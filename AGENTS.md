@@ -8,7 +8,7 @@ This repository is split into three main components:
 
 1.  **`frontend/`**: An Angular-based application acting as a dynamic "screen player". It renders UI components based on JSON definitions received from the backend.
 2.  **`backend/`**: A Python FastAPI mock server (using `uv`). It serves the JSON screen definitions and handles form submissions (next steps) for the frontend.
-3.  **`agent/`**: A Python script designed to interact with the frontend application using SSR (e.g., Playwright) and an LLM. It acts as an automated user, filling out forms based on a natural language conversation with a real human user.
+3.  **`agent/`**: A Python script designed to interact with the frontend application using SSR (HTTP requests to a pre-rendered Angular Universal application) and an LLM. It acts as an automated user, filling out forms based on a natural language conversation with a real human user.
 
 ## Core Development Philosophy
 
@@ -43,7 +43,17 @@ When working on any of the projects, you must adhere to the following workflow:
 ### Agent (Python SSR + LLM)
 *   Prioritize robust DOM interaction (waiting for elements, handling dynamic updates).
 *   The LLM prompts must accurately instruct the model to parse the HTML context and make decisions on how to interact with standard web controls (comboboxes, date pickers, etc.).
-*   Implement tool calling/function calling so the LLM can execute concrete actions (click, type, select) via Playwright based on the user's conversational input.
+*   Implement tool calling/function calling so the LLM can execute concrete actions (click, type, select) via HTTP API calls mimicking the frontend requests based on the user's conversational input.
 
 ## Continuous Integration
 * GitHub Actions workflows are located in `.github/workflows/`. Ensure tests pass for the respective project when committing changes.
+
+### Important Technical Constraint: No Browser Automation
+**WARNING: The use of browser automation libraries in the agent is STRICTLY FORBIDDEN.**
+This includes, but is not limited to:
+*   Playwright
+*   Selenium
+*   Browser Use
+*   Puppeteer
+
+The agent must interact with the frontend by making standard HTTP requests (e.g., using `httpx` or `requests`) to the Angular SSR endpoint and parsing the returned HTML using tools like `BeautifulSoup` or `lxml`. It must not launch or control a real browser.

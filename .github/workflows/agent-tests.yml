@@ -28,7 +28,5 @@ jobs:
           python-version: '3.12'
       - name: Install dependencies
         run: uv pip install -r requirements.txt || uv sync
-      - name: Install Playwright Browsers
-        run: uv run playwright install --with-deps
       - name: Run tests
         run: uv run pytest

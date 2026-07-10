@@ -12,12 +12,12 @@ This document outlines the step-by-step development process for the FastAPI-base
    - Create `main.py` with FastAPI initialization and basic CORS middleware to allow requests from the Angular frontend.
 
 ## Phase 2: Data Models (Pydantic)
-1. [ ] **Define Screen Models**
+1. [x] **Define Screen Models**
    - Create Pydantic models reflecting the JSON structure expected by the frontend:
      - `ComponentDef` (base class and specific implementations for Text, ComboBox, etc.)
      - `ButtonDef`
      - `ScreenDef` (header, content, components, buttons)
-2. [ ] **Define Request/Response Models**
+2. [x] **Define Request/Response Models**
    - `StartRequest` (contains `service_id`)
    - `NextStepRequest` (contains `service_id`, current screen ID, and `answers` dictionary)
    - `NextStepResponse` (returns the next `ScreenDef` or a completion payload)

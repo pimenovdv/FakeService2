@@ -1,0 +1,11 @@
+<div *ngIf="loading" class="loading-indicator">
+  Loading...
+</div>
+
+<div *ngIf="error" class="error-message">
+  {{ error }}
+</div>
+
+<div *ngIf="!loading && !error && (stateService.currentScreen$ | async) as screen">
+  <pre>{{ screen | json }}</pre>
+</div>

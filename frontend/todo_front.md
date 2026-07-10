@@ -3,10 +3,10 @@
 This document outlines the step-by-step development process for the Angular-based screen player application.
 
 ## Phase 1: Project Setup and Architecture
-1. **Initialize Angular Project**
+1. [x] **Initialize Angular Project**
    - Setup Angular CLI, routing, and HTTP client.
    - Configure global styles, UI framework (e.g., Angular Material or Tailwind CSS).
-2. **Define Data Models**
+2. [ ] **Define Data Models**
    - Create interfaces for the Screen definition JSON (`Screen`, `ComponentDef`, `ButtonDef`).
    - Define types for different controls (Text, ComboBox, Checkbox, Radio, DatePicker).
    - Define structure for validation rules and metadata.

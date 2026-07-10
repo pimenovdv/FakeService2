@@ -15,9 +15,9 @@ This document outlines the step-by-step development process for the Angular-base
    - `StateService`: Manage the current state of the screen, user answers, and dependencies between components.
 
 ## Phase 2: Routing and Initialization
-1. [ ] **Route Configuration**
+1. [x] **Route Configuration**
    - Create route `/:service_id/1` mapped to the `PlayerComponent`.
-2. [ ] **Player Component Initialization**
+2. [x] **Player Component Initialization**
    - Read `service_id` from route parameters.
    - Call `ApiService.start(service_id)`.
    - Render loading state while waiting for the JSON response.

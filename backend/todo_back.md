@@ -23,7 +23,7 @@ This document outlines the step-by-step development process for the FastAPI-base
    - `NextStepResponse` (returns the next `ScreenDef` or a completion payload)
 
 ## Phase 3: Core API Endpoints
-1. [ ] **POST `/start` Endpoint**
+1. [x] **POST `/start` Endpoint**
    - Receives `service_id`.
    - Loads the initial screen definition for the given `service_id` from mock JSON files.
    - Returns the `ScreenDef`.

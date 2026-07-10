@@ -1,0 +1,27 @@
+{
+  "id": "screen_1",
+  "header": "Welcome to Service 1",
+  "content": "Please enter your details to proceed.",
+  "components": [
+    {
+      "id": "name_input",
+      "type": "text",
+      "label": "Full Name",
+      "placeholder": "John Doe",
+      "validations": [
+        {
+          "type": "required",
+          "message": "Name is required"
+        }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "next_btn",
+      "label": "Next",
+      "action": "next_step",
+      "color": "primary"
+    }
+  ]
+}

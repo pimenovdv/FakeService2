@@ -1,0 +1,24 @@
+<div class="combobox-container">
+  <label [for]="def.id">{{ def.label }}</label>
+
+  <div *ngIf="loading" class="loading-indicator">Loading options...</div>
+  <div *ngIf="errorFetching" class="error-indicator">Failed to load options</div>
+
+  <select
+    *ngIf="!loading && !errorFetching"
+    [id]="def.id"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [disabled]="def.disabled || false"
+    (blur)="touched = true; validate()"
+  >
+    <option *ngIf="def.placeholder" [ngValue]="null" disabled>{{ def.placeholder }}</option>
+    <option *ngFor="let opt of options" [ngValue]="opt.value">{{ opt.label }}</option>
+  </select>
+
+  <div *ngIf="touched && !isValid" class="error-messages">
+    <div *ngFor="let error of errors" class="error-text">
+      {{ error }}
+    </div>
+  </div>
+</div>

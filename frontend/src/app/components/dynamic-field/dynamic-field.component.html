@@ -1,5 +1,6 @@
 <div class="dynamic-field-container" [ngSwitch]="componentDef.type">
   <app-text-input *ngSwitchCase="'text'" [def]="componentDef"></app-text-input>
+  <app-combobox *ngSwitchCase="'combobox'" [def]="componentDef"></app-combobox>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

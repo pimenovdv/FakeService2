@@ -6,7 +6,7 @@ import { Screen, RestMetadata } from '../models/screen.model';
 describe('ApiService', () => {
   let service: ApiService;
   let httpMock: HttpTestingController;
-  const baseUrl = 'http://localhost:8000';
+  const baseUrl = '';
 
   beforeEach(() => {
     TestBed.configureTestingModule({
@@ -38,7 +38,7 @@ describe('ApiService', () => {
       expect(screen).toEqual(dummyScreen);
     });
 
-    const req = httpMock.expectOne(`${baseUrl}/start`);
+    const req = httpMock.expectOne(`${baseUrl}/api/screens/start`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ service_id: 'service-1' });
     req.flush(dummyScreen);
@@ -57,7 +57,7 @@ describe('ApiService', () => {
       expect(screen).toEqual(dummyScreen);
     });
 
-    const req = httpMock.expectOne(`${baseUrl}/next_step`);
+    const req = httpMock.expectOne(`${baseUrl}/api/screens/next_step`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
       service_id: 'service-1',

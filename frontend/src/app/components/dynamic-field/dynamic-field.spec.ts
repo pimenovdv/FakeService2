@@ -11,7 +11,9 @@ describe('DynamicFieldComponent', () => {
     await TestBed.configureTestingModule({
       imports: [DynamicFieldComponent]
     }).compileComponents();
+  });
 
+  beforeEach(() => {
     fixture = TestBed.createComponent(DynamicFieldComponent);
     component = fixture.componentInstance;
   });

@@ -34,7 +34,7 @@ This document outlines the step-by-step development process for the Angular-base
 ## Phase 4: Implementing Specific Controls
 1. [x] **Text Input Control**
    - Simple text field with regex validation and placeholder support.
-2. [ ] **ComboBox / Select Control**
+2. [x] **ComboBox / Select Control**
    - Dropdown with static options from JSON.
    - Support for dynamic options fetching via REST call metadata provided in JSON.
 3. [ ] **Interactive/Dependent Controls**

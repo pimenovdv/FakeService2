@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { DynamicFieldComponent } from '../dynamic-field/dynamic-field.component';
@@ -18,6 +18,7 @@ export class Player implements OnInit {
   private route = inject(ActivatedRoute);
   private apiService = inject(ApiService);
   public stateService = inject(StateService);
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -38,11 +39,13 @@ export class Player implements OnInit {
       next: (screen) => {
         this.stateService.setScreen(screen);
         this.loading = false;
+        this.cdr.detectChanges();
       },
       error: (err) => {
-        this.error = 'Failed to load screen';
+        this.error = 'Failed to load screen: ' + err.message;
         this.loading = false;
-        console.error(err);
+        console.error('Error loading screen:', err);
+        this.cdr.detectChanges();
       }
     });
   }

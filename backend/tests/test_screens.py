@@ -49,3 +49,54 @@ def test_next_step_not_found():
         "answers": {}
     })
     assert response.status_code == 404
+
+def test_missing_routing_file():
+    # Setup a service without routing file but with screen_1 file
+    import json
+    import os
+    # Assuming tests run from backend/ directory
+    with open("mock_data/service_missing_routing_screen_1.json", "w") as f:
+        json.dump({
+            "id": "screen_1",
+            "components": [],
+            "buttons": []
+        }, f)
+
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "service_missing_routing",
+        "current_screen_id": "screen_1",
+        "answers": {}
+    })
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Routing configuration for service_id 'service_missing_routing' not found."}
+
+    # Cleanup
+    os.remove("mock_data/service_missing_routing_screen_1.json")
+
+def test_missing_next_step_in_routing():
+    import json
+    import os
+    with open("mock_data/service_invalid_routing_screen_1.json", "w") as f:
+        json.dump({
+            "id": "screen_1",
+            "components": [],
+            "buttons": []
+        }, f)
+    with open("mock_data/service_invalid_routing_routing.json", "w") as f:
+        json.dump({
+            "other_screen": "completed"
+        }, f)
+
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "service_invalid_routing",
+        "current_screen_id": "screen_1",
+        "answers": {}
+    })
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No next step defined for service_id 'service_invalid_routing', screen 'screen_1'."}
+
+    # Cleanup
+    os.remove("mock_data/service_invalid_routing_screen_1.json")
+    os.remove("mock_data/service_invalid_routing_routing.json")

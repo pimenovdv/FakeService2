@@ -32,7 +32,7 @@ This document outlines the step-by-step development process for the Angular-base
    - Create a base class for all controls handling common logic: initialization, reading values, applying validation (Regex, required, etc.), and emitting value changes.
 
 ## Phase 4: Implementing Specific Controls
-1. [ ] **Text Input Control**
+1. [x] **Text Input Control**
    - Simple text field with regex validation and placeholder support.
 2. [ ] **ComboBox / Select Control**
    - Dropdown with static options from JSON.

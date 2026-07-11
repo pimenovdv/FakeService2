@@ -27,14 +27,14 @@ This document outlines the step-by-step development process for the FastAPI-base
    - Receives `service_id`.
    - Loads the initial screen definition for the given `service_id` from mock JSON files.
    - Returns the `ScreenDef`.
-2. [ ] **POST `/next_step` Endpoint**
+2. [x] **POST `/next_step` Endpoint**
    - Receives answers from the frontend.
    - Validates the answers against expected types (basic validation).
    - Determines the next screen based on the `service_id` and provided answers (mock routing logic).
    - Returns the next `ScreenDef`.
 
 ## Phase 4: Mock Data Scenarios
-1. [ ] **Create Mock JSON Scenarios**
+1. [x] **Create Mock JSON Scenarios**
    - Define a series of JSON files representing a sequence of screens for a specific `service_id` (e.g., `service_1_screen_1.json`, `service_1_screen_2.json`).
    - Include examples of dynamic dependencies (e.g., a screen that changes based on an answer from a previous screen).
 2. [ ] **Implement Scenario Manager**

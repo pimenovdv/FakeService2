@@ -1,0 +1,26 @@
+{
+  "id": "screen_2",
+  "header": "Confirm Details",
+  "content": "Please review the details below before submitting.",
+  "components": [
+    {
+      "id": "confirmation_checkbox",
+      "type": "checkbox",
+      "label": "I confirm the details are correct",
+      "validations": [
+        {
+          "type": "required",
+          "message": "You must confirm to proceed"
+        }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "submit_btn",
+      "label": "Submit",
+      "action": "submit",
+      "color": "primary"
+    }
+  ]
+}

@@ -22,7 +22,7 @@ def test_next_step_success():
     response = client.post("/api/screens/next_step", json={
         "service_id": "service_1",
         "current_screen_id": "screen_1",
-        "answers": {"name_input": "John Doe"}
+        "answers": {"name_input": "John Doe", "country_input": "usa"}
     })
     assert response.status_code == 200
     data = response.json()

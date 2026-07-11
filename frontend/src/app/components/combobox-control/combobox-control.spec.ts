@@ -21,7 +21,9 @@ describe('ComboboxControlComponent', () => {
         { provide: ApiService, useValue: apiServiceMock }
       ]
     }).compileComponents();
+  });
 
+  beforeEach(() => {
     fixture = TestBed.createComponent(ComboboxControlComponent);
     component = fixture.componentInstance;
   });

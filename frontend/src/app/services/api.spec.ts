@@ -38,7 +38,7 @@ describe('ApiService', () => {
       expect(screen).toEqual(dummyScreen);
     });
 
-    const req = httpMock.expectOne(`${baseUrl}/start`);
+    const req = httpMock.expectOne(`${baseUrl}/api/screens/start`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ service_id: 'service-1' });
     req.flush(dummyScreen);
@@ -57,7 +57,7 @@ describe('ApiService', () => {
       expect(screen).toEqual(dummyScreen);
     });
 
-    const req = httpMock.expectOne(`${baseUrl}/next_step`);
+    const req = httpMock.expectOne(`${baseUrl}/api/screens/next_step`);
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
       service_id: 'service-1',

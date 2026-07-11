@@ -20,7 +20,7 @@ This document outlines the step-by-step development process for the Python agent
    - Build a structured representation of the current screen's requirements (what fields need to be filled).
 
 ## Phase 3: LLM Integration and Conversation Loop
-- [ ] 1. **Prompt Engineering**
+- [x] 1. **Prompt Engineering**
    - Design system prompts for the LLM to understand its role: "You are an agent helping a user fill out a form. The form requires the following fields: {parsed_fields}. Ask the user for this information, use autocomplete features when available, and determine the values to input."
 - [ ] 2. **Interactive Chat Loop**
    - Implement a CLI or simple API chat interface for the user.

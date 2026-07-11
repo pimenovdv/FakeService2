@@ -26,6 +26,12 @@ class AgentClient:
         """Perform a GET request."""
         return await self.client.get(url, **kwargs)
 
+    async def fetch_html(self, url: str) -> str:
+        """Fetch pre-rendered HTML from a given URL."""
+        response = await self.get(url)
+        response.raise_for_status()
+        return response.text
+
     async def post(self, url: str, **kwargs) -> httpx.Response:
         """Perform a POST request."""
         return await self.client.post(url, **kwargs)

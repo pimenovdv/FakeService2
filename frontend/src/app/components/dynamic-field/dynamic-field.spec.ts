@@ -32,4 +32,18 @@ describe('DynamicFieldComponent', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Unsupported component type: unknown (ID: unknown-id)');
   });
+
+  it('should render text input component', () => {
+    component.componentDef = {
+      id: 'test_text_id',
+      type: 'text',
+      label: 'Test Text Field'
+    } as ComponentDef;
+
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const textInput = compiled.querySelector('app-text-input');
+    expect(textInput).toBeTruthy();
+  });
 });

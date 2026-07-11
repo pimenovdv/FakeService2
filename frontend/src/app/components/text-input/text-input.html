@@ -1,0 +1,17 @@
+<div class="text-input-container">
+  <label [for]="def.id">{{ def.label }}</label>
+  <input
+    [id]="def.id"
+    type="text"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [placeholder]="def.placeholder || ''"
+    [disabled]="def.disabled || false"
+    (blur)="touched = true; validate()"
+  />
+  <div *ngIf="touched && !isValid" class="error-messages">
+    <div *ngFor="let error of errors" class="error-text">
+      {{ error }}
+    </div>
+  </div>
+</div>

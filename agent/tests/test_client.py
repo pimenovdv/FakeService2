@@ -25,3 +25,12 @@ async def test_agent_client_context_manager():
         assert not client.client.is_closed
 
     assert client.client.is_closed
+
+@pytest.mark.asyncio
+async def test_agent_client_fetch_html(httpx_mock):
+    html_content = "<html><body><h1>Hello</h1></body></html>"
+    httpx_mock.add_response(url="http://localhost:4200/test", text=html_content)
+
+    async with AgentClient() as client:
+        html = await client.fetch_html("http://localhost:4200/test")
+        assert html == html_content

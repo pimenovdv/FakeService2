@@ -12,10 +12,10 @@ This document outlines the step-by-step development process for the Python agent
    - Create a robust HTTP client session capable of managing cookies and headers, simulating a real user session hitting the Angular SSR endpoint (e.g., `http://localhost:4200/{service_id}/1`).
 
 ## Phase 2: SSR HTML Extraction and State Management
-- [ ] 1. **Fetch Pre-rendered HTML**
+- [x] 1. **Fetch Pre-rendered HTML**
    - Make an HTTP GET request to the Angular SSR endpoint.
    - Extract the fully rendered HTML response.
-- [ ] 2. **Parse HTML Context**
+- [x] 2. **Parse HTML Context**
    - Use `BeautifulSoup` to parse the HTML and identify input fields, labels, comboboxes, buttons, and validation rules present in the DOM (represented in the raw HTML).
    - Build a structured representation of the current screen's requirements (what fields need to be filled).
 

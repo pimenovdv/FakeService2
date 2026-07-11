@@ -17,3 +17,35 @@ def test_start_scenario_not_found():
     response = client.post("/api/screens/start", json={"service_id": "nonexistent_service"})
     assert response.status_code == 404
     assert response.json() == {"detail": "Initial screen for service_id 'nonexistent_service' not found."}
+
+def test_next_step_success():
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "service_1",
+        "current_screen_id": "screen_1",
+        "answers": {"name_input": "John Doe"}
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["completed"] == False
+    assert data["next_screen"]["id"] == "screen_2"
+    assert data["next_screen"]["header"] == "Confirm Details"
+
+def test_next_step_completed():
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "service_1",
+        "current_screen_id": "screen_2",
+        "answers": {"confirmation_checkbox": True}
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["completed"] == True
+    assert "next_screen" in data
+    assert data["next_screen"] is None
+
+def test_next_step_not_found():
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "nonexistent_service",
+        "current_screen_id": "screen_1",
+        "answers": {}
+    })
+    assert response.status_code == 404

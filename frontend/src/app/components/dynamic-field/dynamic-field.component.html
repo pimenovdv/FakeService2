@@ -1,0 +1,5 @@
+<div class="dynamic-field-container" [ngSwitch]="componentDef.type">
+  <div *ngSwitchDefault class="fallback-field">
+    Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})
+  </div>
+</div>

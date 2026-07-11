@@ -1,12 +1,13 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { DynamicFieldComponent } from '../dynamic-field/dynamic-field.component';
 import { ApiService } from '../../services/api';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-player',
-  imports: [CommonModule],
+  imports: [CommonModule, DynamicFieldComponent],
   templateUrl: './player.html',
   styleUrl: './player.scss',
 })

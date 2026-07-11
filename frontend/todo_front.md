@@ -24,11 +24,11 @@ This document outlines the step-by-step development process for the Angular-base
    - Parse the JSON response and initialize the `StateService` with screen data.
 
 ## Phase 3: Dynamic Component Rendering Engine
-1. [ ] **Screen Layout Skeleton**
+1. [x] **Screen Layout Skeleton**
    - Create the main layout rendering `screen.header` and `screen.content`.
-2. [ ] **Dynamic Component Loader**
+2. [x] **Dynamic Component Loader**
    - Implement an Angular structural directive or component (`<app-dynamic-field>`) that takes a `ComponentDef` and dynamically instantiates the correct specific control component.
-3. [ ] **Base Control Component**
+3. [x] **Base Control Component**
    - Create a base class for all controls handling common logic: initialization, reading values, applying validation (Regex, required, etc.), and emitting value changes.
 
 ## Phase 4: Implementing Specific Controls

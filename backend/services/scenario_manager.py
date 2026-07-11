@@ -42,14 +42,25 @@ class ScenarioManager:
                     if comp_id not in answers or answers[comp_id] is None or str(answers[comp_id]).strip() == "":
                         raise HTTPException(status_code=400, detail=validation.get("message", f"{comp_id} is required"))
 
-        # Mock logic for determining the next screen
-        if service_id == "service_1" and current_screen_id == "screen_1":
-            # Just move to screen 2
-            next_screen_id = "screen_2"
-        elif service_id == "service_1" and current_screen_id == "screen_2":
-            return {"completed": True}
-        else:
+        # Configuration-driven routing logic
+        routing_filename = f"{service_id}_routing.json"
+        routing_filepath = os.path.join(MOCK_DATA_DIR, routing_filename)
+
+        if not os.path.exists(routing_filepath):
+            raise HTTPException(status_code=404, detail=f"Routing configuration for service_id '{service_id}' not found.")
+
+        with open(routing_filepath, "r", encoding="utf-8") as f:
+            try:
+                routing_data = json.load(f)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail=f"Error decoding routing JSON for service_id '{service_id}'.")
+
+        if current_screen_id not in routing_data:
             raise HTTPException(status_code=404, detail=f"No next step defined for service_id '{service_id}', screen '{current_screen_id}'.")
+
+        next_screen_id = routing_data[current_screen_id]
+        if next_screen_id == "completed":
+            return {"completed": True}
 
         filename = f"{service_id}_{next_screen_id}.json"
         filepath = os.path.join(MOCK_DATA_DIR, filename)

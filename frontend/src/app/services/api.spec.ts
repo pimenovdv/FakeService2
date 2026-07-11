@@ -6,7 +6,7 @@ import { Screen, RestMetadata } from '../models/screen.model';
 describe('ApiService', () => {
   let service: ApiService;
   let httpMock: HttpTestingController;
-  const baseUrl = 'http://localhost:8000';
+  const baseUrl = '';
 
   beforeEach(() => {
     TestBed.configureTestingModule({

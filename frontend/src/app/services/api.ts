@@ -7,16 +7,16 @@ import { Screen, RestMetadata } from '../models/screen.model';
   providedIn: 'root'
 })
 export class ApiService {
-  private baseUrl = 'http://localhost:8000'; // Assuming FastAPI mock backend
+  private baseUrl = ''; // Empty string so that calls use the proxy
 
   constructor(private http: HttpClient) { }
 
   start(serviceId: string): Observable<Screen> {
-    return this.http.post<Screen>(`${this.baseUrl}/start`, { service_id: serviceId });
+    return this.http.post<Screen>(`${this.baseUrl}/api/screens/start`, { service_id: serviceId });
   }
 
   nextStep(serviceId: string, currentScreenId: string, answers: Record<string, any>): Observable<Screen | any> {
-    return this.http.post<Screen | any>(`${this.baseUrl}/next_step`, {
+    return this.http.post<Screen | any>(`${this.baseUrl}/api/screens/next_step`, {
       service_id: serviceId,
       screen_id: currentScreenId,
       answers: answers

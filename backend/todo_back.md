@@ -41,7 +41,7 @@ This document outlines the step-by-step development process for the FastAPI-base
    - Create a service class to load and serve these JSON files based on the state or request parameters.
 
 ## Phase 5: Dynamic API Endpoints for Components
-1. [ ] **Implement Dynamic Data Endpoints**
+1. [x] **Implement Dynamic Data Endpoints**
    - Create generic endpoints (e.g., `GET /api/data/{data_source}`) that components (like ComboBoxes) can call to fetch dynamic options.
    - Serve mock data for these endpoints based on the `data_source` parameter.
 

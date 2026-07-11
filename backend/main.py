@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import screens
+from routers import screens, data
 
 app = FastAPI()
 
@@ -17,3 +17,4 @@ def read_root():
     return {"status": "ok"}
 
 app.include_router(screens.router)
+app.include_router(data.router)

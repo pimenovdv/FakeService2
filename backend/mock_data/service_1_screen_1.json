@@ -14,6 +14,21 @@
           "message": "Name is required"
         }
       ]
+    },
+    {
+      "id": "country_input",
+      "type": "combobox",
+      "label": "Country",
+      "restMetadata": {
+        "endpoint": "/api/data/countries",
+        "method": "GET"
+      },
+      "validations": [
+        {
+          "type": "required",
+          "message": "Country is required"
+        }
+      ]
     }
   ],
   "buttons": [

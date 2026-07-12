@@ -65,6 +65,71 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[4]["role"], "assistant")
         self.assertEqual(session.messages[4]["content"], "Form submitted successfully. Thanks!")
 
+
+    async def test_process_user_input_multiple_tool_calls(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+
+        # Setup mock for fetch_autocomplete_options via agent_client
+        mock_response_http = MagicMock()
+        mock_response_http.json.return_value = [{"id": "RU", "name": "Russia"}]
+        mock_agent_client.get.return_value = mock_response_http
+
+        # First response: LLM decides to fetch autocomplete options
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call_1 = MagicMock()
+        tool_call_1.id = "call_auto"
+        tool_call_1.type = "function"
+        tool_call_1.function.name = "fetch_autocomplete_options"
+        tool_call_1.function.arguments = json.dumps({"endpoint": "/api/countries", "query": "Rus"})
+        mock_response_1.choices[0].message.tool_calls = [tool_call_1]
+
+        # Second response: LLM receives autocomplete data, decides to submit
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = None
+
+        tool_call_2 = MagicMock()
+        tool_call_2.id = "call_submit"
+        tool_call_2.type = "function"
+        tool_call_2.function.name = "submit_form"
+        tool_call_2.function.arguments = json.dumps({"answers": {"country": "RU"}})
+        mock_response_2.choices[0].message.tool_calls = [tool_call_2]
+
+        # Third response: LLM says thanks
+        mock_response_3 = MagicMock()
+        mock_response_3.choices = [MagicMock()]
+        mock_response_3.choices[0].message.content = "All done!"
+        mock_response_3.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2, mock_response_3]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("My country is Rus, please submit.")
+
+        self.assertEqual(response, "All done!")
+        self.assertTrue(session.form_submitted)
+        self.assertEqual(session.submitted_data, {"country": "RU"})
+
+        # Messages:
+        # 0: system
+        # 1: user
+        # 2: assistant (calls auto)
+        # 3: tool (result auto)
+        # 4: assistant (calls submit)
+        # 5: tool (result submit)
+        # 6: assistant (All done!)
+        self.assertEqual(len(session.messages), 7)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[3]["tool_call_id"], "call_auto")
+        self.assertIn("Russia", session.messages[3]["content"])
+
+        self.assertEqual(session.messages[5]["role"], "tool")
+        self.assertEqual(session.messages[5]["tool_call_id"], "call_submit")
+
 class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_exit(self):
         session = MagicMock()

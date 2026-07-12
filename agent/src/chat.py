@@ -2,11 +2,14 @@ import json
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
+from src.client import AgentClient
+from src.actions import fetch_autocomplete_options
 
 class ChatSession:
-    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, model: str = "gpt-4o-mini"):
+    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, model: str = "gpt-4o-mini", agent_client: AgentClient = None):
         self.client = client or AsyncOpenAI()
         self.model = model
+        self.agent_client = agent_client
         self.messages: List[ChatCompletionMessageParam] = [
             {"role": "system", "content": system_prompt}
         ]
@@ -27,6 +30,27 @@ class ChatSession:
                         "required": ["answers"]
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "fetch_autocomplete_options",
+                    "description": "Fetch autocomplete options for a specific field based on user query.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "endpoint": {
+                                "type": "string",
+                                "description": "The API endpoint to query."
+                            },
+                            "query": {
+                                "type": "string",
+                                "description": "The search query from the user."
+                            }
+                        },
+                        "required": ["endpoint", "query"]
+                    }
+                }
             }
         ]
         self.form_submitted = False
@@ -38,34 +62,36 @@ class ChatSession:
         """
         self.messages.append({"role": "user", "content": user_input})
 
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=self.messages,
-            tools=self.tools,
-            tool_choice="auto"
-        )
+        while True:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=self.messages,
+                tools=self.tools,
+                tool_choice="auto"
+            )
 
-        response_message = response.choices[0].message
+            response_message = response.choices[0].message
 
-        # We need to serialize the response message back into dict format if we append it
-        message_dict = {"role": "assistant"}
-        if response_message.content:
-            message_dict["content"] = response_message.content
-        if response_message.tool_calls:
-            message_dict["tool_calls"] = [
-                {
-                    "id": tool_call.id,
-                    "type": tool_call.type,
-                    "function": {
-                        "name": tool_call.function.name,
-                        "arguments": tool_call.function.arguments,
+            message_dict = {"role": "assistant"}
+            if response_message.content:
+                message_dict["content"] = response_message.content
+            if response_message.tool_calls:
+                message_dict["tool_calls"] = [
+                    {
+                        "id": tool_call.id,
+                        "type": tool_call.type,
+                        "function": {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments,
+                        }
                     }
-                }
-                for tool_call in response_message.tool_calls
-            ]
-        self.messages.append(message_dict)
+                    for tool_call in response_message.tool_calls
+                ]
+            self.messages.append(message_dict)
 
-        if response_message.tool_calls:
+            if not response_message.tool_calls:
+                return response_message.content or ""
+
             # Handle tool calls
             for tool_call in response_message.tool_calls:
                 if tool_call.function.name == "submit_form":
@@ -73,26 +99,36 @@ class ChatSession:
                     self.form_submitted = True
                     self.submitted_data = args.get("answers", {})
 
-                    # Provide tool result back to the model
                     self.messages.append({
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": json.dumps({"status": "success", "message": "Form submitted successfully."})
                     })
+                elif tool_call.function.name == "fetch_autocomplete_options":
+                    args = json.loads(tool_call.function.arguments)
+                    endpoint = args.get("endpoint", "")
+                    query = args.get("query", "")
 
-                    # Get final conversational response after tool call
-                    second_response = await self.client.chat.completions.create(
-                        model=self.model,
-                        messages=self.messages
-                    )
-                    final_msg = second_response.choices[0].message
-                    self.messages.append({
-                        "role": "assistant",
-                        "content": final_msg.content
-                    })
-                    return final_msg.content or "Form submitted."
-
-        return response_message.content or ""
+                    if self.agent_client:
+                        try:
+                            result = await fetch_autocomplete_options(self.agent_client, endpoint, query)
+                            self.messages.append({
+                                "role": "tool",
+                                "tool_call_id": tool_call.id,
+                                "content": json.dumps({"status": "success", "data": result})
+                            })
+                        except Exception as e:
+                            self.messages.append({
+                                "role": "tool",
+                                "tool_call_id": tool_call.id,
+                                "content": json.dumps({"status": "error", "message": str(e)})
+                            })
+                    else:
+                        self.messages.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "content": json.dumps({"status": "error", "message": "AgentClient not configured"})
+                        })
 
 async def run_chat_loop(
     session: ChatSession,

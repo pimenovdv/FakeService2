@@ -71,4 +71,36 @@ describe('StateService', () => {
     expect(service.getScreen()).toBeNull();
     expect(service.getAllAnswers()).toEqual({});
   });
+
+  describe('evaluateCondition', () => {
+    it('should return false if condition is undefined', () => {
+      expect(service.evaluateCondition(undefined)).toBe(false);
+    });
+
+    it('should evaluate == operator correctly', () => {
+      service.setAnswer('field1', 'yes');
+      expect(service.evaluateCondition({ field: 'field1', operator: '==', value: 'yes' })).toBe(true);
+      expect(service.evaluateCondition({ field: 'field1', operator: '==', value: 'no' })).toBe(false);
+    });
+
+    it('should evaluate != operator correctly', () => {
+      service.setAnswer('field1', 'yes');
+      expect(service.evaluateCondition({ field: 'field1', operator: '!=', value: 'no' })).toBe(true);
+      expect(service.evaluateCondition({ field: 'field1', operator: '!=', value: 'yes' })).toBe(false);
+    });
+
+    it('should evaluate > and < operators correctly', () => {
+      service.setAnswer('age', 25);
+      expect(service.evaluateCondition({ field: 'age', operator: '>', value: 18 })).toBe(true);
+      expect(service.evaluateCondition({ field: 'age', operator: '>', value: 30 })).toBe(false);
+      expect(service.evaluateCondition({ field: 'age', operator: '<', value: 30 })).toBe(true);
+      expect(service.evaluateCondition({ field: 'age', operator: '<', value: 18 })).toBe(false);
+    });
+
+    it('should evaluate in operator correctly', () => {
+      service.setAnswer('color', 'red');
+      expect(service.evaluateCondition({ field: 'color', operator: 'in', value: ['red', 'blue'] })).toBe(true);
+      expect(service.evaluateCondition({ field: 'color', operator: 'in', value: ['green', 'yellow'] })).toBe(false);
+    });
+  });
 });

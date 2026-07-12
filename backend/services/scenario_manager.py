@@ -74,3 +74,40 @@ class ScenarioManager:
                 return {"next_screen": data, "completed": False}
             except json.JSONDecodeError:
                 raise HTTPException(status_code=500, detail=f"Error decoding JSON for service_id '{service_id}', screen '{next_screen_id}'.")
+
+    @staticmethod
+    def get_prev_screen(service_id: str, current_screen_id: str) -> dict:
+        # Configuration-driven routing logic
+        routing_filename = f"{service_id}_routing.json"
+        routing_filepath = os.path.join(MOCK_DATA_DIR, routing_filename)
+
+        if not os.path.exists(routing_filepath):
+            raise HTTPException(status_code=404, detail=f"Routing configuration for service_id '{service_id}' not found.")
+
+        with open(routing_filepath, "r", encoding="utf-8") as f:
+            try:
+                routing_data = json.load(f)
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail=f"Error decoding routing JSON for service_id '{service_id}'.")
+
+        prev_screen_id = None
+        for k, v in routing_data.items():
+            if v == current_screen_id:
+                prev_screen_id = k
+                break
+
+        if prev_screen_id is None:
+            raise HTTPException(status_code=404, detail=f"No previous step defined for service_id '{service_id}', screen '{current_screen_id}'.")
+
+        filename = f"{service_id}_{prev_screen_id}.json"
+        filepath = os.path.join(MOCK_DATA_DIR, filename)
+
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail=f"Previous screen '{prev_screen_id}' for service_id '{service_id}' not found.")
+
+        with open(filepath, "r", encoding="utf-8") as f:
+            try:
+                data = json.load(f)
+                return data
+            except json.JSONDecodeError:
+                raise HTTPException(status_code=500, detail=f"Error decoding JSON for service_id '{service_id}', screen '{prev_screen_id}'.")

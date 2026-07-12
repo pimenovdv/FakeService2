@@ -2,13 +2,14 @@
 
 This document outlines the step-by-step development process for the FastAPI-based mock backend.
 
-## Completed Phases (1-6)
-- **Phase 1-3:** Project initialized with `uv`, core structure created. Data models (Pydantic) for screens, components, buttons, requests, and responses implemented. Core API endpoints (`/start`, `/next_step`) implemented.
-- **Phase 4-5:** Mock JSON scenarios created. `ScenarioManager` implemented to serve scenarios and validate answers. Dynamic endpoints for components implemented.
-- **Phase 6:** Unit and API tests written with `pytest` and `httpx`. All tests passing.
+## Completed Phases
+- **Phases 1-6:** Project setup, data models, core endpoints, scenarios, configuration-based routing, and extensive tests (unit and API tests).
+- **Phase 7:** Enhanced Scenario Engine:
+  - [x] **Configuration-driven Routing**
+  - [x] **Support for 'Previous Step'**
 
-## Phase 7: Enhanced Scenario Engine
-1. [x] **Configuration-driven Routing**
-   - Replace hardcoded routing logic in `ScenarioManager` with a configuration-based mechanism (e.g., loading `service_1_routing.json` that maps state transitions).
-2. [ ] **Support for 'Previous Step'**
-   - Implement functionality to navigate back to the previous screen.
+## Phase 8: Data Collection and Output
+1. [ ] **Store User Journey Data**
+   - Implement temporary state storage (e.g., in-memory store) to track complete journeys before saving.
+2. [ ] **Final Submission Endpoint**
+   - Create an endpoint triggered at the end of the scenario that saves the collected data into a unified JSON format or mock database.

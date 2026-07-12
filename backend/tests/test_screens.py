@@ -100,3 +100,27 @@ def test_missing_next_step_in_routing():
     # Cleanup
     os.remove("mock_data/service_invalid_routing_screen_1.json")
     os.remove("mock_data/service_invalid_routing_routing.json")
+
+def test_prev_step_success():
+    response = client.post("/api/screens/prev_step", json={
+        "service_id": "service_1",
+        "current_screen_id": "screen_2"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == "screen_1"
+
+def test_prev_step_no_previous_defined():
+    response = client.post("/api/screens/prev_step", json={
+        "service_id": "service_1",
+        "current_screen_id": "screen_1"
+    })
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No previous step defined for service_id 'service_1', screen 'screen_1'."}
+
+def test_prev_step_routing_not_found():
+    response = client.post("/api/screens/prev_step", json={
+        "service_id": "nonexistent_service",
+        "current_screen_id": "screen_2"
+    })
+    assert response.status_code == 404

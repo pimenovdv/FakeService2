@@ -6,7 +6,7 @@
 
   <select
     [id]="def.id"
-    [disabled]="def.disabled || loadingOptions"
+    [disabled]="disabled || def.disabled || loadingOptions"
     [hidden]="def.hidden"
     [ngModel]="value"
     (ngModelChange)="onValueChange($event)"

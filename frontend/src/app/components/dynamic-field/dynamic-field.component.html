@@ -1,6 +1,8 @@
-<div class="dynamic-field-container" [ngSwitch]="componentDef.type">
-  <app-text-input *ngSwitchCase="'text'" [def]="componentDef"></app-text-input>
-  <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef"></app-combobox-control>
+<div class="dynamic-field-container" [ngSwitch]="componentDef.type" *ngIf="show">
+  <ng-container *ngIf="stateService.answers$ | async">
+    <app-text-input *ngSwitchCase="'text'" [def]="componentDef" [disabled]="isDisabled"></app-text-input>
+    <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef" [disabled]="isDisabled"></app-combobox-control>
+  </ng-container>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

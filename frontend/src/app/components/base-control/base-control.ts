@@ -5,6 +5,7 @@ import { ComponentDef, ValidationRule } from '../../models/screen.model';
 export abstract class BaseControl {
   @Input() def!: ComponentDef;
   @Input() value: any;
+  @Input() disabled: boolean = false;
   @Output() valueChange = new EventEmitter<any>();
   @Output() isValidChange = new EventEmitter<boolean>();
 

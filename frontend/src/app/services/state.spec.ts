@@ -71,4 +71,39 @@ describe('StateService', () => {
     expect(service.getScreen()).toBeNull();
     expect(service.getAllAnswers()).toEqual({});
   });
+
+  describe('evaluateCondition', () => {
+    it('should return true if no condition is provided', () => {
+      expect(service.evaluateCondition(undefined)).toBe(true);
+    });
+
+    it('should evaluate hasValue correctly', () => {
+      service.setAnswer('field1', 'some value');
+      expect(service.evaluateCondition({ field: 'field1', hasValue: true })).toBe(true);
+      expect(service.evaluateCondition({ field: 'field1', hasValue: false })).toBe(false);
+
+      expect(service.evaluateCondition({ field: 'field2', hasValue: true })).toBe(false);
+      expect(service.evaluateCondition({ field: 'field2', hasValue: false })).toBe(true);
+
+      service.setAnswer('field3', '');
+      expect(service.evaluateCondition({ field: 'field3', hasValue: true })).toBe(false);
+      expect(service.evaluateCondition({ field: 'field3', hasValue: false })).toBe(true);
+    });
+
+    it('should evaluate equals correctly', () => {
+      service.setAnswer('field1', 'exact match');
+      expect(service.evaluateCondition({ field: 'field1', equals: 'exact match' })).toBe(true);
+      expect(service.evaluateCondition({ field: 'field1', equals: 'wrong match' })).toBe(false);
+
+      service.setAnswer('numField', 42);
+      expect(service.evaluateCondition({ field: 'numField', equals: 42 })).toBe(true);
+      expect(service.evaluateCondition({ field: 'numField', equals: '42' })).toBe(false); // strict equality
+    });
+
+    it('should evaluate both hasValue and equals if both provided', () => {
+      service.setAnswer('field1', 'test');
+      expect(service.evaluateCondition({ field: 'field1', hasValue: true, equals: 'test' })).toBe(true);
+      expect(service.evaluateCondition({ field: 'field1', hasValue: true, equals: 'wrong' })).toBe(false);
+    });
+  });
 });

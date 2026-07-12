@@ -37,7 +37,7 @@ This document outlines the step-by-step development process for the Angular-base
 2. [x] **ComboBox / Select Control**
    - Dropdown with static options from JSON.
    - Support for dynamic options fetching via REST call metadata provided in JSON.
-3. [ ] **Interactive/Dependent Controls**
+3. [x] **Interactive/Dependent Controls**
    - Implement logic in `StateService` to evaluate conditions (e.g., if control A value is 'X', show control B).
    - Bind `disabled` and `hidden` properties of controls to state evaluations.
 4. [ ] **Action Buttons**

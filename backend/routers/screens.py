@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from models.request import StartRequest, NextStepRequest, NextStepResponse
+from models.request import StartRequest, NextStepRequest, NextStepResponse, PreviousStepRequest
 from models.screen import ScreenDef
 from services.scenario_manager import ScenarioManager
 
@@ -13,3 +13,7 @@ def start_scenario(request: StartRequest):
 @router.post("/next_step", response_model=NextStepResponse)
 def next_step(request: NextStepRequest):
     return ScenarioManager.get_next_screen(request.service_id, request.current_screen_id, request.answers)
+
+@router.post("/previous_step", response_model=ScreenDef)
+def previous_step(request: PreviousStepRequest):
+    return ScenarioManager.get_previous_screen(request.service_id, request.current_screen_id)

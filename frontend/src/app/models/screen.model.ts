@@ -12,6 +12,12 @@ export interface RestMetadata {
   params?: Record<string, string>;
 }
 
+export interface Condition {
+  field: string;
+  operator: '==' | '!=' | '>' | '<' | 'in';
+  value: any;
+}
+
 export interface ComponentDef {
   id: string;
   type: ControlType;
@@ -22,6 +28,8 @@ export interface ComponentDef {
   validations?: ValidationRule[];
   hidden?: boolean;
   disabled?: boolean;
+  showIf?: Condition;
+  disableIf?: Condition;
   dependsOn?: string[]; // IDs of components this depends on
 }
 

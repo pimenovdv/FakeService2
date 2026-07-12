@@ -28,7 +28,7 @@ This document outlines the step-by-step development process for the Python agent
    - The LLM should decide whether to ask the user a clarifying question or to execute actions to gather data or submit the form.
 
 ## Phase 4: Form Interaction and Autocomplete Handling
-- [ ] 1. **Simulating Actions via API**
+- [x] 1. **Simulating Actions via API**
    - Create Python functions that the LLM can call (function calling/tools) to simulate interactions by making appropriate API calls that the frontend would normally make (e.g., `fetch_autocomplete_options(field_id, query)` or `simulate_form_submission(payload)`).
 - [ ] 2. **Handling Complex Controls (e.g., Autocomplete, Dates)**
    - **Autocomplete**: If the LLM needs to fill an address, it must call the backend API endpoint (extracted from the HTML/JSON definitions) that the frontend autocomplete field uses, fetch the options, and match the user's input (e.g., User: "МО, Луховицы, Пионерская" -> Agent queries the API for "Московская", matches the result, queries for "Лухов", etc.).

@@ -10,5 +10,5 @@ This document outlines the step-by-step development process for the FastAPI-base
 ## Phase 7: Enhanced Scenario Engine
 1. [x] **Configuration-driven Routing**
    - Replace hardcoded routing logic in `ScenarioManager` with a configuration-based mechanism (e.g., loading `service_1_routing.json` that maps state transitions).
-2. [ ] **Support for 'Previous Step'**
+2. [x] **Support for 'Previous Step'**
    - Implement functionality to navigate back to the previous screen.

@@ -12,6 +12,11 @@ export interface RestMetadata {
   params?: Record<string, string>;
 }
 
+export interface Condition {
+  componentId: string;
+  value: any;
+}
+
 export interface ComponentDef {
   id: string;
   type: ControlType;
@@ -23,6 +28,8 @@ export interface ComponentDef {
   hidden?: boolean;
   disabled?: boolean;
   dependsOn?: string[]; // IDs of components this depends on
+  showIf?: Condition;
+  disableIf?: Condition;
 }
 
 export interface ButtonDef {

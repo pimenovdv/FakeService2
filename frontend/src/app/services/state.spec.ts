@@ -71,4 +71,32 @@ describe('StateService', () => {
     expect(service.getScreen()).toBeNull();
     expect(service.getAllAnswers()).toEqual({});
   });
+
+  it('should evaluate conditions correctly', () => {
+    service.setAnswer('q1', 'yes');
+    service.setAnswer('q2', 42);
+
+    expect(service.evaluateCondition({ componentId: 'q1', value: 'yes' })).toBeTruthy();
+    expect(service.evaluateCondition({ componentId: 'q1', value: 'no' })).toBeFalsy();
+    expect(service.evaluateCondition({ componentId: 'q2', value: 42 })).toBeTruthy();
+    expect(service.evaluateCondition({ componentId: 'q3', value: 'something' })).toBeFalsy();
+  });
+
+  it('should emit new answers to answers$', () => {
+    return new Promise<void>((resolve) => {
+      let emissionCount = 0;
+      service.answers$.subscribe(answers => {
+        emissionCount++;
+        if (emissionCount === 1) {
+          // Initial empty state
+          expect(answers).toEqual({});
+        } else if (emissionCount === 2) {
+          expect(answers).toEqual({ q1: 'value1' });
+          resolve();
+        }
+      });
+
+      service.setAnswer('q1', 'value1');
+    });
+  });
 });

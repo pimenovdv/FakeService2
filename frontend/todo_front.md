@@ -32,15 +32,12 @@ This document outlines the step-by-step development process for the Angular-base
    - Create a base class for all controls handling common logic: initialization, reading values, applying validation (Regex, required, etc.), and emitting value changes.
 
 ## Phase 4: Implementing Specific Controls
-1. [x] **Text Input Control**
-   - Simple text field with regex validation and placeholder support.
-2. [x] **ComboBox / Select Control**
-   - Dropdown with static options from JSON.
-   - Support for dynamic options fetching via REST call metadata provided in JSON.
-3. [ ] **Interactive/Dependent Controls**
-   - Implement logic in `StateService` to evaluate conditions (e.g., if control A value is 'X', show control B).
-   - Bind `disabled` and `hidden` properties of controls to state evaluations.
-4. [ ] **Action Buttons**
+1. [x] **Controls Implementation**
+   - Implemented Text Input, ComboBox, and Checkbox base controls.
+2. [x] **Interactive/Dependent Controls**
+   - Implemented logic in `StateService` to evaluate conditions (e.g., if control A value is 'X', show control B).
+   - Bound `disabled` and `hidden` properties of controls to state evaluations via `showIf` and `disableIf`.
+3. [ ] **Action Buttons**
    - Render buttons defined in the JSON.
    - Implement click handler to collect data, validate, and call `next_step`.
 

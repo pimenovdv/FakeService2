@@ -71,4 +71,45 @@ describe('StateService', () => {
     expect(service.getScreen()).toBeNull();
     expect(service.getAllAnswers()).toEqual({});
   });
+
+  it('should evaluate dependencies correctly', () => {
+    const compNoDeps = { id: 'c1', type: 'text', label: 'C1' } as any;
+    const compWithDeps = { id: 'c2', type: 'text', label: 'C2', dependsOn: ['c1'] } as any;
+
+    expect(service.evaluateDependencies(compNoDeps)).toBeTruthy();
+    expect(service.evaluateDependencies(compWithDeps)).toBeFalsy();
+
+    service.setAnswer('c1', 'value');
+    expect(service.evaluateDependencies(compWithDeps)).toBeTruthy();
+  });
+
+  it('should compute isScreenValid correctly', () => {
+    const dummyScreen: Screen = {
+      id: 'screen1',
+      header: 'Test',
+      content: 'Test content',
+      components: [
+        { id: 'c1', type: 'text', label: 'C1' },
+        { id: 'c2', type: 'text', label: 'C2', dependsOn: ['c1'] }
+      ] as any[],
+      buttons: []
+    };
+    service.setScreen(dummyScreen);
+
+    // Initial state: c1 valid (undefined validation state defaults to true), c2 hidden (valid)
+    expect(service.isScreenValid()).toBeTruthy();
+
+    service.setValidationState('c1', false);
+    expect(service.isScreenValid()).toBeFalsy();
+
+    service.setValidationState('c1', true);
+    expect(service.isScreenValid()).toBeTruthy();
+
+    service.setAnswer('c1', 'value');
+    // Now c2 is visible. If its validation state is undefined, it defaults to true
+    expect(service.isScreenValid()).toBeTruthy();
+
+    service.setValidationState('c2', false);
+    expect(service.isScreenValid()).toBeFalsy();
+  });
 });

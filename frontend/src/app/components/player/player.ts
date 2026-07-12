@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { DynamicFieldComponent } from '../dynamic-field/dynamic-field.component';
 import { ApiService } from '../../services/api';
 import { StateService } from '../../services/state';
+import { ButtonDef } from '../../models/screen.model';
 
 @Component({
   selector: 'app-player',
@@ -30,6 +31,35 @@ export class Player implements OnInit {
         this.loading = false;
       }
     });
+  }
+
+  onAction(button: ButtonDef) {
+    if (button.action === 'next_step' || button.action === 'submit') {
+      const screen = this.stateService.getScreen();
+      const serviceId = this.route.snapshot.paramMap.get('service_id');
+      if (screen && serviceId) {
+        this.loading = true;
+        this.apiService.nextStep(serviceId, screen.id, this.stateService.getAllAnswers()).subscribe({
+          next: (response) => {
+            if (response && response.id) {
+              this.stateService.setScreen(response);
+            } else {
+              // No more screens
+              this.stateService.clearState();
+              this.error = 'Flow completed successfully.';
+            }
+            this.loading = false;
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            this.error = 'Failed to submit: ' + err.message;
+            this.loading = false;
+            console.error('Error submitting:', err);
+            this.cdr.detectChanges();
+          }
+        });
+      }
+    }
   }
 
   private loadScreen(serviceId: string) {

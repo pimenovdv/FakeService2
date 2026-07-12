@@ -18,6 +18,15 @@
       <div class="components-container">
         <app-dynamic-field *ngFor="let comp of screen.components" [componentDef]="comp"></app-dynamic-field>
       </div>
+
+      <div class="buttons-container" *ngIf="screen.buttons && screen.buttons.length > 0">
+        <button *ngFor="let button of screen.buttons"
+                (click)="onAction(button)"
+                [disabled]="!stateService.isScreenValid()"
+                [ngClass]="'btn ' + (button.color ? 'btn-' + button.color : 'btn-primary')">
+          {{ button.label }}
+        </button>
+      </div>
     </main>
   </div>
 

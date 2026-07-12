@@ -24,7 +24,10 @@ describe('Player', () => {
 
     mockStateService = {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
-      currentScreen$: currentScreenSubject.asObservable()
+      currentScreen$: currentScreenSubject.asObservable(),
+      evaluateDependencies: vi.fn().mockReturnValue(true),
+      isScreenValid: vi.fn().mockReturnValue(true),
+      setValidationState: vi.fn()
     };
 
     mockActivatedRoute = {
@@ -81,5 +84,19 @@ describe('Player', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Test Header');
     expect(compiled.querySelector('.screen-content p')?.textContent).toContain('Test Content');
+  });
+
+  it('should handle button action next_step', async () => {
+    mockApiService.nextStep = vi.fn().mockReturnValue(of({ id: 'next-screen' }));
+    mockStateService.getScreen = vi.fn().mockReturnValue({ id: 'test-screen' });
+    mockStateService.getAllAnswers = vi.fn().mockReturnValue({ 'q1': 'answer1' });
+
+    // Have to recreate with the right mock route snapshot for nextStep
+    mockActivatedRoute.snapshot = { paramMap: { get: () => 'test-service' } };
+
+    await component.onAction({ id: 'btn1', label: 'Next', action: 'next_step' });
+
+    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { 'q1': 'answer1' });
+    expect(mockStateService.setScreen).toHaveBeenCalledWith({ id: 'next-screen' });
   });
 });

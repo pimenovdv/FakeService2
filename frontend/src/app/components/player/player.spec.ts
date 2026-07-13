@@ -26,7 +26,10 @@ describe('Player', () => {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
       currentScreen$: currentScreenSubject.asObservable(),
       answers$: of({}),
-      evaluateCondition: vi.fn().mockReturnValue(false)
+      evaluateCondition: vi.fn().mockReturnValue(false),
+      getAnswer: vi.fn().mockReturnValue(null),
+      setAnswer: vi.fn(),
+      getAllAnswers: vi.fn().mockReturnValue({})
     };
 
     mockActivatedRoute = {
@@ -83,5 +86,49 @@ describe('Player', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Test Header');
     expect(compiled.querySelector('.screen-content p')?.textContent).toContain('Test Content');
+  });
+
+  it('should prevent nextStep if validation fails', () => {
+    component.dynamicFields = {
+      forEach: (cb: any) => cb({ validate: () => false })
+    } as any;
+
+    component.onAction({ id: 'btn', label: 'Next', action: 'next_step' });
+
+    expect(component.validationError).toBe('Please correct the errors before proceeding.');
+  });
+
+  it('should call apiService.nextStep and set next screen on success', () => {
+    mockStateService.getAllAnswers = vi.fn().mockReturnValue({ field1: 'value' });
+    mockStateService.getScreen = vi.fn().mockReturnValue({ id: 'current-screen' });
+    mockApiService.nextStep = vi.fn().mockReturnValue(of({ next_screen: { id: 'next-screen' } }));
+
+    component.serviceId = 'test-service';
+    component.dynamicFields = {
+      forEach: (cb: any) => cb({ validate: () => true })
+    } as any;
+
+    component.onAction({ id: 'btn', label: 'Next', action: 'next_step' });
+
+    expect(component.validationError).toBeNull();
+    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'current-screen', { field1: 'value' });
+    expect(mockStateService.setScreen).toHaveBeenCalledWith({ id: 'next-screen' });
+  });
+
+  it('should call apiService.nextStep and set completed on success', () => {
+    mockStateService.getAllAnswers = vi.fn().mockReturnValue({ field1: 'value' });
+    mockStateService.getScreen = vi.fn().mockReturnValue({ id: 'current-screen' });
+    mockApiService.nextStep = vi.fn().mockReturnValue(of({ completed: true }));
+
+    component.serviceId = 'test-service';
+    component.dynamicFields = {
+      forEach: (cb: any) => cb({ validate: () => true })
+    } as any;
+
+    component.onAction({ id: 'btn', label: 'Next', action: 'next_step' });
+
+    expect(component.validationError).toBeNull();
+    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'current-screen', { field1: 'value' });
+    expect(component.completed).toBeTruthy();
   });
 });

@@ -18,7 +18,24 @@
       <div class="components-container">
         <app-dynamic-field *ngFor="let comp of screen.components" [componentDef]="comp"></app-dynamic-field>
       </div>
+
+      <div *ngIf="validationError" class="validation-error" style="color: red; margin-top: 10px;">
+        {{ validationError }}
+      </div>
+
+      <div class="buttons-container" style="margin-top: 20px;">
+        <button *ngFor="let btn of screen.buttons"
+                [ngClass]="btn.color ? 'btn-' + btn.color : ''"
+                (click)="onAction(btn)">
+          {{ btn.label }}
+        </button>
+      </div>
     </main>
   </div>
 
+</div>
+
+<div *ngIf="completed" class="completed-message">
+  <h2>Scenario Completed</h2>
+  <p>Thank you for submitting your answers.</p>
 </div>

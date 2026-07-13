@@ -1,3 +1,4 @@
+import { vitest } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DynamicFieldComponent } from './dynamic-field.component';
 import { ComponentDef } from '../../models/screen.model';
@@ -95,5 +96,24 @@ describe('DynamicFieldComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(component.isHidden).toBe(false);
+  });
+
+  it('should call stateService.setAnswer on value change', () => {
+    component.componentDef = { id: 'test_id', type: 'text', label: 'Test' } as ComponentDef;
+    const spy = vitest.spyOn(stateService, 'setAnswer');
+    component.onValueChange('new value');
+    expect(spy).toHaveBeenCalledWith('test_id', 'new value');
+  });
+
+  it('should validate inner control', () => {
+    component.componentDef = { id: 'test_id', type: 'text', label: 'Test' } as ComponentDef;
+    const innerControlSpy = { touched: false, validate: vitest.fn(), isValid: false };
+    component.innerControl = innerControlSpy as any;
+
+    const result = component.validate();
+
+    expect(innerControlSpy.touched).toBe(true);
+    expect(innerControlSpy.validate).toHaveBeenCalled();
+    expect(result).toBe(false);
   });
 });

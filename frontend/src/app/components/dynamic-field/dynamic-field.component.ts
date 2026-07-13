@@ -5,6 +5,8 @@ import { ComponentDef } from '../../models/screen.model';
 import { TextInputComponent } from '../text-input/text-input';
 import { ComboboxControlComponent } from '../combobox-control/combobox-control';
 import { StateService } from '../../services/state';
+import { BaseControl } from '../base-control/base-control';
+import { ViewChild } from '@angular/core';
 
 @Component({
   selector: 'app-dynamic-field',
@@ -14,12 +16,33 @@ import { StateService } from '../../services/state';
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {
   @Input() componentDef!: ComponentDef;
+  @ViewChild('innerControl') innerControl!: BaseControl;
 
   isHidden = false;
   isDisabled = false;
 
   private stateService = inject(StateService);
   private subscription = new Subscription();
+
+  get value(): any {
+    return this.stateService.getAnswer(this.componentDef.id);
+  }
+
+  onValueChange(newValue: any) {
+    this.stateService.setAnswer(this.componentDef.id, newValue);
+  }
+
+  validate(): boolean {
+    if (this.isHidden || this.isDisabled) {
+      return true;
+    }
+    if (this.innerControl) {
+      this.innerControl.touched = true;
+      this.innerControl.validate();
+      return this.innerControl.isValid;
+    }
+    return true; // If no control to validate, consider valid
+  }
 
   ngOnInit() {
     this.isHidden = this.componentDef.hidden || false;

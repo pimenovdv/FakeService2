@@ -17,7 +17,6 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
 
   isHidden = false;
   isDisabled = false;
-  private lastReportedValidity = true;
 
   private stateService = inject(StateService);
   private subscription = new Subscription();
@@ -37,43 +36,16 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
-  onValueChange(value: any) {
-    this.stateService.setAnswer(this.componentDef.id, value);
-  }
-
-  onValidityChange(isValid: boolean) {
-    this.lastReportedValidity = isValid;
-    this.updateValidationState();
-  }
-
-  private updateValidationState() {
-    const effectiveValidity = (this.isHidden || this.isDisabled) ? true : this.lastReportedValidity;
-    this.stateService.setValidationState(this.componentDef.id, effectiveValidity);
-  }
-
   private evaluateConditions() {
-    let changed = false;
-
     if (this.componentDef.showIf) {
-      const newHidden = !this.stateService.evaluateCondition(this.componentDef.showIf);
-      if (this.isHidden !== newHidden) {
-        this.isHidden = newHidden;
-        this.componentDef.hidden = this.isHidden;
-        changed = true;
-      }
+      this.isHidden = !this.stateService.evaluateCondition(this.componentDef.showIf);
+      this.componentDef.hidden = this.isHidden;
     }
 
     if (this.componentDef.disableIf) {
-      const newDisabled = this.stateService.evaluateCondition(this.componentDef.disableIf);
-      if (this.isDisabled !== newDisabled) {
-        this.isDisabled = newDisabled;
-        this.componentDef.disabled = this.isDisabled;
-        changed = true;
-      }
-    }
-
-    if (changed) {
-      this.updateValidationState();
+      this.isDisabled = this.stateService.evaluateCondition(this.componentDef.disableIf);
+      // We also update the componentDef so child components receive the updated disabled state
+      this.componentDef.disabled = this.isDisabled;
     }
   }
 }

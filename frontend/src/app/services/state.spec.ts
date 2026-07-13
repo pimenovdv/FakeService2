@@ -70,30 +70,6 @@ describe('StateService', () => {
 
     expect(service.getScreen()).toBeNull();
     expect(service.getAllAnswers()).toEqual({});
-    expect(service.isScreenValid()).toBe(true); // empty validities means true
-  });
-
-  describe('Validation State', () => {
-    it('should track component validity and determine overall screen validity', () => {
-      expect(service.isScreenValid()).toBe(true); // initially true
-
-      service.setValidationState('comp1', false);
-      expect(service.isScreenValid()).toBe(false);
-
-      service.setValidationState('comp2', true);
-      expect(service.isScreenValid()).toBe(false);
-
-      service.setValidationState('comp1', true);
-      expect(service.isScreenValid()).toBe(true);
-    });
-
-    it('should reset validities when setting a new screen', () => {
-      service.setValidationState('comp1', false);
-      expect(service.isScreenValid()).toBe(false);
-
-      service.setScreen({ id: 'screen2', header: 'H', content: 'C', components: [], buttons: [] });
-      expect(service.isScreenValid()).toBe(true);
-    });
   });
 
   describe('evaluateCondition', () => {

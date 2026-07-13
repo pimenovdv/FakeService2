@@ -24,8 +24,6 @@ export class ComboboxControlComponent extends BaseControl implements OnInit {
     } else if (this.def.restMetadata) {
       this.loadDynamicOptions();
     }
-    this.validate();
-    Promise.resolve().then(() => this.isValidChange.emit(this.isValid));
   }
 
   private loadDynamicOptions() {

@@ -11,8 +11,4 @@ import { BaseControl } from '../base-control/base-control';
   styleUrls: ['./text-input.scss']
 })
 export class TextInputComponent extends BaseControl {
-  ngOnInit() {
-    this.validate();
-    Promise.resolve().then(() => this.isValidChange.emit(this.isValid));
-  }
 }

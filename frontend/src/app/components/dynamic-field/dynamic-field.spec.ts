@@ -22,41 +22,6 @@ describe('DynamicFieldComponent', () => {
     stateService = TestBed.inject(StateService);
   });
 
-  it('should proxy value changes to state service', () => {
-    component.componentDef = { id: 'test_field', type: 'text', label: 'Test' };
-    fixture.detectChanges();
-
-    component.onValueChange('new_value');
-    expect(stateService.getAnswer('test_field')).toBe('new_value');
-  });
-
-  it('should proxy validity changes to state service', () => {
-    component.componentDef = { id: 'test_field', type: 'text', label: 'Test' };
-    fixture.detectChanges();
-
-    component.onValidityChange(false);
-    expect(stateService.isScreenValid()).toBe(false);
-
-    component.onValidityChange(true);
-    expect(stateService.isScreenValid()).toBe(true);
-  });
-
-  it('should force validity to true if field is hidden or disabled, and restore when visible', () => {
-    component.componentDef = { id: 'test_field', type: 'text', label: 'Test' };
-    fixture.detectChanges();
-
-    component.onValidityChange(false); // child reports invalid
-    expect(stateService.isScreenValid()).toBe(false); // initially false
-
-    component.isHidden = true;
-    component['updateValidationState'](); // trigger internal update as if evaluated
-    expect(stateService.isScreenValid()).toBe(true); // forced true because hidden
-
-    component.isHidden = false;
-    component['updateValidationState']();
-    expect(stateService.isScreenValid()).toBe(false); // restored to false
-  });
-
   it('should create', () => {
     component.componentDef = { id: 'test', type: 'text', label: 'Test' };
     fixture.detectChanges();

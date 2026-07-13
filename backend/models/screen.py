@@ -8,6 +8,11 @@ class ValidationRule(BaseModel):
     value: Optional[Any] = None
     message: Optional[str] = None
 
+class CrossValidationRule(BaseModel):
+    type: Literal['match']
+    fields: List[str]
+    message: Optional[str] = None
+
 class RestMetadata(BaseModel):
     endpoint: str
     method: Literal['GET', 'POST']
@@ -37,3 +42,4 @@ class ScreenDef(BaseModel):
     content: str
     components: List[ComponentDef]
     buttons: List[ButtonDef]
+    crossValidations: Optional[List[CrossValidationRule]] = None

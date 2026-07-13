@@ -45,7 +45,7 @@ This document outlines the step-by-step development process for the Angular-base
    - Implement click handler to collect data, validate, and call `next_step`.
 
 ## Phase 5: Validation and Submission
-1. [ ] **Form Validation Engine**
+1. [x] **Form Validation Engine**
    - Collect all validation states from rendered components.
    - Prevent submission if validation fails.
 2. [x] **Next Step Submission**

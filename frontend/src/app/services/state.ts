@@ -42,6 +42,75 @@ export class StateService {
     this.answersSubject.next({});
   }
 
+
+  validateScreen(): boolean {
+    const screen = this.getScreen();
+    if (!screen) return true;
+
+    const answers = this.answersSubject.value;
+    let isValid = true;
+
+    for (const comp of screen.components) {
+      const isHidden = comp.hidden || (comp.showIf ? !this.evaluateCondition(comp.showIf) : false);
+      const isDisabled = comp.disabled || (comp.disableIf ? this.evaluateCondition(comp.disableIf) : false);
+
+      if (isHidden || isDisabled) {
+        continue;
+      }
+
+      if (comp.validations) {
+        const value = answers[comp.id];
+        for (const rule of comp.validations) {
+          switch (rule.type) {
+            case 'required':
+              if (value === null || value === undefined || value === '') {
+                isValid = false;
+              }
+              break;
+            case 'regex':
+              if (value && rule.value) {
+                const regex = new RegExp(rule.value);
+                if (!regex.test(value.toString())) {
+                  isValid = false;
+                }
+              }
+              break;
+            case 'min':
+              if (value !== null && value !== undefined && rule.value !== undefined) {
+                if (Number(value) < Number(rule.value)) {
+                  isValid = false;
+                }
+              }
+              break;
+            case 'max':
+              if (value !== null && value !== undefined && rule.value !== undefined) {
+                if (Number(value) > Number(rule.value)) {
+                  isValid = false;
+                }
+              }
+              break;
+            case 'minLength':
+              if (value && rule.value !== undefined) {
+                if (value.toString().length < Number(rule.value)) {
+                  isValid = false;
+                }
+              }
+              break;
+            case 'maxLength':
+              if (value && rule.value !== undefined) {
+                if (value.toString().length > Number(rule.value)) {
+                  isValid = false;
+                }
+              }
+              break;
+          }
+        }
+      }
+    }
+
+    return isValid;
+  }
+
   evaluateCondition(condition: Condition | undefined): boolean {
     if (!condition) {
       return false; // Default if no condition

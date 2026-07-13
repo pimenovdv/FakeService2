@@ -21,6 +21,11 @@
     </main>
   </div>
 
+
+    <div *ngIf="validationError" class="validation-error-message">
+      {{ validationError }}
+    </div>
+
     <footer class="screen-footer" *ngIf="screen.buttons && screen.buttons.length > 0">
       <button
         *ngFor="let btn of screen.buttons"

@@ -28,7 +28,8 @@ describe('Player', () => {
       currentScreen$: currentScreenSubject.asObservable(),
       answers$: of({}),
       evaluateCondition: vi.fn().mockReturnValue(false),
-      getAllAnswers: vi.fn().mockReturnValue({ field1: 'value1' })
+      getAllAnswers: vi.fn().mockReturnValue({ field1: 'value1' }),
+      validateScreen: vi.fn().mockReturnValue(true)
     };
 
     mockActivatedRoute = {
@@ -135,5 +136,36 @@ describe('Player', () => {
     expect(mockStateService.getAllAnswers).toHaveBeenCalled();
     expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { field1: 'value1' });
     expect(mockStateService.setScreen).toHaveBeenCalledWith({ id: 'test-screen-2' });
+  });
+
+  it('should prevent submission if validation fails', async () => {
+    mockApiService.start.mockReturnValue(of({
+      id: 'test-screen',
+      header: 'Test Header',
+      content: 'Test Content',
+      components: [],
+      buttons: [
+        { id: 'btn-next', label: 'Next', action: 'next_step' }
+      ]
+    } as Screen));
+
+    mockApiService.nextStep.mockClear();
+    mockStateService.validateScreen.mockReturnValue(false);
+    mockApiService.nextStep.mockClear();
+
+    fixture = TestBed.createComponent(Player);
+
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const button = compiled.querySelector('.screen-footer button') as HTMLButtonElement;
+
+    button.click();
+
+    expect(mockApiService.nextStep).not.toHaveBeenCalled();
+    expect(component.validationError).toBe('Please fix the validation errors before proceeding.');
   });
 });

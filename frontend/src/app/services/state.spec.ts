@@ -103,4 +103,41 @@ describe('StateService', () => {
       expect(service.evaluateCondition({ field: 'color', operator: 'in', value: ['green', 'yellow'] })).toBe(false);
     });
   });
+
+  describe('validateScreen', () => {
+    it('should validate screen answers correctly', () => {
+      const screen: Screen = {
+        id: 'screen1',
+        header: 'Test',
+        content: 'Test content',
+        components: [
+          {
+            id: 'req_field',
+            type: 'text',
+            label: 'Required',
+            validations: [{ type: 'required' }]
+          },
+          {
+            id: 'hidden_req_field',
+            type: 'text',
+            label: 'Hidden Required',
+            validations: [{ type: 'required' }],
+            hidden: true
+          }
+        ],
+        buttons: []
+      };
+
+      service.setScreen(screen);
+
+      // Should be invalid because req_field is empty
+      expect(service.validateScreen()).toBe(false);
+
+      // Hidden fields should be ignored. Set value for req_field.
+      service.setAnswer('req_field', 'value');
+
+      // Should be valid now
+      expect(service.validateScreen()).toBe(true);
+    });
+  });
 });

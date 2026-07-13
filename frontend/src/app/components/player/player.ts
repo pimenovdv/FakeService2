@@ -15,6 +15,7 @@ import { ButtonDef } from '../../models/screen.model';
 export class Player implements OnInit {
   loading = true;
   error: string | null = null;
+  validationError: string | null = null;
   serviceId: string | null = null;
 
   private route = inject(ActivatedRoute);
@@ -38,6 +39,7 @@ export class Player implements OnInit {
   private loadScreen(serviceId: string) {
     this.loading = true;
     this.error = null;
+    this.validationError = null;
     this.apiService.start(serviceId).subscribe({
       next: (screen) => {
         this.stateService.setScreen(screen);
@@ -53,11 +55,19 @@ export class Player implements OnInit {
     });
   }
 
+
   onButtonClick(btn: ButtonDef, currentScreenId: string) {
     if (btn.action === 'next_step' || btn.action === 'submit') {
       if (!this.serviceId) return;
 
+      if (!this.stateService.validateScreen()) {
+        this.validationError = 'Please fix the validation errors before proceeding.';
+        return;
+      }
+
       this.loading = true;
+      this.validationError = null;
+
       const answers = this.stateService.getAllAnswers();
       this.apiService.nextStep(this.serviceId, currentScreenId, answers).subscribe({
         next: (screen) => {

@@ -13,3 +13,7 @@ class NextStepRequest(BaseModel):
 class NextStepResponse(BaseModel):
     next_screen: Optional[ScreenDef] = None
     completed: bool = False
+
+class PreviousStepRequest(BaseModel):
+    service_id: str
+    current_screen_id: str

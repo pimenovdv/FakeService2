@@ -2,13 +2,14 @@
 
 This document outlines the step-by-step development process for the FastAPI-based mock backend.
 
-## Completed Phases (1-6)
-- **Phase 1-3:** Project initialized with `uv`, core structure created. Data models (Pydantic) for screens, components, buttons, requests, and responses implemented. Core API endpoints (`/start`, `/next_step`) implemented.
+## Completed Phases (1-7)
+- **Phase 1-3:** Project initialized with `uv`. Data models (Pydantic) for screens, components, buttons, requests, and responses implemented. Core API endpoints (`/start`, `/next_step`) implemented.
 - **Phase 4-5:** Mock JSON scenarios created. `ScenarioManager` implemented to serve scenarios and validate answers. Dynamic endpoints for components implemented.
 - **Phase 6:** Unit and API tests written with `pytest` and `httpx`. All tests passing.
+- **Phase 7:** Enhanced Scenario Engine implemented (Configuration-driven Routing via `service_1_routing.json` and Support for 'Previous Step' via `/previous_step` endpoint). All tests passing.
 
-## Phase 7: Enhanced Scenario Engine
-1. [x] **Configuration-driven Routing**
-   - Replace hardcoded routing logic in `ScenarioManager` with a configuration-based mechanism (e.g., loading `service_1_routing.json` that maps state transitions).
-2. [ ] **Support for 'Previous Step'**
-   - Implement functionality to navigate back to the previous screen.
+## Phase 8: Data Validation Enhancements
+1. [ ] **Cross-field Validation**
+   - Implement logic to support validation rules that depend on multiple fields within a screen.
+2. [ ] **Custom Error Messages**
+   - Enhance the validation engine to support fully customizable error messages returned to the frontend.

@@ -1,46 +1,32 @@
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from src.actions import fetch_autocomplete_options, simulate_form_submission
+import unittest
+from unittest.mock import AsyncMock, MagicMock
+from src.actions import AgentActions
 from src.client import AgentClient
 
-@pytest.mark.asyncio
-async def test_fetch_autocomplete_options():
-    mock_client = MagicMock(spec=AgentClient)
+class TestAgentActions(unittest.IsolatedAsyncioTestCase):
+    async def test_fetch_autocomplete_options(self):
+        mock_client = AsyncMock(spec=AgentClient)
+        mock_response = MagicMock()
+        mock_response.json.return_value = [{"id": 1, "name": "Option 1"}]
+        mock_client.get.return_value = mock_response
 
-    # Mock the get response
-    mock_response = MagicMock()
-    mock_response.json.return_value = [{"id": 1, "name": "Option 1"}]
-    mock_client.get = AsyncMock(return_value=mock_response)
+        actions = AgentActions(client=mock_client)
+        result = await actions.fetch_autocomplete_options("/api/options", params={"q": "Opt"})
 
-    endpoint = "/api/data/regions"
-    query_params = {"q": "Option"}
+        mock_client.get.assert_called_once_with("/api/options", params={"q": "Opt"})
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, [{"id": 1, "name": "Option 1"}])
 
-    result = await fetch_autocomplete_options(mock_client, endpoint, query_params)
+    async def test_simulate_form_submission(self):
+        mock_client = AsyncMock(spec=AgentClient)
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"status": "success"}
+        mock_client.post.return_value = mock_response
 
-    mock_client.get.assert_called_once_with(endpoint, params=query_params)
-    mock_response.raise_for_status.assert_called_once()
-    assert result == [{"id": 1, "name": "Option 1"}]
+        actions = AgentActions(client=mock_client)
+        payload = {"answers": {"field_1": "value_1"}}
+        result = await actions.simulate_form_submission("/next_step", payload)
 
-@pytest.mark.asyncio
-async def test_simulate_form_submission():
-    mock_client = MagicMock(spec=AgentClient)
-
-    # Mock the post response
-    mock_response = MagicMock()
-    mock_response.json.return_value = {"next_screen": {"id": "step2"}, "completed": False}
-    mock_client.post = AsyncMock(return_value=mock_response)
-
-    service_id = "test_service"
-    current_screen_id = "step1"
-    answers = {"field1": "value1"}
-
-    result = await simulate_form_submission(mock_client, service_id, current_screen_id, answers)
-
-    expected_payload = {
-        "service_id": service_id,
-        "current_screen_id": current_screen_id,
-        "answers": answers
-    }
-    mock_client.post.assert_called_once_with("/api/screens/next_step", json=expected_payload)
-    mock_response.raise_for_status.assert_called_once()
-    assert result == {"next_screen": {"id": "step2"}, "completed": False}
+        mock_client.post.assert_called_once_with("/next_step", json=payload)
+        mock_response.raise_for_status.assert_called_once()
+        self.assertEqual(result, {"status": "success"})

@@ -1,16 +1,36 @@
+from src.client import AgentClient
 import json
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 class ChatSession:
-    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, model: str = "gpt-4o-mini"):
+    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, agent_client: AgentClient = None, model: str = "gpt-4o-mini"):
         self.client = client or AsyncOpenAI()
         self.model = model
+        self.agent_client = agent_client
         self.messages: List[ChatCompletionMessageParam] = [
             {"role": "system", "content": system_prompt}
         ]
         self.tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "fetch_autocomplete_options",
+                    "description": "Fetch available options for an autocomplete field from the backend.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "data_source": {
+                                "type": "string",
+                                "description": "The data source endpoint to fetch from."
+                            }
+                        },
+                        "required": ["data_source"]
+                    }
+                }
+            },
+
             {
                 "type": "function",
                 "function": {
@@ -91,6 +111,39 @@ class ChatSession:
                         "content": final_msg.content
                     })
                     return final_msg.content or "Form submitted."
+                elif tool_call.function.name == "fetch_autocomplete_options":
+                    args = json.loads(tool_call.function.arguments)
+                    data_source = args.get("data_source")
+
+                    if self.agent_client:
+                        try:
+                            res = await self.agent_client.get(f"/api/data/{data_source}")
+                            if res.status_code == 200:
+                                tool_content = res.text
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to fetch data, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    # After fetching data, we need to let the LLM generate a response
+                    second_response = await self.client.chat.completions.create(
+                        model=self.model,
+                        messages=self.messages
+                    )
+                    final_msg = second_response.choices[0].message
+                    self.messages.append({
+                        "role": "assistant",
+                        "content": final_msg.content
+                    })
+                    return final_msg.content or ""
 
         return response_message.content or ""
 

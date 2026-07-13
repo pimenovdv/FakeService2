@@ -24,7 +24,9 @@ describe('Player', () => {
 
     mockStateService = {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
-      currentScreen$: currentScreenSubject.asObservable()
+      currentScreen$: currentScreenSubject.asObservable(),
+      answers$: of({}),
+      evaluateCondition: vi.fn().mockReturnValue(false)
     };
 
     mockActivatedRoute = {

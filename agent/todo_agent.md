@@ -4,31 +4,11 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Phase 1: Project Setup and Environment
-- [x] 1. **Initialize Project**
-   - Create a virtual environment (`uv` or `venv`).
-   - Install dependencies: `httpx` (or `requests`) for HTTP communication, `langchain` (or preferred LLM library), `openai` (or specific LLM provider SDK), `beautifulsoup4` (for HTML parsing).
-- [x] 2. **Configure HTTP Client**
-   - Create a robust HTTP client session capable of managing cookies and headers, simulating a real user session hitting the Angular SSR endpoint (e.g., `http://localhost:4200/{service_id}/1`).
-
-## Phase 2: SSR HTML Extraction and State Management
-- [x] 1. **Fetch Pre-rendered HTML**
-   - Make an HTTP GET request to the Angular SSR endpoint.
-   - Extract the fully rendered HTML response.
-- [x] 2. **Parse HTML Context**
-   - Use `BeautifulSoup` to parse the HTML and identify input fields, labels, comboboxes, buttons, and validation rules present in the DOM (represented in the raw HTML).
-   - Build a structured representation of the current screen's requirements (what fields need to be filled).
-
-## Phase 3: LLM Integration and Conversation Loop
-- [x] 1. **Prompt Engineering**
-   - Design system prompts for the LLM to understand its role: "You are an agent helping a user fill out a form. The form requires the following fields: {parsed_fields}. Ask the user for this information, use autocomplete features when available, and determine the values to input."
-- [x] 2. **Interactive Chat Loop**
-   - Implement a CLI or simple API chat interface for the user.
-   - Send the current form state and user input to the LLM.
-   - The LLM should decide whether to ask the user a clarifying question or to execute actions to gather data or submit the form.
+## Completed Phases (1-3)
+- **Phase 1-3:** Project setup completed. HTTP client configured. SSR HTML extraction and parsing implemented. LLM integration with prompt engineering and interactive chat loop completed.
 
 ## Phase 4: Form Interaction and Autocomplete Handling
-- [ ] 1. **Simulating Actions via API**
+- [x] 1. **Simulating Actions via API**
    - Create Python functions that the LLM can call (function calling/tools) to simulate interactions by making appropriate API calls that the frontend would normally make (e.g., `fetch_autocomplete_options(field_id, query)` or `simulate_form_submission(payload)`).
 - [ ] 2. **Handling Complex Controls (e.g., Autocomplete, Dates)**
    - **Autocomplete**: If the LLM needs to fill an address, it must call the backend API endpoint (extracted from the HTML/JSON definitions) that the frontend autocomplete field uses, fetch the options, and match the user's input (e.g., User: "МО, Луховицы, Пионерская" -> Agent queries the API for "Московская", matches the result, queries for "Лухов", etc.).

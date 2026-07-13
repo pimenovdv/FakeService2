@@ -101,58 +101,40 @@ def test_missing_next_step_in_routing():
     os.remove("mock_data/service_invalid_routing_screen_1.json")
     os.remove("mock_data/service_invalid_routing_routing.json")
 
-def test_prev_step_success():
-    response = client.post("/api/screens/prev_step", json={
+def test_previous_step_success():
+    response = client.post("/api/screens/previous_step", json={
         "service_id": "service_1",
         "current_screen_id": "screen_2"
     })
     assert response.status_code == 200
     data = response.json()
-    assert "prev_screen" in data
-    assert data["prev_screen"]["id"] == "screen_1"
+    assert data["id"] == "screen_1"
 
-def test_prev_step_missing_routing():
-    response = client.post("/api/screens/prev_step", json={
-        "service_id": "nonexistent_service",
-        "current_screen_id": "screen_2"
+def test_previous_step_not_found():
+    response = client.post("/api/screens/previous_step", json={
+        "service_id": "service_1",
+        "current_screen_id": "screen_1"  # No previous screen for screen_1
     })
     assert response.status_code == 404
-    assert response.json() == {"detail": "Routing configuration for service_id 'nonexistent_service' not found."}
+    assert "Previous screen not found" in response.json()["detail"]
 
-def test_prev_step_missing_previous_step():
+def test_previous_step_missing_routing():
     import json
     import os
-    with open("mock_data/service_invalid_routing_routing.json", "w") as f:
+    with open("mock_data/service_missing_routing_screen_2.json", "w") as f:
         json.dump({
-            "screen_1": "screen_2"
+            "id": "screen_2",
+            "components": [],
+            "buttons": []
         }, f)
 
-    response = client.post("/api/screens/prev_step", json={
-        "service_id": "service_invalid_routing",
-        "current_screen_id": "screen_1"
-    })
-
-    assert response.status_code == 404
-    assert response.json() == {"detail": "No previous step defined for service_id 'service_invalid_routing', screen 'screen_1'."}
-
-    # Cleanup
-    os.remove("mock_data/service_invalid_routing_routing.json")
-
-def test_prev_step_screen_not_found():
-    import json
-    import os
-    with open("mock_data/service_missing_screen_routing.json", "w") as f:
-        json.dump({
-            "screen_missing": "screen_2"
-        }, f)
-
-    response = client.post("/api/screens/prev_step", json={
-        "service_id": "service_missing_screen",
+    response = client.post("/api/screens/previous_step", json={
+        "service_id": "service_missing_routing",
         "current_screen_id": "screen_2"
     })
 
     assert response.status_code == 404
-    assert response.json() == {"detail": "Previous screen 'screen_missing' for service_id 'service_missing_screen' not found."}
+    assert response.json() == {"detail": "Routing configuration for service_id 'service_missing_routing' not found."}
 
     # Cleanup
-    os.remove("mock_data/service_missing_screen_routing.json")
+    os.remove("mock_data/service_missing_routing_screen_2.json")

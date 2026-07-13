@@ -76,7 +76,7 @@ class ScenarioManager:
                 raise HTTPException(status_code=500, detail=f"Error decoding JSON for service_id '{service_id}', screen '{next_screen_id}'.")
 
     @staticmethod
-    def get_prev_screen(service_id: str, current_screen_id: str) -> dict:
+    def get_previous_screen(service_id: str, current_screen_id: str) -> dict:
         routing_filename = f"{service_id}_routing.json"
         routing_filepath = os.path.join(MOCK_DATA_DIR, routing_filename)
 
@@ -89,24 +89,25 @@ class ScenarioManager:
             except json.JSONDecodeError:
                 raise HTTPException(status_code=500, detail=f"Error decoding routing JSON for service_id '{service_id}'.")
 
-        prev_screen_id = None
+        # Reverse lookup in routing config
+        previous_screen_id = None
         for k, v in routing_data.items():
             if v == current_screen_id:
-                prev_screen_id = k
+                previous_screen_id = k
                 break
 
-        if not prev_screen_id:
-            raise HTTPException(status_code=404, detail=f"No previous step defined for service_id '{service_id}', screen '{current_screen_id}'.")
+        if not previous_screen_id:
+            raise HTTPException(status_code=404, detail=f"Previous screen not found for service_id '{service_id}', screen '{current_screen_id}'.")
 
-        filename = f"{service_id}_{prev_screen_id}.json"
+        filename = f"{service_id}_{previous_screen_id}.json"
         filepath = os.path.join(MOCK_DATA_DIR, filename)
 
         if not os.path.exists(filepath):
-            raise HTTPException(status_code=404, detail=f"Previous screen '{prev_screen_id}' for service_id '{service_id}' not found.")
+            raise HTTPException(status_code=404, detail=f"Previous screen file '{previous_screen_id}' for service_id '{service_id}' not found.")
 
         with open(filepath, "r", encoding="utf-8") as f:
             try:
                 data = json.load(f)
-                return {"prev_screen": data}
+                return data
             except json.JSONDecodeError:
-                raise HTTPException(status_code=500, detail=f"Error decoding JSON for service_id '{service_id}', screen '{prev_screen_id}'.")
+                raise HTTPException(status_code=500, detail=f"Error decoding JSON for service_id '{service_id}', screen '{previous_screen_id}'.")

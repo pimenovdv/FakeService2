@@ -14,9 +14,6 @@ class NextStepResponse(BaseModel):
     next_screen: Optional[ScreenDef] = None
     completed: bool = False
 
-class PrevStepRequest(BaseModel):
+class PreviousStepRequest(BaseModel):
     service_id: str
     current_screen_id: str
-
-class PrevStepResponse(BaseModel):
-    prev_screen: Optional[ScreenDef] = None

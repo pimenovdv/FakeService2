@@ -1,6 +1,9 @@
 from typing import Dict, Any, Optional
 from src.client import AgentClient
 from src.parser import ScreenParser
+from src.logger import get_logger
+
+logger = get_logger()
 
 class AgentFlow:
     """
@@ -17,6 +20,7 @@ class AgentFlow:
         """
         Starts the flow by fetching the initial screen HTML.
         """
+        logger.info(f"Starting flow for service {self.service_id}")
         url = f"/{self.service_id}/1"
         html = await self.client.fetch_html(url)
         return self._parse_and_prepare_screen(html)
@@ -46,6 +50,8 @@ class AgentFlow:
         if not self.current_screen_id:
             raise ValueError("Next screen ID not found in response.")
 
+        logger.info(f"Transitioning to screen {self.current_screen_id}")
+
         # In a real SSR environment, the frontend fetches the new page via routing.
         # We mimic this by fetching the new HTML for the screen.
         url = f"/{self.service_id}/{self.current_screen_id}"
@@ -58,4 +64,6 @@ class AgentFlow:
 
     def _parse_and_prepare_screen(self, html: str) -> Dict[str, Any]:
         parser = ScreenParser(html)
-        return parser.parse()
+        parsed_screen = parser.parse()
+        logger.debug(f"Parsed screen: {parsed_screen}")
+        return parsed_screen

@@ -3,6 +3,9 @@ import json
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
+from src.logger import get_logger
+
+logger = get_logger()
 
 class ChatSession:
     def __init__(self, system_prompt: str, client: AsyncOpenAI = None, agent_client: AgentClient = None, model: str = "gpt-4o-mini"):
@@ -70,6 +73,7 @@ class ChatSession:
         # We need to serialize the response message back into dict format if we append it
         message_dict = {"role": "assistant"}
         if response_message.content:
+            logger.info(f"LLM Response Content: {response_message.content}")
             message_dict["content"] = response_message.content
         if response_message.tool_calls:
             message_dict["tool_calls"] = [
@@ -88,8 +92,10 @@ class ChatSession:
         if response_message.tool_calls:
             # Handle tool calls
             for tool_call in response_message.tool_calls:
+                logger.info(f"Tool Call: {tool_call.function.name}")
                 if tool_call.function.name == "submit_form":
                     args = json.loads(tool_call.function.arguments)
+                    logger.debug(f"Submit Form Arguments: {args}")
                     self.form_submitted = True
                     self.submitted_data = args.get("answers", {})
 
@@ -114,6 +120,7 @@ class ChatSession:
                 elif tool_call.function.name == "fetch_autocomplete_options":
                     args = json.loads(tool_call.function.arguments)
                     data_source = args.get("data_source")
+                    logger.debug(f"Fetch Autocomplete Options: {data_source}")
 
                     if self.agent_client:
                         try:
@@ -139,6 +146,7 @@ class ChatSession:
                         messages=self.messages
                     )
                     final_msg = second_response.choices[0].message
+                    logger.info(f"LLM Final Response: {final_msg.content}")
                     self.messages.append({
                         "role": "assistant",
                         "content": final_msg.content

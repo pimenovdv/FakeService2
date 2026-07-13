@@ -83,7 +83,7 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         tool_call.id = "call_456"
         tool_call.type = "function"
         tool_call.function.name = "fetch_autocomplete_options"
-        tool_call.function.arguments = json.dumps({"data_source": "countries"})
+        tool_call.function.arguments = json.dumps({"data_source": "countries", "query": "Test"})
         mock_response_1.choices[0].message.tool_calls = [tool_call]
 
         # Second response is the final conversational reply after tool execution
@@ -100,7 +100,7 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "I found some options.")
         self.assertFalse(session.form_submitted)
 
-        mock_agent_client.get.assert_called_once_with("/api/data/countries")
+        mock_agent_client.get.assert_called_once_with("/api/data/countries", params={"q": "Test"})
 
         self.assertEqual(len(session.messages), 5)
         self.assertEqual(session.messages[3]["role"], "tool")
@@ -108,6 +108,43 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[3]["content"], '["option1", "option2"]')
         self.assertEqual(session.messages[4]["role"], "assistant")
         self.assertEqual(session.messages[4]["content"], "I found some options.")
+
+    async def test_process_user_input_get_current_datetime(self):
+        mock_client = AsyncMock()
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_789"
+        tool_call.type = "function"
+        tool_call.function.name = "get_current_datetime"
+        tool_call.function.arguments = "{}"
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Today is a good day."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+        response = await session.process_user_input("What day is today?")
+
+        self.assertEqual(response, "Today is a good day.")
+        self.assertFalse(session.form_submitted)
+
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[3]["tool_call_id"], "call_789")
+        self.assertTrue(isinstance(session.messages[3]["content"], str))
+        self.assertTrue(len(session.messages[3]["content"]) > 10)
+        self.assertEqual(session.messages[4]["role"], "assistant")
+        self.assertEqual(session.messages[4]["content"], "Today is a good day.")
 
 class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_exit(self):

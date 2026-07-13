@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ButtonDef } from '../../models/screen.model';
 import { CommonModule } from '@angular/common';
 import { DynamicFieldComponent } from '../dynamic-field/dynamic-field.component';
 import { ApiService } from '../../services/api';
@@ -14,6 +15,8 @@ import { StateService } from '../../services/state';
 export class Player implements OnInit {
   loading = true;
   error: string | null = null;
+  validationError: string | null = null;
+  private serviceId: string | null = null;
 
   private route = inject(ActivatedRoute);
   private apiService = inject(ApiService);
@@ -23,6 +26,7 @@ export class Player implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const serviceId = params.get('service_id');
+      this.serviceId = serviceId;
       if (serviceId) {
         this.loadScreen(serviceId);
       } else {
@@ -48,5 +52,41 @@ export class Player implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+  onButtonClick(btn: ButtonDef) {
+    if (btn.action === 'next_step' || btn.action === 'submit') {
+      this.stateService.setSubmitAttempted(true);
+
+      if (!this.stateService.isFormValid()) {
+        this.validationError = 'Please correct the errors before proceeding.';
+        return;
+      }
+
+      this.validationError = null;
+      this.loading = true;
+      const currentScreen = this.stateService.getScreen();
+      if (!currentScreen || !this.serviceId) {
+         this.error = 'No active screen or service ID';
+         this.loading = false;
+         return;
+      }
+
+      const answers = this.stateService.getAllAnswers();
+
+      this.apiService.nextStep(this.serviceId, currentScreen.id, answers).subscribe({
+        next: (response) => {
+          if (response && response.id) {
+            this.stateService.setScreen(response);
+          }
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = 'Failed to process next step: ' + err.message;
+          this.loading = false;
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 }

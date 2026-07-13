@@ -1,12 +1,37 @@
-import { Directive, EventEmitter, Input, Output } from '@angular/core';
+import { Directive, EventEmitter, Input, Output, OnInit, OnDestroy, inject } from '@angular/core';
+import { Subscription } from 'rxjs';
+import { StateService } from '../../services/state';
 import { ComponentDef, ValidationRule } from '../../models/screen.model';
 
 @Directive()
-export abstract class BaseControl {
+export abstract class BaseControl implements OnInit, OnDestroy {
   @Input() def!: ComponentDef;
   @Input() value: any;
   @Output() valueChange = new EventEmitter<any>();
   @Output() isValidChange = new EventEmitter<boolean>();
+
+  protected stateService = inject(StateService);
+  protected sub = new Subscription();
+
+  ngOnInit() {
+    this.validate();
+    this.isValidChange.emit(this.isValid);
+
+    this.sub.add(
+      this.stateService.submitAttempted$.subscribe(attempted => {
+        if (attempted) {
+          this.touched = true;
+          this.validate();
+          this.isValidChange.emit(this.isValid);
+        }
+      })
+    );
+  }
+
+  ngOnDestroy() {
+    this.sub.unsubscribe();
+    if (this.def && this.def.id) { this.stateService.setValidation(this.def.id, true); } // if destroyed, consider it valid so it doesn't block
+  }
 
   errors: string[] = [];
   touched = false;

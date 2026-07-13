@@ -19,14 +19,21 @@ describe('Player', () => {
     currentScreenSubject = new BehaviorSubject<Screen | null>(null);
 
     mockApiService = {
-      start: vi.fn().mockReturnValue(of({ id: 'test-screen' } as Screen))
+      start: vi.fn().mockReturnValue(of({ id: 'test-screen' } as any)),
+      nextStep: vi.fn().mockReturnValue(of({ id: 'next-screen' } as any))
     };
 
     mockStateService = {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
+      getScreen: vi.fn().mockReturnValue({ id: 'test-screen' }),
       currentScreen$: currentScreenSubject.asObservable(),
       answers$: of({}),
-      evaluateCondition: vi.fn().mockReturnValue(false)
+      evaluateCondition: vi.fn().mockReturnValue(false),
+      setSubmitAttempted: vi.fn(),
+      isFormValid: vi.fn().mockReturnValue(true),
+      getAllAnswers: vi.fn().mockReturnValue({ field1: 'value' }),
+      submitAttempted$: of(false),
+      setValidation: vi.fn()
     };
 
     mockActivatedRoute = {
@@ -72,16 +79,33 @@ describe('Player', () => {
       ]
     } as Screen));
 
-    // We recreate the component here to make sure it loads with the new mock values
     fixture = TestBed.createComponent(Player);
     component = fixture.componentInstance;
 
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges(); // Trigger again for the async pipe
+    fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Test Header');
     expect(compiled.querySelector('.screen-content p')?.textContent).toContain('Test Content');
+  });
+
+  describe('onButtonClick', () => {
+    it('should set submit attempted and show validation error if form is invalid', () => {
+      mockStateService.isFormValid.mockReturnValue(false);
+      component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+      expect(mockStateService.setSubmitAttempted).toHaveBeenCalledWith(true);
+      expect(component.validationError).toBe('Please correct the errors before proceeding.');
+      expect(mockApiService.nextStep).not.toHaveBeenCalled();
+    });
+
+    it('should call nextStep if form is valid and clear validation error', () => {
+      mockStateService.isFormValid.mockReturnValue(true);
+      component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+      expect(mockStateService.setSubmitAttempted).toHaveBeenCalledWith(true);
+      expect(component.validationError).toBeNull();
+      expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { field1: 'value' });
+    });
   });
 });

@@ -6,17 +6,24 @@ import { Screen, Condition } from '../models/screen.model';
   providedIn: 'root'
 })
 export class StateService {
-  private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
+private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
   public currentScreen$ = this.currentScreenSubject.asObservable();
 
   private answersSubject = new BehaviorSubject<Record<string, any>>({});
   public answers$ = this.answersSubject.asObservable();
+
+  private validationState: Record<string, boolean> = {};
+
+  private submitAttemptedSubject = new BehaviorSubject<boolean>(false);
+  public submitAttempted$ = this.submitAttemptedSubject.asObservable();
 
   constructor() { }
 
   setScreen(screen: Screen) {
     this.currentScreenSubject.next(screen);
     this.answersSubject.next({}); // Reset answers on new screen
+    this.validationState = {};
+    this.submitAttemptedSubject.next(false);
   }
 
   getScreen(): Screen | null {
@@ -33,13 +40,27 @@ export class StateService {
     return this.answersSubject.value[componentId];
   }
 
-  getAllAnswers(): Record<string, any> {
+getAllAnswers(): Record<string, any> {
     return { ...this.answersSubject.value };
+  }
+
+  setValidation(id: string, valid: boolean) {
+    this.validationState[id] = valid;
+  }
+
+  isFormValid(): boolean {
+    return Object.values(this.validationState).every(v => v);
+  }
+
+  setSubmitAttempted(value: boolean) {
+    this.submitAttemptedSubject.next(value);
   }
 
   clearState() {
     this.currentScreenSubject.next(null);
     this.answersSubject.next({});
+    this.validationState = {};
+    this.submitAttemptedSubject.next(false);
   }
 
   evaluateCondition(condition: Condition | undefined): boolean {

@@ -72,6 +72,15 @@ describe('StateService', () => {
     expect(service.getAllAnswers()).toEqual({});
   });
 
+
+  it('should track validation state', () => {
+    service.setValidation('q1', true);
+    service.setValidation('q2', false);
+    expect(service.isFormValid()).toBe(false);
+
+    service.setValidation('q2', true);
+    expect(service.isFormValid()).toBe(true);
+  });
   describe('evaluateCondition', () => {
     it('should return false if condition is undefined', () => {
       expect(service.evaluateCondition(undefined)).toBe(false);

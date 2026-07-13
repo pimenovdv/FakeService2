@@ -40,15 +40,15 @@ This document outlines the step-by-step development process for the Angular-base
 3. [x] **Interactive/Dependent Controls**
    - Implement logic in `StateService` to evaluate conditions (e.g., if control A value is 'X', show control B).
    - Bind `disabled` and `hidden` properties of controls to state evaluations.
-4. [ ] **Action Buttons**
+4. [x] **Action Buttons**
    - Render buttons defined in the JSON.
    - Implement click handler to collect data, validate, and call `next_step`.
 
 ## Phase 5: Validation and Submission
-1. [ ] **Form Validation Engine**
+1. [x] **Form Validation Engine**
    - Collect all validation states from rendered components.
    - Prevent submission if validation fails.
-2. [ ] **Next Step Submission**
+2. [x] **Next Step Submission**
    - Compile the `answers` dictionary (component ID -> value).
    - Merge `answers` with the original JSON or required payload structure.
    - Call `POST /next_step`.

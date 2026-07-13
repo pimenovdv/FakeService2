@@ -61,3 +61,17 @@ def test_screen_parser_buttons():
     assert result["buttons"][1]["type"] == "button"
     assert result["buttons"][1]["text"] == "Cancel"
     assert "id" not in result["buttons"][1]
+
+def test_parse_malformed_html_graceful_fallback(monkeypatch):
+    html = '<input type="text" id="bad">'
+    parser = ScreenParser(html)
+
+    # Mock soup.find_all to raise an exception simulating a catastrophic parsing failure
+    def mock_find_all(*args, **kwargs):
+        raise Exception("Parsing died")
+
+    monkeypatch.setattr(parser.soup, 'find_all', mock_find_all)
+
+    result = parser.parse()
+
+    assert result == {"fields": [], "buttons": [], "error": "Failed to parse HTML"}

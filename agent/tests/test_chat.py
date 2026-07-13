@@ -182,3 +182,13 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         output_func.assert_any_call("Ok")
         output_func.assert_any_call("Done")
         output_func.assert_any_call("Form submission complete with data: {'test': 'data'}")
+
+    async def test_process_user_input_exception_handling(self):
+        mock_client = AsyncMock()
+        mock_client.chat.completions.create.side_effect = Exception("LLM API is down")
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+        response = await session.process_user_input("Hello")
+
+        self.assertEqual(response, "I encountered an error processing your request.")
+        self.assertFalse(session.form_submitted)

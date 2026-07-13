@@ -1,9 +1,12 @@
 from src.client import AgentClient
 import json
 import datetime
+import logging
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
+
+logger = logging.getLogger(__name__)
 
 class ChatSession:
     def __init__(self, system_prompt: str, client: AsyncOpenAI = None, agent_client: AgentClient = None, model: str = "gpt-4o-mini"):
@@ -72,16 +75,22 @@ class ChatSession:
         """
         Process user input and get a response from the LLM, potentially handling tool calls.
         """
+        logger.info(f"User input: {user_input}")
         self.messages.append({"role": "user", "content": user_input})
 
-        response = await self.client.chat.completions.create(
-            model=self.model,
-            messages=self.messages,
-            tools=self.tools,
-            tool_choice="auto"
-        )
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=self.messages,
+                tools=self.tools,
+                tool_choice="auto"
+            )
+        except Exception as e:
+            logger.error(f"Error during initial LLM completion: {e}")
+            return "I encountered an error processing your request."
 
         response_message = response.choices[0].message
+        logger.debug(f"LLM initial response content: {response_message.content}, tool_calls: {response_message.tool_calls}")
 
         # We need to serialize the response message back into dict format if we append it
         message_dict = {"role": "assistant"}
@@ -104,6 +113,7 @@ class ChatSession:
         if response_message.tool_calls:
             # Handle tool calls
             for tool_call in response_message.tool_calls:
+                logger.info(f"Executing tool call: {tool_call.function.name} with arguments: {tool_call.function.arguments}")
                 if tool_call.function.name == "submit_form":
                     args = json.loads(tool_call.function.arguments)
                     self.form_submitted = True
@@ -117,16 +127,21 @@ class ChatSession:
                     })
 
                     # Get final conversational response after tool call
-                    second_response = await self.client.chat.completions.create(
-                        model=self.model,
-                        messages=self.messages
-                    )
-                    final_msg = second_response.choices[0].message
-                    self.messages.append({
-                        "role": "assistant",
-                        "content": final_msg.content
-                    })
-                    return final_msg.content or "Form submitted."
+                    try:
+                        second_response = await self.client.chat.completions.create(
+                            model=self.model,
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or "Form submitted."
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (submit_form): {e}")
+                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "fetch_autocomplete_options":
                     args = json.loads(tool_call.function.arguments)
                     data_source = args.get("data_source")
@@ -152,16 +167,21 @@ class ChatSession:
                     })
 
                     # After fetching data, we need to let the LLM generate a response
-                    second_response = await self.client.chat.completions.create(
-                        model=self.model,
-                        messages=self.messages
-                    )
-                    final_msg = second_response.choices[0].message
-                    self.messages.append({
-                        "role": "assistant",
-                        "content": final_msg.content
-                    })
-                    return final_msg.content or ""
+                    try:
+                        second_response = await self.client.chat.completions.create(
+                            model=self.model,
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (fetch_autocomplete): {e}")
+                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "get_current_datetime":
                     tool_content = datetime.datetime.now().isoformat()
                     self.messages.append({
@@ -170,16 +190,21 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    second_response = await self.client.chat.completions.create(
-                        model=self.model,
-                        messages=self.messages
-                    )
-                    final_msg = second_response.choices[0].message
-                    self.messages.append({
-                        "role": "assistant",
-                        "content": final_msg.content
-                    })
-                    return final_msg.content or ""
+                    try:
+                        second_response = await self.client.chat.completions.create(
+                            model=self.model,
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (datetime): {e}")
+                        return "I encountered an error processing your request."
 
         return response_message.content or ""
 

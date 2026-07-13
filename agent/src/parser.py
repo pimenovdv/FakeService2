@@ -1,5 +1,8 @@
+import logging
 from bs4 import BeautifulSoup
 from typing import Dict, Any, List
+
+logger = logging.getLogger(__name__)
 
 class ScreenParser:
     """
@@ -14,30 +17,36 @@ class ScreenParser:
         """
         Extracts structural requirements of the screen.
         """
-        result = {
-            "fields": [],
-            "buttons": []
-        }
-
-        # Extract all input-like elements
-        for element in self.soup.find_all(['input', 'select', 'textarea']):
-            field_info = self._parse_field(element)
-            if field_info:
-                result["fields"].append(field_info)
-
-        # Extract buttons
-        for button in self.soup.find_all('button'):
-            btn_info = {
-                "text": button.get_text(strip=True),
-                "type": button.get('type', 'button'),
-                "id": button.get('id'),
-                "name": button.get('name')
+        logger.debug("ScreenParser parsing HTML")
+        try:
+            result = {
+                "fields": [],
+                "buttons": []
             }
-            # Clean up Nones
-            btn_info = {k: v for k, v in btn_info.items() if v is not None}
-            result["buttons"].append(btn_info)
 
-        return result
+            # Extract all input-like elements
+            for element in self.soup.find_all(['input', 'select', 'textarea']):
+                field_info = self._parse_field(element)
+                if field_info:
+                    result["fields"].append(field_info)
+
+            # Extract buttons
+            for button in self.soup.find_all('button'):
+                btn_info = {
+                    "text": button.get_text(strip=True),
+                    "type": button.get('type', 'button'),
+                    "id": button.get('id'),
+                    "name": button.get('name')
+                }
+                # Clean up Nones
+                btn_info = {k: v for k, v in btn_info.items() if v is not None}
+                result["buttons"].append(btn_info)
+
+            logger.info(f"ScreenParser extracted {len(result['fields'])} fields and {len(result['buttons'])} buttons")
+            return result
+        except Exception as e:
+            logger.error(f"ScreenParser failed to parse HTML: {e}")
+            return {"fields": [], "buttons": [], "error": "Failed to parse HTML"}
 
     def _parse_field(self, element) -> Dict[str, Any]:
         tag_name = element.name

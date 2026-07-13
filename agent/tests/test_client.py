@@ -34,3 +34,11 @@ async def test_agent_client_fetch_html(httpx_mock):
     async with AgentClient() as client:
         html = await client.fetch_html("http://localhost:4200/test")
         assert html == html_content
+
+@pytest.mark.asyncio
+async def test_agent_client_fetch_html_http_error_handling(httpx_mock):
+    httpx_mock.add_response(url="http://localhost:4200/error", status_code=500)
+
+    async with AgentClient() as client:
+        with pytest.raises(httpx.HTTPStatusError):
+            await client.fetch_html("http://localhost:4200/error")

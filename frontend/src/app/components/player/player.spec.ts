@@ -168,4 +168,58 @@ describe('Player', () => {
     expect(mockApiService.nextStep).not.toHaveBeenCalled();
     expect(component.validationError).toBe('Please fix the validation errors before proceeding.');
   });
+
+  it('should simulate a full user flow', async () => {
+    // 1. Initial Start
+    const screen1: Screen = {
+      id: 'screen-1',
+      header: 'Step 1',
+      content: 'Enter name',
+      components: [
+        { id: 'name', type: 'text', label: 'Name', validations: [{ type: 'required' }] }
+      ],
+      buttons: [
+        { id: 'btn-next', label: 'Next', action: 'next_step' }
+      ]
+    };
+
+    const screen2: Screen = {
+      id: 'screen-2',
+      header: 'Step 2',
+      content: 'Confirm',
+      components: [],
+      buttons: [
+        { id: 'btn-submit', label: 'Submit', action: 'submit' }
+      ]
+    };
+
+    mockApiService.start.mockReturnValue(of(screen1));
+    mockApiService.nextStep.mockReturnValue(of(screen2));
+    mockStateService.validateScreen.mockReturnValue(true);
+
+    fixture = TestBed.createComponent(Player);
+    component = fixture.componentInstance;
+
+    // Simulate user answering field
+    mockStateService.getAllAnswers.mockReturnValue({ name: 'Alice' });
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    // Verify first screen loaded
+    let compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Step 1');
+
+    // Click next
+    const button = compiled.querySelector('.screen-footer button') as HTMLButtonElement;
+    button.click();
+
+    // Verify next step called
+    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'screen-1', { name: 'Alice' });
+
+    // Assuming the component updates itself on next step:
+    // Actually the mockStateService.setScreen handles it, and we check if the mock was called with screen2
+    expect(mockStateService.setScreen).toHaveBeenCalledWith(screen2);
+  });
 });

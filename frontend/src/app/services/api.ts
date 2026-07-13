@@ -18,7 +18,7 @@ export class ApiService {
   nextStep(serviceId: string, currentScreenId: string, answers: Record<string, any>): Observable<Screen | any> {
     return this.http.post<Screen | any>(`${this.baseUrl}/api/screens/next_step`, {
       service_id: serviceId,
-      screen_id: currentScreenId,
+      current_screen_id: currentScreenId,
       answers: answers
     });
   }

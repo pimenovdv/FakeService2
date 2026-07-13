@@ -61,7 +61,7 @@ describe('ApiService', () => {
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({
       service_id: 'service-1',
-      screen_id: 'screen1',
+      current_screen_id: 'screen1',
       answers: { q1: 'yes' }
     });
     req.flush(dummyScreen);

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DynamicFieldComponent } from './dynamic-field.component';
 import { ComponentDef } from '../../models/screen.model';
-import { expect, describe, it, beforeEach } from 'vitest';
+import { expect, describe, it, beforeEach, vi } from 'vitest';
 import { StateService } from '../../services/state';
 
 describe('DynamicFieldComponent', () => {
@@ -95,5 +95,22 @@ describe('DynamicFieldComponent', () => {
     await fixture.whenStable();
     fixture.detectChanges();
     expect(component.isHidden).toBe(false);
+  });
+
+  it('should handle value and validation changes', () => {
+    vi.spyOn(stateService, 'setAnswer');
+    vi.spyOn(stateService, 'setValidationState');
+
+    component.componentDef = {
+      id: 'test_comp',
+      type: 'text',
+      label: 'Conditional Field 2'
+    };
+
+    component.onValueChange('new val');
+    expect(stateService.setAnswer).toHaveBeenCalledWith('test_comp', 'new val');
+
+    component.onValidationChange(false);
+    expect(stateService.setValidationState).toHaveBeenCalledWith('test_comp', false);
   });
 });

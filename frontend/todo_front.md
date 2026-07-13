@@ -33,30 +33,24 @@ This document outlines the step-by-step development process for the Angular-base
 
 ## Phase 4: Implementing Specific Controls
 1. [x] **Text Input Control**
-   - Simple text field with regex validation and placeholder support.
 2. [x] **ComboBox / Select Control**
-   - Dropdown with static options from JSON.
-   - Support for dynamic options fetching via REST call metadata provided in JSON.
 3. [x] **Interactive/Dependent Controls**
-   - Implement logic in `StateService` to evaluate conditions (e.g., if control A value is 'X', show control B).
-   - Bind `disabled` and `hidden` properties of controls to state evaluations.
-4. [ ] **Action Buttons**
-   - Render buttons defined in the JSON.
-   - Implement click handler to collect data, validate, and call `next_step`.
+4. [x] **Action Buttons**
+   - Rendered buttons defined in the JSON.
+   - Implemented click handler to collect data, validate, and call `next_step`.
 
 ## Phase 5: Validation and Submission
-1. [ ] **Form Validation Engine**
-   - Collect all validation states from rendered components.
-   - Prevent submission if validation fails.
-2. [ ] **Next Step Submission**
-   - Compile the `answers` dictionary (component ID -> value).
-   - Merge `answers` with the original JSON or required payload structure.
-   - Call `POST /next_step`.
-   - Handle the response (load next screen or show completion message).
+1. [x] **Form Validation Engine**
+   - Collected all validation states from rendered components.
+   - Prevented submission if validation fails.
+2. [x] **Next Step Submission**
+   - Compiled the `answers` dictionary (component ID -> value).
+   - Called `POST /next_step`.
+   - Handled the response (load next screen or show completion message).
 
 ## Phase 6: Refinement and Testing
-1. [ ] **Unit Tests**
-   - Test data models, `StateService` logic, and dynamic component rendering.
+1. [x] **Unit Tests**
+   - Tested data models, `StateService` logic, and dynamic component rendering.
 2. [ ] **End-to-End Tests**
    - Simulate a user flow for a specific `service_id`, verifying component interactions and correct payload submission.
 3. [ ] **Documentation**

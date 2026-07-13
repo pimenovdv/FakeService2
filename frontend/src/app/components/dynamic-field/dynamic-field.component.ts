@@ -48,4 +48,12 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
       this.componentDef.disabled = this.isDisabled;
     }
   }
+
+  onValueChange(value: any) {
+    this.stateService.setAnswer(this.componentDef.id, value);
+  }
+
+  onValidationChange(isValid: boolean) {
+    this.stateService.setValidationState(this.componentDef.id, isValid);
+  }
 }

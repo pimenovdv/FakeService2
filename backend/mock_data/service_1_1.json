@@ -13,6 +13,15 @@
       ]
     },
     {
+      "id": "doc_input",
+      "type": "file",
+      "label": "Upload Document",
+      "validations": [
+        { "type": "maxSize", "value": 5000000, "message": "Max 5MB" },
+        { "type": "allowedTypes", "value": ["image/png", "application/pdf"], "message": "Only PNG/PDF allowed" }
+      ]
+    },
+    {
       "id": "dob_input",
       "type": "datepicker",
       "label": "Date of Birth",

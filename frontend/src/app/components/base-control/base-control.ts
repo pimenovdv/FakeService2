@@ -107,6 +107,21 @@ export abstract class BaseControl implements OnInit, OnDestroy {
             }
           }
           break;
+        case 'maxSize':
+          if (this.value && this.value.size !== undefined && rule.value !== undefined) {
+            if (this.value.size > Number(rule.value)) {
+              this.errors.push(rule.message || `File size must be less than ${rule.value} bytes`);
+            }
+          }
+          break;
+        case 'allowedTypes':
+          if (this.value && this.value.type !== undefined && rule.value !== undefined) {
+            const types = Array.isArray(rule.value) ? rule.value : [rule.value];
+            if (!types.includes(this.value.type)) {
+              this.errors.push(rule.message || `File type ${this.value.type} is not allowed`);
+            }
+          }
+          break;
       }
     }
   }

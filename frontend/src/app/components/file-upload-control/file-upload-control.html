@@ -1,0 +1,20 @@
+<div class="file-upload-control-container">
+  <label [for]="def.id">{{ def.label }}</label>
+  <input
+    [id]="def.id"
+    type="file"
+    (change)="onFileSelected($event)"
+    [disabled]="def.disabled || false"
+    (blur)="touched = true; validate()"
+  />
+
+  <div *ngIf="fileError" class="error-messages">
+    <div class="error-text">{{ fileError }}</div>
+  </div>
+
+  <div *ngIf="touched && !isValid && !fileError" class="error-messages">
+    <div *ngFor="let error of errors" class="error-text">
+      {{ error }}
+    </div>
+  </div>
+</div>

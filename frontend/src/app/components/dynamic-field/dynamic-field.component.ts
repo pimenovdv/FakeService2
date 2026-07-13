@@ -5,12 +5,13 @@ import { ComponentDef } from '../../models/screen.model';
 import { TextInputComponent } from '../text-input/text-input';
 import { ComboboxControlComponent } from '../combobox-control/combobox-control';
 import { DatepickerControlComponent } from '../datepicker-control/datepicker-control';
+import { FileUploadControlComponent } from '../file-upload-control/file-upload-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, DatepickerControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, DatepickerControlComponent, FileUploadControlComponent],
   templateUrl: './dynamic-field.component.html'
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {

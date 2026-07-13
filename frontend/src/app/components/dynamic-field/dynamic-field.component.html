@@ -1,7 +1,8 @@
-<div class="dynamic-field-container" [ngSwitch]="componentDef.type" [hidden]="isHidden">
-  <app-text-input *ngSwitchCase="'text'" [def]="componentDef"></app-text-input>
-  <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef"></app-combobox-control>
-  <app-datepicker-control *ngSwitchCase="'datepicker'" [def]="componentDef"></app-datepicker-control>
+<div class="dynamic-field-container" [ngSwitch]="componentDef.type" *ngIf="!isHidden">
+  <app-text-input *ngSwitchCase="'text'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-text-input>
+  <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-combobox-control>
+  <app-datepicker-control *ngSwitchCase="'datepicker'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-datepicker-control>
+  <app-file-upload-control *ngSwitchCase="'file'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-file-upload-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

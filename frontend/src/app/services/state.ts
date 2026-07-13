@@ -130,6 +130,21 @@ getAllAnswers(): Record<string, any> {
                 }
               }
               break;
+            case 'maxSize':
+              if (value && value.size !== undefined && rule.value !== undefined) {
+                if (value.size > Number(rule.value)) {
+                  isValid = false;
+                }
+              }
+              break;
+            case 'allowedTypes':
+              if (value && value.type !== undefined && rule.value !== undefined) {
+                const types = Array.isArray(rule.value) ? rule.value : [rule.value];
+                if (!types.includes(value.type)) {
+                  isValid = false;
+                }
+              }
+              break;
           }
         }
       }

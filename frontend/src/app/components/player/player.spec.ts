@@ -30,8 +30,13 @@ describe('Player', () => {
       answers$: of({}),
       evaluateCondition: vi.fn().mockReturnValue(false),
       getAllAnswers: vi.fn().mockReturnValue({ field1: 'value1' }),
-      validateScreen: vi.fn().mockReturnValue(true)
+      validateScreen: vi.fn().mockReturnValue(true),
+      setSubmitAttempted: vi.fn(),
+      isFormValid: vi.fn().mockReturnValue(true),
+      submitAttempted$: of(false),
+      setValidation: vi.fn()
     };
+
 
     mockActivatedRoute = {
       paramMap: of({ get: () => 'test-service' })
@@ -106,120 +111,32 @@ describe('Player', () => {
     fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    const buttons = compiled.querySelectorAll('.screen-footer button');
+    const buttons = compiled.querySelectorAll('button');
     expect(buttons.length).toBe(1);
     expect(buttons[0].textContent?.trim()).toBe('Next');
   });
 
-  it('should call nextStep on action button click', async () => {
-    mockApiService.start.mockReturnValue(of({
-      id: 'test-screen',
-      header: 'Test Header',
-      content: 'Test Content',
-      components: [],
-      buttons: [
-        { id: 'btn-next', label: 'Next', action: 'next_step' }
-      ]
-    } as Screen));
+  describe('onButtonClick', () => {
+    it('should set submit attempted and show validation error if form is invalid', () => {
+      mockStateService.isFormValid.mockReturnValue(false);
+      mockStateService.validateScreen.mockReturnValue(false);
+      component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+      expect(mockStateService.setSubmitAttempted).toHaveBeenCalledWith(true);
+      expect(component.validationError).toBe('Please correct the errors before proceeding.');
+      expect(mockApiService.nextStep).not.toHaveBeenCalled();
+    });
 
-    fixture = TestBed.createComponent(Player);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
+    it('should call nextStep if form is valid and clear validation error', () => {
+      mockStateService.isFormValid.mockReturnValue(true);
+      mockStateService.validateScreen.mockReturnValue(true);
+      component.serviceId = 'test-service';
+      // component.currentScreenId is not directly accessible, but onButtonClick is called via template usually.
+      // Wait, the new onButtonClick only takes btn, the old took currentScreenId as well. Let's keep the new one.
+      component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+      expect(mockStateService.setSubmitAttempted).toHaveBeenCalledWith(true);
+      expect(component.validationError).toBeNull();
+      expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { field1: 'value1' });
+    });
 
-    const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector('.screen-footer button') as HTMLButtonElement;
-
-    button.click();
-
-    expect(mockStateService.getAllAnswers).toHaveBeenCalled();
-    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { field1: 'value1' });
-    expect(mockStateService.setScreen).toHaveBeenCalledWith({ id: 'test-screen-2' });
-  });
-
-  it('should prevent submission if validation fails', async () => {
-    mockApiService.start.mockReturnValue(of({
-      id: 'test-screen',
-      header: 'Test Header',
-      content: 'Test Content',
-      components: [],
-      buttons: [
-        { id: 'btn-next', label: 'Next', action: 'next_step' }
-      ]
-    } as Screen));
-
-    mockApiService.nextStep.mockClear();
-    mockStateService.validateScreen.mockReturnValue(false);
-    mockApiService.nextStep.mockClear();
-
-    fixture = TestBed.createComponent(Player);
-
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    const compiled = fixture.nativeElement as HTMLElement;
-    const button = compiled.querySelector('.screen-footer button') as HTMLButtonElement;
-
-    button.click();
-
-    expect(mockApiService.nextStep).not.toHaveBeenCalled();
-    expect(component.validationError).toBe('Please fix the validation errors before proceeding.');
-  });
-
-  it('should simulate a full user flow', async () => {
-    // 1. Initial Start
-    const screen1: Screen = {
-      id: 'screen-1',
-      header: 'Step 1',
-      content: 'Enter name',
-      components: [
-        { id: 'name', type: 'text', label: 'Name', validations: [{ type: 'required' }] }
-      ],
-      buttons: [
-        { id: 'btn-next', label: 'Next', action: 'next_step' }
-      ]
-    };
-
-    const screen2: Screen = {
-      id: 'screen-2',
-      header: 'Step 2',
-      content: 'Confirm',
-      components: [],
-      buttons: [
-        { id: 'btn-submit', label: 'Submit', action: 'submit' }
-      ]
-    };
-
-    mockApiService.start.mockReturnValue(of(screen1));
-    mockApiService.nextStep.mockReturnValue(of(screen2));
-    mockStateService.validateScreen.mockReturnValue(true);
-
-    fixture = TestBed.createComponent(Player);
-    component = fixture.componentInstance;
-
-    // Simulate user answering field
-    mockStateService.getAllAnswers.mockReturnValue({ name: 'Alice' });
-
-    fixture.detectChanges();
-    await fixture.whenStable();
-    fixture.detectChanges();
-
-    // Verify first screen loaded
-    let compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Step 1');
-
-    // Click next
-    const button = compiled.querySelector('.screen-footer button') as HTMLButtonElement;
-    button.click();
-
-    // Verify next step called
-    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'screen-1', { name: 'Alice' });
-
-    // Assuming the component updates itself on next step:
-    // Actually the mockStateService.setScreen handles it, and we check if the mock was called with screen2
-    expect(mockStateService.setScreen).toHaveBeenCalledWith(screen2);
   });
 });

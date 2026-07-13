@@ -1,0 +1,44 @@
+{
+  "id": "screen_1",
+  "header": "Welcome to Service 1",
+  "content": "Please enter your details to proceed.",
+  "components": [
+    {
+      "id": "name_input",
+      "type": "text",
+      "label": "Full Name",
+      "placeholder": "John Doe",
+      "validations": [
+        { "type": "required", "message": "Name is required" }
+      ]
+    },
+    {
+      "id": "dob_input",
+      "type": "datepicker",
+      "label": "Date of Birth",
+      "validations": [
+        { "type": "max", "value": "2024-01-01", "message": "DOB must be before 2024" }
+      ]
+    },
+    {
+      "id": "country_input",
+      "type": "combobox",
+      "label": "Country",
+      "restMetadata": {
+        "endpoint": "/api/data/countries",
+        "method": "GET"
+      },
+      "validations": [
+        { "type": "required", "message": "Country is required" }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "next_btn",
+      "label": "Next",
+      "action": "next_step",
+      "color": "primary"
+    }
+  ]
+}

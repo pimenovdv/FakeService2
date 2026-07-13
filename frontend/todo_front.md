@@ -17,7 +17,7 @@ This document outlines the step-by-step development process for the Angular-base
 
 
 ## Phase 7: Advanced Components
-1. [ ] **DatePicker Component**
+1. [x] **DatePicker Component**
    - Implement date selection control with specific validations (minDate, maxDate).
 2. [ ] **File Upload Component**
    - Implement file upload control with size and type constraints.

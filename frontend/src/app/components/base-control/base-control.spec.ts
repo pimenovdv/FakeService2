@@ -106,5 +106,24 @@ describe('BaseControl', () => {
       component.onValueChange('abcd');
       expect(component.errors.length).toBe(0);
     });
+
+    it('should validate min and max with dates', () => {
+      component.def = {
+        id: 'test-date', type: 'datepicker', label: 'Date',
+        validations: [
+          { type: 'min', value: '2023-01-01', message: 'Min 2023-01-01' },
+          { type: 'max', value: '2023-12-31', message: 'Max 2023-12-31' }
+        ]
+      } as ComponentDef;
+
+      component.onValueChange('2022-12-31');
+      expect(component.errors).toContain('Min 2023-01-01');
+
+      component.onValueChange('2024-01-01');
+      expect(component.errors).toContain('Max 2023-12-31');
+
+      component.onValueChange('2023-06-15');
+      expect(component.errors.length).toBe(0);
+    });
   });
 });

@@ -61,11 +61,32 @@ class ScenarioManager:
                         if len(str(answer)) > int(val_value):
                             raise HTTPException(status_code=400, detail=val_message)
                     elif val_type == "min":
-                        if float(answer) < float(val_value):
-                            raise HTTPException(status_code=400, detail=val_message)
+                        try:
+                            if float(answer) < float(val_value):
+                                raise HTTPException(status_code=400, detail=val_message)
+                        except ValueError:
+                            # It might be a date string
+                            from datetime import datetime
+                            try:
+                                v = datetime.fromisoformat(str(answer))
+                                r = datetime.fromisoformat(str(val_value))
+                                if v < r:
+                                    raise HTTPException(status_code=400, detail=val_message)
+                            except ValueError:
+                                raise HTTPException(status_code=400, detail=val_message)
                     elif val_type == "max":
-                        if float(answer) > float(val_value):
-                            raise HTTPException(status_code=400, detail=val_message)
+                        try:
+                            if float(answer) > float(val_value):
+                                raise HTTPException(status_code=400, detail=val_message)
+                        except ValueError:
+                            from datetime import datetime
+                            try:
+                                v = datetime.fromisoformat(str(answer))
+                                r = datetime.fromisoformat(str(val_value))
+                                if v > r:
+                                    raise HTTPException(status_code=400, detail=val_message)
+                            except ValueError:
+                                raise HTTPException(status_code=400, detail=val_message)
 
         # Cross-field validation
         for cross_validation in current_data.get("crossValidations", []) or []:

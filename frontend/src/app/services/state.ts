@@ -75,16 +75,22 @@ export class StateService {
                 }
               }
               break;
+
             case 'min':
-              if (value !== null && value !== undefined && rule.value !== undefined) {
-                if (Number(value) < Number(rule.value)) {
+              if (value !== null && value !== undefined && value !== '' && rule.value !== undefined) {
+                const v = isNaN(Date.parse(value)) ? Number(value) : Date.parse(value);
+                const r = isNaN(Date.parse(rule.value)) ? Number(rule.value) : Date.parse(rule.value);
+                if (v < r) {
                   isValid = false;
                 }
               }
               break;
+
             case 'max':
-              if (value !== null && value !== undefined && rule.value !== undefined) {
-                if (Number(value) > Number(rule.value)) {
+              if (value !== null && value !== undefined && value !== '' && rule.value !== undefined) {
+                const v = isNaN(Date.parse(value)) ? Number(value) : Date.parse(value);
+                const r = isNaN(Date.parse(rule.value)) ? Number(rule.value) : Date.parse(rule.value);
+                if (v > r) {
                   isValid = false;
                 }
               }

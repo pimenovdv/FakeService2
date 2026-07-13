@@ -48,16 +48,22 @@ export abstract class BaseControl {
             }
           }
           break;
+
         case 'min':
-          if (this.value !== null && this.value !== undefined && rule.value !== undefined) {
-            if (Number(this.value) < Number(rule.value)) {
+          if (this.value !== null && this.value !== undefined && this.value !== '' && rule.value !== undefined) {
+            const v = isNaN(Date.parse(this.value)) ? Number(this.value) : Date.parse(this.value);
+            const r = isNaN(Date.parse(rule.value)) ? Number(rule.value) : Date.parse(rule.value);
+            if (v < r) {
               this.errors.push(rule.message || `Minimum value is ${rule.value}`);
             }
           }
           break;
+
         case 'max':
-          if (this.value !== null && this.value !== undefined && rule.value !== undefined) {
-            if (Number(this.value) > Number(rule.value)) {
+          if (this.value !== null && this.value !== undefined && this.value !== '' && rule.value !== undefined) {
+            const v = isNaN(Date.parse(this.value)) ? Number(this.value) : Date.parse(this.value);
+            const r = isNaN(Date.parse(rule.value)) ? Number(rule.value) : Date.parse(rule.value);
+            if (v > r) {
               this.errors.push(rule.message || `Maximum value is ${rule.value}`);
             }
           }

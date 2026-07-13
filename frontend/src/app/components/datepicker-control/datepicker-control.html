@@ -1,0 +1,16 @@
+<div class="datepicker-control-container">
+  <label [for]="def.id">{{ def.label }}</label>
+  <input
+    [id]="def.id"
+    type="date"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [disabled]="def.disabled || false"
+    (blur)="touched = true; validate()"
+  />
+  <div *ngIf="touched && !isValid" class="error-messages">
+    <div *ngFor="let error of errors" class="error-text">
+      {{ error }}
+    </div>
+  </div>
+</div>

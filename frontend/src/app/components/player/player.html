@@ -6,9 +6,17 @@
   {{ error }}
 </div>
 
-<div *ngIf="!loading && !error && (stateService.currentScreen$ | async) as screen">
+<div *ngIf="isFinished" class="success-message">
+  Process completed successfully!
+</div>
+
+<div *ngIf="!loading && !error && !isFinished && (stateService.currentScreen$ | async) as screen">
 
   <div class="screen-layout">
+    <div *ngIf="submitError" class="error-message submit-error">
+      {{ submitError }}
+    </div>
+
     <header class="screen-header">
       <h1>{{ screen.header }}</h1>
     </header>
@@ -19,6 +27,16 @@
         <app-dynamic-field *ngFor="let comp of screen.components" [componentDef]="comp"></app-dynamic-field>
       </div>
     </main>
+    <footer class="screen-footer" *ngIf="screen.buttons && screen.buttons.length > 0">
+      <button
+        *ngFor="let btn of screen.buttons"
+        [ngClass]="'btn-' + (btn.color || 'primary')"
+        [disabled]="btn.action === 'next_step' && !stateService.isScreenValid()"
+        (click)="onButtonClick(btn.action)"
+      >
+        {{ btn.label }}
+      </button>
+    </footer>
   </div>
 
 </div>

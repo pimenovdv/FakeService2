@@ -19,14 +19,20 @@ describe('Player', () => {
     currentScreenSubject = new BehaviorSubject<Screen | null>(null);
 
     mockApiService = {
-      start: vi.fn().mockReturnValue(of({ id: 'test-screen' } as Screen))
+      start: vi.fn().mockReturnValue(of({ id: 'test-screen' } as Screen)),
+      nextStep: vi.fn().mockReturnValue(of({ id: 'next-screen' } as Screen))
     };
 
     mockStateService = {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
+      getScreen: vi.fn().mockReturnValue({ id: 'test-screen' } as Screen),
       currentScreen$: currentScreenSubject.asObservable(),
       answers$: of({}),
-      evaluateCondition: vi.fn().mockReturnValue(false)
+      evaluateCondition: vi.fn().mockReturnValue(false),
+      isScreenValid: vi.fn().mockReturnValue(true),
+      setValidationState: vi.fn(),
+      getAllAnswers: vi.fn().mockReturnValue({ field1: 'val1' }),
+      clearState: vi.fn()
     };
 
     mockActivatedRoute = {
@@ -83,5 +89,36 @@ describe('Player', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Test Header');
     expect(compiled.querySelector('.screen-content p')?.textContent).toContain('Test Content');
+  });
+
+  it('should render buttons and handle submit click', async () => {
+    mockApiService.start.mockReturnValue(of({
+      id: 'test-screen',
+      header: 'H', content: 'C', components: [],
+      buttons: [
+        { id: 'btn1', label: 'Submit Btn', action: 'next_step' }
+      ]
+    } as Screen));
+
+    fixture = TestBed.createComponent(Player);
+    component = fixture.componentInstance;
+
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const button = compiled.querySelector('button');
+    expect(button?.textContent).toContain('Submit Btn');
+
+    button?.click();
+    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { field1: 'val1' });
+  });
+
+  it('should not submit if screen is invalid', () => {
+    mockStateService.isScreenValid.mockReturnValue(false);
+    component.serviceId = 'test-service';
+    component.onButtonClick('next_step');
+    expect(mockApiService.nextStep).not.toHaveBeenCalled();
   });
 });

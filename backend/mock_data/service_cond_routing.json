@@ -1,0 +1,17 @@
+{
+    "screen_1": [
+        {
+            "condition": {
+                "field": "age",
+                "operator": ">=",
+                "value": 18
+            },
+            "target": "screen_adult"
+        },
+        {
+            "target": "screen_child"
+        }
+    ],
+    "screen_adult": "completed",
+    "screen_child": "completed"
+}

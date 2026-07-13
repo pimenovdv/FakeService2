@@ -33,7 +33,7 @@ class ComponentDef(BaseModel):
 class ButtonDef(BaseModel):
     id: str
     label: str
-    action: Literal['next_step', 'cancel', 'submit']
+    action: Literal['next_step', 'previous_step', 'cancel', 'submit']
     color: Optional[Literal['primary', 'secondary', 'warn']] = None
 
 class ScreenDef(BaseModel):

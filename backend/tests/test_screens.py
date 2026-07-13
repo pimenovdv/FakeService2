@@ -138,3 +138,42 @@ def test_previous_step_missing_routing():
 
     # Cleanup
     os.remove("mock_data/service_missing_routing_screen_2.json")
+
+
+def test_conditional_routing_match_rule():
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "service_cond",
+        "current_screen_id": "screen_1",
+        "answers": {"age": "20"}
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["next_screen"]["id"] == "screen_adult"
+
+def test_conditional_routing_default_rule():
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "service_cond",
+        "current_screen_id": "screen_1",
+        "answers": {"age": "15"}
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["next_screen"]["id"] == "screen_child"
+
+def test_conditional_routing_previous_step_match():
+    response = client.post("/api/screens/previous_step", json={
+        "service_id": "service_cond",
+        "current_screen_id": "screen_adult"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == "screen_1"
+
+def test_conditional_routing_previous_step_default():
+    response = client.post("/api/screens/previous_step", json={
+        "service_id": "service_cond",
+        "current_screen_id": "screen_child"
+    })
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == "screen_1"

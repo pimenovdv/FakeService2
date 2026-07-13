@@ -29,6 +29,10 @@ export abstract class BaseControl {
       return;
     }
 
+    if (this.def.disabled || this.def.hidden) {
+      return; // Disabled or hidden components are always valid
+    }
+
     for (const rule of this.def.validations) {
       switch (rule.type) {
         case 'required':

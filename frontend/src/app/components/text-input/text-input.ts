@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseControl } from '../base-control/base-control';
@@ -10,5 +10,13 @@ import { BaseControl } from '../base-control/base-control';
   templateUrl: './text-input.html',
   styleUrls: ['./text-input.scss']
 })
-export class TextInputComponent extends BaseControl {
+export class TextInputComponent extends BaseControl implements OnInit, OnDestroy {
+  override ngOnInit() {
+    super.ngOnInit();
+  }
+
+  override ngOnDestroy() {
+    super.ngOnDestroy();
+  }
+
 }

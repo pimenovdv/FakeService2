@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
 import { ComponentDef } from '../../models/screen.model';
@@ -18,13 +18,17 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
 
   isHidden = false;
   isDisabled = false;
+  value: any;
 
   private stateService = inject(StateService);
   private subscription = new Subscription();
+  private cdr = inject(ChangeDetectorRef);
 
   ngOnInit() {
     this.isHidden = this.componentDef.hidden || false;
     this.isDisabled = this.componentDef.disabled || false;
+
+    this.value = this.stateService.getAllAnswers()[this.componentDef.id];
 
     this.subscription.add(
       this.stateService.answers$.subscribe(() => {
@@ -37,16 +41,38 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
     this.subscription.unsubscribe();
   }
 
+
+  onValueChange(val: any) {
+    this.value = val;
+    this.stateService.setAnswer(this.componentDef.id, val);
+  }
+
+  onValidChange(valid: boolean) {
+    this.stateService.setValidation(this.componentDef.id, valid);
+  }
+
   private evaluateConditions() {
+    let changed = false;
     if (this.componentDef.showIf) {
-      this.isHidden = !this.stateService.evaluateCondition(this.componentDef.showIf);
-      this.componentDef.hidden = this.isHidden;
+      const isHidden = !this.stateService.evaluateCondition(this.componentDef.showIf);
+      if (this.isHidden !== isHidden) {
+        this.isHidden = isHidden;
+        this.componentDef.hidden = this.isHidden;
+        changed = true;
+      }
     }
 
     if (this.componentDef.disableIf) {
-      this.isDisabled = this.stateService.evaluateCondition(this.componentDef.disableIf);
-      // We also update the componentDef so child components receive the updated disabled state
-      this.componentDef.disabled = this.isDisabled;
+      const isDisabled = this.stateService.evaluateCondition(this.componentDef.disableIf);
+      if (this.isDisabled !== isDisabled) {
+        this.isDisabled = isDisabled;
+        this.componentDef.disabled = this.isDisabled;
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this.cdr.detectChanges();
     }
   }
 }

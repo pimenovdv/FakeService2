@@ -25,6 +25,7 @@ describe('Player', () => {
 
     mockStateService = {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
+      getScreen: vi.fn().mockReturnValue({ id: 'test-screen' }),
       currentScreen$: currentScreenSubject.asObservable(),
       answers$: of({}),
       evaluateCondition: vi.fn().mockReturnValue(false),
@@ -75,13 +76,12 @@ describe('Player', () => {
       ]
     } as Screen));
 
-    // We recreate the component here to make sure it loads with the new mock values
     fixture = TestBed.createComponent(Player);
     component = fixture.componentInstance;
 
     fixture.detectChanges();
     await fixture.whenStable();
-    fixture.detectChanges(); // Trigger again for the async pipe
+    fixture.detectChanges();
 
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Test Header');

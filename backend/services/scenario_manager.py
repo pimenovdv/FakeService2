@@ -115,7 +115,48 @@ class ScenarioManager:
         if current_screen_id not in routing_data:
             raise HTTPException(status_code=404, detail=f"No next step defined for service_id '{service_id}', screen '{current_screen_id}'.")
 
-        next_screen_id = routing_data[current_screen_id]
+        next_step_config = routing_data[current_screen_id]
+        next_screen_id = None
+
+        if isinstance(next_step_config, str):
+            next_screen_id = next_step_config
+        elif isinstance(next_step_config, list):
+            for rule in next_step_config:
+                if "condition" in rule:
+                    cond = rule["condition"]
+                    field = cond.get("field")
+                    op = cond.get("operator")
+                    val = cond.get("value")
+                    ans = answers.get(field)
+
+                    if ans is not None:
+                        match = False
+                        if op == "==" and str(ans) == str(val):
+                            match = True
+                        elif op == "!=" and str(ans) != str(val):
+                            match = True
+                        elif op in (">", "<", ">=", "<="):
+                            try:
+                                ans_f = float(ans)
+                                val_f = float(val)
+                                if op == ">" and ans_f > val_f: match = True
+                                elif op == "<" and ans_f < val_f: match = True
+                                elif op == ">=" and ans_f >= val_f: match = True
+                                elif op == "<=" and ans_f <= val_f: match = True
+                            except ValueError:
+                                pass
+
+                        if match:
+                            next_screen_id = rule.get("target")
+                            break
+                else:
+                    # Default rule
+                    next_screen_id = rule.get("target")
+                    break
+
+        if not next_screen_id:
+            raise HTTPException(status_code=400, detail=f"Could not evaluate conditional routing for service_id '{service_id}', screen '{current_screen_id}'.")
+
         if next_screen_id == "completed":
             return {"completed": True}
 
@@ -149,9 +190,14 @@ class ScenarioManager:
         # Reverse lookup in routing config
         previous_screen_id = None
         for k, v in routing_data.items():
-            if v == current_screen_id:
-                previous_screen_id = k
-                break
+            if isinstance(v, str):
+                if v == current_screen_id:
+                    previous_screen_id = k
+                    break
+            elif isinstance(v, list):
+                if any(rule.get("target") == current_screen_id for rule in v):
+                    previous_screen_id = k
+                    break
 
         if not previous_screen_id:
             raise HTTPException(status_code=404, detail=f"Previous screen not found for service_id '{service_id}', screen '{current_screen_id}'.")

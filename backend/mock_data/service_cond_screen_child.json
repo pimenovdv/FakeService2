@@ -1,0 +1,13 @@
+{
+    "id": "screen_child",
+    "header": "Child Screen",
+    "content": "You are a child.",
+    "components": [],
+    "buttons": [
+        {
+            "id": "back",
+            "label": "Back",
+            "action": "previous_step"
+        }
+    ]
+}

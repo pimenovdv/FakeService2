@@ -3,6 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BaseControl } from './base-control';
 import { ComponentDef } from '../../models/screen.model';
 import { expect, describe, it, beforeEach, vi } from 'vitest';
+import { StateService } from '../../services/state';
+import { BehaviorSubject } from 'rxjs';
 
 @Component({
   template: ''
@@ -12,14 +14,24 @@ class TestControl extends BaseControl {}
 describe('BaseControl', () => {
   let component: TestControl;
   let fixture: ComponentFixture<TestControl>;
+  let mockStateService: any;
+  let submitAttemptedSubject: BehaviorSubject<boolean>;
 
   beforeEach(async () => {
+    submitAttemptedSubject = new BehaviorSubject<boolean>(false);
+    mockStateService = {
+      submitAttempted$: submitAttemptedSubject.asObservable(),
+      setValidation: vi.fn()
+    };
+
     await TestBed.configureTestingModule({
-      imports: [TestControl]
+      imports: [TestControl],
+      providers: [{ provide: StateService, useValue: mockStateService }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestControl);
     component = fixture.componentInstance;
+    fixture.detectChanges();
   });
 
   it('should initialize empty errors and touched false', () => {
@@ -38,6 +50,16 @@ describe('BaseControl', () => {
     expect(component.touched).toBe(true);
     expect(valueChangeSpy).toHaveBeenCalledWith('test value');
     expect(validateSpy).toHaveBeenCalled();
+  });
+
+  it('should trigger validation and touched on submitAttempted', () => {
+    component.def = { id: 'test', type: 'text', label: 'Test', validations: [{ type: 'required', message: 'Required field' }] } as any;
+    fixture.detectChanges();
+    component.errors = [];
+    component.touched = false;
+    submitAttemptedSubject.next(true);
+    expect(component.touched).toBe(true);
+    expect(component.isValid).toBe(false);
   });
 
   describe('Validations', () => {

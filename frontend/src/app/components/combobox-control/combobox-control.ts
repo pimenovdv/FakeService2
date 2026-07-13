@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseControl } from '../base-control/base-control';
@@ -11,14 +11,15 @@ import { ApiService } from '../../services/api';
   templateUrl: './combobox-control.html',
   styleUrls: ['./combobox-control.scss']
 })
-export class ComboboxControlComponent extends BaseControl implements OnInit {
+export class ComboboxControlComponent extends BaseControl implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
 
   options: any[] = [];
   loadingOptions = false;
   optionsError: string | null = null;
 
-  ngOnInit() {
+  override ngOnInit() {
+    super.ngOnInit();
     if (this.def.options) {
       this.options = this.def.options;
     } else if (this.def.restMetadata) {
@@ -43,5 +44,9 @@ export class ComboboxControlComponent extends BaseControl implements OnInit {
         this.loadingOptions = false;
       }
     });
+  }
+
+  override ngOnDestroy() {
+    super.ngOnDestroy();
   }
 }

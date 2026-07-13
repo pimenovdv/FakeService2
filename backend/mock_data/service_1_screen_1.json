@@ -29,6 +29,18 @@
           "message": "Country is required"
         }
       ]
+    },
+    {
+      "id": "city_input",
+      "type": "text",
+      "label": "City",
+      "showConditions": [
+        {
+          "dependsOn": "country_input",
+          "operator": "===",
+          "value": "usa"
+        }
+      ]
     }
   ],
   "buttons": [

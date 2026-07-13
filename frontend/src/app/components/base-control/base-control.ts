@@ -1,8 +1,11 @@
-import { Directive, EventEmitter, Input, Output } from '@angular/core';
+import { Directive, EventEmitter, Input, Output, inject } from '@angular/core';
 import { ComponentDef, ValidationRule } from '../../models/screen.model';
+import { StateService } from '../../services/state';
 
 @Directive()
 export abstract class BaseControl {
+  public stateService = inject(StateService);
+
   @Input() def!: ComponentDef;
   @Input() value: any;
   @Output() valueChange = new EventEmitter<any>();
@@ -11,12 +14,17 @@ export abstract class BaseControl {
   errors: string[] = [];
   touched = false;
 
+  get isDisabled(): boolean {
+    return this.stateService.isComponentDisabled(this.def);
+  }
+
   get isValid(): boolean {
     return this.errors.length === 0;
   }
 
   onValueChange(newValue: any) {
     this.value = newValue;
+    this.stateService.setAnswer(this.def.id, newValue);
     this.touched = true;
     this.validate();
     this.valueChange.emit(this.value);

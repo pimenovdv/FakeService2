@@ -20,6 +20,7 @@ describe('BaseControl', () => {
 
     fixture = TestBed.createComponent(TestControl);
     component = fixture.componentInstance;
+    component.def = { id: 'test_id', type: 'text', label: 'Test Label' } as ComponentDef;
   });
 
   it('should initialize empty errors and touched false', () => {

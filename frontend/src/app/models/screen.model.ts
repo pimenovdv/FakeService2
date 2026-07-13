@@ -1,5 +1,11 @@
 export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker';
 
+export interface Condition {
+  dependsOn: string;
+  operator: '===' | '!==' | '>' | '<';
+  value: any;
+}
+
 export interface ValidationRule {
   type: 'required' | 'regex' | 'min' | 'max' | 'minLength' | 'maxLength';
   value?: any;
@@ -23,6 +29,8 @@ export interface ComponentDef {
   hidden?: boolean;
   disabled?: boolean;
   dependsOn?: string[]; // IDs of components this depends on
+  showConditions?: Condition[];
+  disableConditions?: Condition[];
 }
 
 export interface ButtonDef {

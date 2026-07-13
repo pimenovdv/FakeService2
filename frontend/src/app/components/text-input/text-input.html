@@ -6,7 +6,7 @@
     [ngModel]="value"
     (ngModelChange)="onValueChange($event)"
     [placeholder]="def.placeholder || ''"
-    [disabled]="def.disabled || false"
+    [disabled]="isDisabled"
     (blur)="touched = true; validate()"
   />
   <div *ngIf="touched && !isValid" class="error-messages">

@@ -19,14 +19,16 @@ describe('Player', () => {
     currentScreenSubject = new BehaviorSubject<Screen | null>(null);
 
     mockApiService = {
-      start: vi.fn().mockReturnValue(of({ id: 'test-screen' } as Screen))
+      start: vi.fn().mockReturnValue(of({ id: 'test-screen' } as Screen)),
+      nextStep: vi.fn().mockReturnValue(of({ id: 'test-screen-2' } as Screen))
     };
 
     mockStateService = {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
       currentScreen$: currentScreenSubject.asObservable(),
       answers$: of({}),
-      evaluateCondition: vi.fn().mockReturnValue(false)
+      evaluateCondition: vi.fn().mockReturnValue(false),
+      getAllAnswers: vi.fn().mockReturnValue({ field1: 'value1' })
     };
 
     mockActivatedRoute = {
@@ -83,5 +85,55 @@ describe('Player', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Test Header');
     expect(compiled.querySelector('.screen-content p')?.textContent).toContain('Test Content');
+  });
+
+  it('should render action buttons', async () => {
+    mockApiService.start.mockReturnValue(of({
+      id: 'test-screen',
+      header: 'Test Header',
+      content: 'Test Content',
+      components: [],
+      buttons: [
+        { id: 'btn-next', label: 'Next', action: 'next_step' }
+      ]
+    } as Screen));
+
+    fixture = TestBed.createComponent(Player);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const buttons = compiled.querySelectorAll('.screen-footer button');
+    expect(buttons.length).toBe(1);
+    expect(buttons[0].textContent?.trim()).toBe('Next');
+  });
+
+  it('should call nextStep on action button click', async () => {
+    mockApiService.start.mockReturnValue(of({
+      id: 'test-screen',
+      header: 'Test Header',
+      content: 'Test Content',
+      components: [],
+      buttons: [
+        { id: 'btn-next', label: 'Next', action: 'next_step' }
+      ]
+    } as Screen));
+
+    fixture = TestBed.createComponent(Player);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const button = compiled.querySelector('.screen-footer button') as HTMLButtonElement;
+
+    button.click();
+
+    expect(mockStateService.getAllAnswers).toHaveBeenCalled();
+    expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { field1: 'value1' });
+    expect(mockStateService.setScreen).toHaveBeenCalledWith({ id: 'test-screen-2' });
   });
 });

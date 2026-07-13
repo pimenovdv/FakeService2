@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { DynamicFieldComponent } from '../dynamic-field/dynamic-field.component';
 import { ApiService } from '../../services/api';
 import { StateService } from '../../services/state';
+import { ButtonDef } from '../../models/screen.model';
 
 @Component({
   selector: 'app-player',
@@ -14,6 +15,7 @@ import { StateService } from '../../services/state';
 export class Player implements OnInit {
   loading = true;
   error: string | null = null;
+  serviceId: string | null = null;
 
   private route = inject(ActivatedRoute);
   private apiService = inject(ApiService);
@@ -23,6 +25,7 @@ export class Player implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const serviceId = params.get('service_id');
+      this.serviceId = serviceId;
       if (serviceId) {
         this.loadScreen(serviceId);
       } else {
@@ -48,5 +51,27 @@ export class Player implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  onButtonClick(btn: ButtonDef, currentScreenId: string) {
+    if (btn.action === 'next_step' || btn.action === 'submit') {
+      if (!this.serviceId) return;
+
+      this.loading = true;
+      const answers = this.stateService.getAllAnswers();
+      this.apiService.nextStep(this.serviceId, currentScreenId, answers).subscribe({
+        next: (screen) => {
+          this.stateService.setScreen(screen);
+          this.loading = false;
+          this.cdr.detectChanges();
+        },
+        error: (err) => {
+          this.error = 'Failed to submit next step: ' + err.message;
+          this.loading = false;
+          console.error('Error submitting next step:', err);
+          this.cdr.detectChanges();
+        }
+      });
+    }
   }
 }

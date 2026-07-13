@@ -21,4 +21,14 @@
     </main>
   </div>
 
+    <footer class="screen-footer" *ngIf="screen.buttons && screen.buttons.length > 0">
+      <button
+        *ngFor="let btn of screen.buttons"
+        [id]="btn.id"
+        [ngClass]="btn.color ? 'btn-' + btn.color : 'btn-primary'"
+        (click)="onButtonClick(btn, screen.id)">
+        {{ btn.label }}
+      </button>
+    </footer>
+
 </div>

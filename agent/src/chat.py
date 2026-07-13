@@ -3,13 +3,14 @@ from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 from src.client import AgentClient
-from src.actions import fetch_autocomplete_options
+from src.actions import AgentActions
 
 class ChatSession:
-    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, model: str = "gpt-4o-mini", agent_client: AgentClient = None):
+    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, agent_client: AgentClient = None, model: str = "gpt-4o-mini"):
         self.client = client or AsyncOpenAI()
         self.model = model
         self.agent_client = agent_client
+        self.actions = AgentActions(agent_client) if agent_client else None
         self.messages: List[ChatCompletionMessageParam] = [
             {"role": "system", "content": system_prompt}
         ]
@@ -41,7 +42,7 @@ class ChatSession:
                         "properties": {
                             "endpoint": {
                                 "type": "string",
-                                "description": "The API endpoint to query."
+                                "description": "The API endpoint to query. Usually derived from restMetadata."
                             },
                             "query": {
                                 "type": "string",
@@ -106,12 +107,14 @@ class ChatSession:
                     })
                 elif tool_call.function.name == "fetch_autocomplete_options":
                     args = json.loads(tool_call.function.arguments)
-                    endpoint = args.get("endpoint", "")
+
+                    # main branch used data_source, we used endpoint. Let's support both gracefully for test compat.
+                    endpoint = args.get("endpoint") or f"/api/data/{args.get('data_source')}"
                     query = args.get("query", "")
 
-                    if self.agent_client:
+                    if self.actions:
                         try:
-                            result = await fetch_autocomplete_options(self.agent_client, endpoint, query)
+                            result = await self.actions.fetch_autocomplete_options(endpoint, params={"query": query})
                             self.messages.append({
                                 "role": "tool",
                                 "tool_call_id": tool_call.id,
@@ -121,13 +124,13 @@ class ChatSession:
                             self.messages.append({
                                 "role": "tool",
                                 "tool_call_id": tool_call.id,
-                                "content": json.dumps({"status": "error", "message": str(e)})
+                                "content": json.dumps({"error": str(e)})
                             })
                     else:
                         self.messages.append({
                             "role": "tool",
                             "tool_call_id": tool_call.id,
-                            "content": json.dumps({"status": "error", "message": "AgentClient not configured"})
+                            "content": json.dumps({"error": "No agent client configured."})
                         })
 
 async def run_chat_loop(

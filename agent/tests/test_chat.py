@@ -53,18 +53,11 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(session.form_submitted)
         self.assertEqual(session.submitted_data, {"name": "John Doe"})
 
-        # Check messages history:
-        # 1. system
-        # 2. user
-        # 3. assistant (with tool calls)
-        # 4. tool
-        # 5. assistant (final response)
         self.assertEqual(len(session.messages), 5)
         self.assertEqual(session.messages[3]["role"], "tool")
         self.assertEqual(session.messages[3]["tool_call_id"], "call_123")
         self.assertEqual(session.messages[4]["role"], "assistant")
         self.assertEqual(session.messages[4]["content"], "Form submitted successfully. Thanks!")
-
 
     async def test_process_user_input_multiple_tool_calls(self):
         mock_client = AsyncMock()
@@ -114,14 +107,6 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(session.form_submitted)
         self.assertEqual(session.submitted_data, {"country": "RU"})
 
-        # Messages:
-        # 0: system
-        # 1: user
-        # 2: assistant (calls auto)
-        # 3: tool (result auto)
-        # 4: assistant (calls submit)
-        # 5: tool (result submit)
-        # 6: assistant (All done!)
         self.assertEqual(len(session.messages), 7)
         self.assertEqual(session.messages[3]["role"], "tool")
         self.assertEqual(session.messages[3]["tool_call_id"], "call_auto")

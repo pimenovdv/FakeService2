@@ -1,0 +1,19 @@
+{
+    "id": "screen_1",
+    "header": "Enter Age",
+    "content": "Please enter your age.",
+    "components": [
+        {
+            "id": "age",
+            "type": "text",
+            "label": "Age"
+        }
+    ],
+    "buttons": [
+        {
+            "id": "next",
+            "label": "Next",
+            "action": "next_step"
+        }
+    ]
+}

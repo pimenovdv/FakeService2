@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from fastapi import HTTPException
 
 MOCK_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mock_data")
@@ -38,9 +39,44 @@ class ScenarioManager:
         for component in current_data.get("components", []):
             comp_id = component.get("id")
             for validation in component.get("validations", []):
-                if validation.get("type") == "required":
+                val_type = validation.get("type")
+                val_message = validation.get("message", f"Validation failed for {comp_id}")
+
+                if val_type == "required":
                     if comp_id not in answers or answers[comp_id] is None or str(answers[comp_id]).strip() == "":
-                        raise HTTPException(status_code=400, detail=validation.get("message", f"{comp_id} is required"))
+                        raise HTTPException(status_code=400, detail=val_message)
+
+                # Check other validations only if the value is provided
+                if comp_id in answers and answers[comp_id] is not None and str(answers[comp_id]).strip() != "":
+                    val_value = validation.get("value")
+                    answer = answers[comp_id]
+
+                    if val_type == "regex":
+                        if not re.match(val_value, str(answer)):
+                            raise HTTPException(status_code=400, detail=val_message)
+                    elif val_type == "minLength":
+                        if len(str(answer)) < int(val_value):
+                            raise HTTPException(status_code=400, detail=val_message)
+                    elif val_type == "maxLength":
+                        if len(str(answer)) > int(val_value):
+                            raise HTTPException(status_code=400, detail=val_message)
+                    elif val_type == "min":
+                        if float(answer) < float(val_value):
+                            raise HTTPException(status_code=400, detail=val_message)
+                    elif val_type == "max":
+                        if float(answer) > float(val_value):
+                            raise HTTPException(status_code=400, detail=val_message)
+
+        # Cross-field validation
+        for cross_validation in current_data.get("crossValidations", []) or []:
+            if cross_validation.get("type") == "match":
+                fields = cross_validation.get("fields", [])
+                if len(fields) > 1:
+                    first_val = answers.get(fields[0])
+                    for field in fields[1:]:
+                        if answers.get(field) != first_val:
+                            val_message = cross_validation.get("message", "Fields do not match")
+                            raise HTTPException(status_code=400, detail=val_message)
 
         # Configuration-driven routing logic
         routing_filename = f"{service_id}_routing.json"

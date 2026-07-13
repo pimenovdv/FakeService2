@@ -9,7 +9,7 @@ This document outlines the step-by-step development process for the FastAPI-base
 - **Phase 7:** Enhanced Scenario Engine implemented (Configuration-driven Routing via `service_1_routing.json` and Support for 'Previous Step' via `/previous_step` endpoint). All tests passing.
 
 ## Phase 8: Data Validation Enhancements
-1. [ ] **Cross-field Validation**
+1. [x] **Cross-field Validation**
    - Implement logic to support validation rules that depend on multiple fields within a screen.
-2. [ ] **Custom Error Messages**
+2. [x] **Custom Error Messages**
    - Enhance the validation engine to support fully customizable error messages returned to the frontend.

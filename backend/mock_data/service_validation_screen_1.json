@@ -1,0 +1,78 @@
+{
+  "id": "screen_1",
+  "header": "Validation Test Screen",
+  "content": "Please enter your details to proceed.",
+  "components": [
+    {
+      "id": "username",
+      "type": "text",
+      "label": "Username",
+      "validations": [
+        {
+          "type": "regex",
+          "value": "^[a-z0-9]+$",
+          "message": "Username must be alphanumeric and lowercase"
+        }
+      ]
+    },
+    {
+      "id": "age",
+      "type": "text",
+      "label": "Age",
+      "validations": [
+        {
+          "type": "min",
+          "value": 18,
+          "message": "Must be at least 18"
+        },
+        {
+          "type": "max",
+          "value": 99,
+          "message": "Must be at most 99"
+        }
+      ]
+    },
+    {
+      "id": "bio",
+      "type": "text",
+      "label": "Bio",
+      "validations": [
+        {
+          "type": "minLength",
+          "value": 10,
+          "message": "Bio too short"
+        },
+        {
+          "type": "maxLength",
+          "value": 50,
+          "message": "Bio too long"
+        }
+      ]
+    },
+    {
+      "id": "password",
+      "type": "text",
+      "label": "Password"
+    },
+    {
+      "id": "confirm_password",
+      "type": "text",
+      "label": "Confirm Password"
+    }
+  ],
+  "crossValidations": [
+    {
+      "type": "match",
+      "fields": ["password", "confirm_password"],
+      "message": "Passwords do not match"
+    }
+  ],
+  "buttons": [
+    {
+      "id": "next_btn",
+      "label": "Next",
+      "action": "next_step",
+      "color": "primary"
+    }
+  ]
+}

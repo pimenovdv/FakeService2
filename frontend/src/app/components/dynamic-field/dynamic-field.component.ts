@@ -30,6 +30,11 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
 
   onValueChange(newValue: any) {
     this.stateService.setAnswer(this.componentDef.id, newValue);
+    this.stateService.setValidation(this.componentDef.id, this.innerControl?.isValid ?? true);
+  }
+
+  onValidChange(isValid: boolean) {
+     this.stateService.setValidation(this.componentDef.id, isValid);
   }
 
   validate(): boolean {
@@ -39,7 +44,9 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
     if (this.innerControl) {
       this.innerControl.touched = true;
       this.innerControl.validate();
-      return this.innerControl.isValid;
+      const isValid = this.innerControl.isValid;
+      this.stateService.setValidation(this.componentDef.id, isValid);
+      return isValid;
     }
     return true; // If no control to validate, consider valid
   }
@@ -53,10 +60,20 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
         this.evaluateConditions();
       })
     );
+    this.subscription.add(
+       this.stateService.submitAttempted$.subscribe((attempted) => {
+         if (attempted && this.innerControl) {
+             this.innerControl.touched = true;
+             this.innerControl.validate();
+             this.stateService.setValidation(this.componentDef.id, this.innerControl.isValid);
+         }
+       })
+    )
   }
 
   ngOnDestroy() {
     this.subscription.unsubscribe();
+    this.stateService.setValidation(this.componentDef.id, true);
   }
 
   private evaluateConditions() {

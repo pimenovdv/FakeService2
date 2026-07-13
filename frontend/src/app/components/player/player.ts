@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, ChangeDetectorRef, ViewChildren, QueryList } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ButtonDef } from '../../models/screen.model';
 import { CommonModule } from '@angular/common';
 import { DynamicFieldComponent } from '../dynamic-field/dynamic-field.component';
 import { ApiService } from '../../services/api';
 import { StateService } from '../../services/state';
-import { ButtonDef } from '../../models/screen.model';
 
 @Component({
   selector: 'app-player',
@@ -39,7 +39,7 @@ export class Player implements OnInit {
   }
 
   onAction(btn: ButtonDef) {
-    if (btn.action === 'next_step') {
+    if (btn.action === 'next_step' || btn.action === 'submit') {
       this.nextStep();
     } else {
       console.warn('Unhandled action:', btn.action);

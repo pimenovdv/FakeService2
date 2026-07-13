@@ -19,13 +19,18 @@
         <app-dynamic-field *ngFor="let comp of screen.components" [componentDef]="comp"></app-dynamic-field>
       </div>
 
-      <div *ngIf="validationError" class="validation-error" style="color: red; margin-top: 10px;">
+      <div *ngIf="validationError" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4 mb-4">
         {{ validationError }}
       </div>
 
-      <div class="buttons-container" style="margin-top: 20px;">
+      <div class="flex justify-end gap-2 mt-4">
         <button *ngFor="let btn of screen.buttons"
-                [ngClass]="btn.color ? 'btn-' + btn.color : ''"
+                [ngClass]="{
+                  'bg-blue-500 hover:bg-blue-700': btn.color === 'primary' || !btn.color,
+                  'bg-gray-500 hover:bg-gray-700': btn.color === 'secondary',
+                  'bg-red-500 hover:bg-red-700': btn.color === 'warn'
+                }"
+                class="px-4 py-2 font-semibold rounded shadow-md text-white transition-colors duration-200 ease-in-out cursor-pointer"
                 (click)="onAction(btn)">
           {{ btn.label }}
         </button>

@@ -1,4 +1,9 @@
-import { vitest } from "vitest";
+import os
+
+with open("frontend/src/app/components/dynamic-field/dynamic-field.spec.ts", "r") as f:
+    content = f.read()
+
+resolved = """import { vitest } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DynamicFieldComponent } from './dynamic-field.component';
 import { ComponentDef } from '../../models/screen.model';
@@ -123,4 +128,7 @@ describe('DynamicFieldComponent', () => {
     expect(innerControlSpy.validate).toHaveBeenCalled();
     expect(result).toBe(false);
   });
-});
+});"""
+
+with open("frontend/src/app/components/dynamic-field/dynamic-field.spec.ts", "w") as f:
+    f.write(resolved)

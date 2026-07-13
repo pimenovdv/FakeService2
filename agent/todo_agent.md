@@ -8,11 +8,7 @@ This document outlines the step-by-step development process for the Python agent
 - **Phase 1-3:** Project setup completed. HTTP client configured. SSR HTML extraction and parsing implemented. LLM integration with prompt engineering and interactive chat loop completed.
 
 ## Phase 4: Form Interaction and Autocomplete Handling
-- [x] 1. **Simulating Actions via API**
-   - Create Python functions that the LLM can call (function calling/tools) to simulate interactions by making appropriate API calls that the frontend would normally make (e.g., `fetch_autocomplete_options(field_id, query)` or `simulate_form_submission(payload)`).
-- [ ] 2. **Handling Complex Controls (e.g., Autocomplete, Dates)**
-   - **Autocomplete**: If the LLM needs to fill an address, it must call the backend API endpoint (extracted from the HTML/JSON definitions) that the frontend autocomplete field uses, fetch the options, and match the user's input (e.g., User: "МО, Луховицы, Пионерская" -> Agent queries the API for "Московская", matches the result, queries for "Лухов", etc.).
-   - **Date/Time Slots**: The agent parses the available slots rendered in the static HTML (or fetched via an API call mimicking the frontend), calculates required offsets (e.g., "tomorrow"), filters times, and selects an available slot ID.
+- [x] Phase 4 complete: Simulated API actions and handling of complex controls (autocomplete, dates) implemented.
 
 ## Phase 5: Validation and Submission
 - [ ] 1. **Submitting the Screen**

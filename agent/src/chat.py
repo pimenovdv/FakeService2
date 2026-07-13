@@ -1,5 +1,6 @@
 from src.client import AgentClient
 import json
+import datetime
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
@@ -24,13 +25,28 @@ class ChatSession:
                             "data_source": {
                                 "type": "string",
                                 "description": "The data source endpoint to fetch from."
+                            },
+                            "query": {
+                                "type": "string",
+                                "description": "Optional search query to filter the autocomplete options."
                             }
                         },
                         "required": ["data_source"]
                     }
                 }
             },
-
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_current_datetime",
+                    "description": "Get the current date and time to help calculate date offsets or relative dates like 'tomorrow'.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
             {
                 "type": "function",
                 "function": {
@@ -114,10 +130,12 @@ class ChatSession:
                 elif tool_call.function.name == "fetch_autocomplete_options":
                     args = json.loads(tool_call.function.arguments)
                     data_source = args.get("data_source")
+                    query = args.get("query")
+                    params = {"q": query} if query else None
 
                     if self.agent_client:
                         try:
-                            res = await self.agent_client.get(f"/api/data/{data_source}")
+                            res = await self.agent_client.get(f"/api/data/{data_source}", params=params)
                             if res.status_code == 200:
                                 tool_content = res.text
                             else:
@@ -134,6 +152,24 @@ class ChatSession:
                     })
 
                     # After fetching data, we need to let the LLM generate a response
+                    second_response = await self.client.chat.completions.create(
+                        model=self.model,
+                        messages=self.messages
+                    )
+                    final_msg = second_response.choices[0].message
+                    self.messages.append({
+                        "role": "assistant",
+                        "content": final_msg.content
+                    })
+                    return final_msg.content or ""
+                elif tool_call.function.name == "get_current_datetime":
+                    tool_content = datetime.datetime.now().isoformat()
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
                     second_response = await self.client.chat.completions.create(
                         model=self.model,
                         messages=self.messages

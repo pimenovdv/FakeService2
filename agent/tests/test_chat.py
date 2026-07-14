@@ -4,6 +4,42 @@ from unittest.mock import AsyncMock, MagicMock
 from src.chat import ChatSession, run_chat_loop
 
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
+    async def test_usage_tracking(self):
+        mock_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = "I am a test."
+        mock_response.choices[0].message.tool_calls = None
+
+        # Mock usage
+        mock_response.usage = MagicMock()
+        mock_response.usage.total_tokens = 150
+        mock_response.usage.prompt_tokens = 100
+        mock_response.usage.completion_tokens = 50
+
+        mock_client.chat.completions.create.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+
+        # Initial usage should be 0
+        self.assertEqual(session.total_tokens_used, 0)
+        self.assertEqual(session.prompt_tokens_used, 0)
+        self.assertEqual(session.completion_tokens_used, 0)
+
+        await session.process_user_input("Hello")
+
+        self.assertEqual(session.total_tokens_used, 150)
+        self.assertEqual(session.prompt_tokens_used, 100)
+        self.assertEqual(session.completion_tokens_used, 50)
+
+        # A second call should accumulate
+        await session.process_user_input("Hello again")
+
+        self.assertEqual(session.total_tokens_used, 300)
+        self.assertEqual(session.prompt_tokens_used, 200)
+        self.assertEqual(session.completion_tokens_used, 100)
+
     async def test_process_user_input_normal_response(self):
         mock_client = AsyncMock()
 

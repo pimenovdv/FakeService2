@@ -21,32 +21,58 @@ class ScreenParser:
         try:
             result = {
                 "fields": [],
-                "buttons": []
+                "buttons": [],
+                "dialogs": []
             }
 
-            # Extract all input-like elements
+            # Extract dialogs first so their children don't pollute the main fields
+            for dialog in self.soup.find_all('dialog'):
+                dialog_info = {
+                    "id": dialog.get('id'),
+                    "fields": [],
+                    "buttons": []
+                }
+                for element in dialog.find_all(['input', 'select', 'textarea']):
+                    field_info = self._parse_field(element)
+                    if field_info:
+                        dialog_info["fields"].append(field_info)
+                for button in dialog.find_all('button'):
+                    btn_info = self._parse_button(button)
+                    if btn_info:
+                        dialog_info["buttons"].append(btn_info)
+
+                # Clean up Nones in dialog_info
+                dialog_info = {k: v for k, v in dialog_info.items() if v is not None}
+                result["dialogs"].append(dialog_info)
+                dialog.extract() # Remove the dialog from soup so it's not processed again
+
+            # Extract all input-like elements from main body
             for element in self.soup.find_all(['input', 'select', 'textarea']):
                 field_info = self._parse_field(element)
                 if field_info:
                     result["fields"].append(field_info)
 
-            # Extract buttons
+            # Extract buttons from main body
             for button in self.soup.find_all('button'):
-                btn_info = {
-                    "text": button.get_text(strip=True),
-                    "type": button.get('type', 'button'),
-                    "id": button.get('id'),
-                    "name": button.get('name')
-                }
-                # Clean up Nones
-                btn_info = {k: v for k, v in btn_info.items() if v is not None}
-                result["buttons"].append(btn_info)
+                btn_info = self._parse_button(button)
+                if btn_info:
+                    result["buttons"].append(btn_info)
 
-            logger.info(f"ScreenParser extracted {len(result['fields'])} fields and {len(result['buttons'])} buttons")
+            logger.info(f"ScreenParser extracted {len(result['fields'])} fields, {len(result['buttons'])} buttons, and {len(result.get('dialogs', []))} dialogs")
             return result
         except Exception as e:
             logger.error(f"ScreenParser failed to parse HTML: {e}")
             return {"fields": [], "buttons": [], "error": "Failed to parse HTML"}
+
+    def _parse_button(self, button) -> Dict[str, Any]:
+        btn_info = {
+            "text": button.get_text(strip=True),
+            "type": button.get('type', 'button'),
+            "id": button.get('id'),
+            "name": button.get('name')
+        }
+        # Clean up Nones
+        return {k: v for k, v in btn_info.items() if v is not None}
 
     def _parse_field(self, element) -> Dict[str, Any]:
         tag_name = element.name
@@ -92,7 +118,7 @@ class ScreenParser:
     def _extract_attributes(self, element) -> Dict[str, Any]:
         attrs = {}
         # List of validation and structural attributes to look for
-        target_attrs = ['required', 'minlength', 'maxlength', 'pattern', 'placeholder', 'value', 'min', 'max', 'step']
+        target_attrs = ['required', 'minlength', 'maxlength', 'pattern', 'placeholder', 'value', 'min', 'max', 'step', 'accept', 'multiple']
 
         for attr in target_attrs:
             if element.has_attr(attr):

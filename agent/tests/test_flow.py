@@ -121,3 +121,23 @@ class TestAgentFlow(unittest.IsolatedAsyncioTestCase):
         # Check that it fell back to returning the JSON data
         self.assertEqual(result, {"id": "screen_3", "fallback_data": "yes"})
         self.assertEqual(flow.current_screen_id, "screen_3")
+
+    async def test_start_error_handling(self):
+        mock_client = AsyncMock(spec=AgentClient)
+        mock_client.fetch_html.side_effect = Exception("Network error")
+
+        flow = AgentFlow(service_id="service_1", client=mock_client)
+        result = await flow.start()
+
+        self.assertEqual(result, {"error": "Failed to fetch screen: Network error"})
+
+    async def test_submit_step_error_handling(self):
+        mock_client = AsyncMock(spec=AgentClient)
+        mock_client.post.side_effect = Exception("API error")
+
+        flow = AgentFlow(service_id="service_1", client=mock_client)
+        flow.current_screen_id = "1"
+
+        result = await flow.submit_step({"key": "val"})
+
+        self.assertEqual(result, {"error": "API error"})

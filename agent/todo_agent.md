@@ -4,24 +4,9 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Completed Phases (1-3)
-- **Phase 1-3:** Project setup completed. HTTP client configured. SSR HTML extraction and parsing implemented. LLM integration with prompt engineering and interactive chat loop completed.
+## Completed Phases (1-6)
+- **Phases 1-6:** Project setup completed. HTTP client configured. SSR HTML extraction and parsing implemented. LLM integration with prompt engineering and interactive chat loop completed. Form interaction, simulated API actions, autocomplete handling, form validation/submission, and screen transitions are implemented. Robustness (graceful error handling) and agent logging (LLM reasoning and HTTP requests) have also been added.
 
-## Phase 4: Form Interaction and Autocomplete Handling
-- [x] Phase 4 complete: Simulated API actions and handling of complex controls (autocomplete, dates) implemented.
-
-## Phase 5: Validation and Submission
-- [x] 1. **Submitting the Screen**
-   - Once the LLM determines all required fields are filled correctly, construct the HTTP POST request representing the form submission (`/next_step`).
-   - Include all necessary headers, cookies, and the `answers` JSON payload exactly as the frontend would.
-- [x] 2. **Handling Screen Transitions**
-   - Analyze the response from the submission (which could be new HTML or a redirect to the next screen URL).
-   - Loop back to Phase 2 (Fetch HTML) for the new screen.
-- [x] 3. **Completion State**
-   - Detect the final success screen (by analyzing the resulting HTML or redirect URL) and notify the user that the process is complete.
-
-## Phase 6: Refinement
-- [ ] 1. **Robustness**
-   - Handle HTTP errors, parsing errors, and malformed HTML gracefully.
-- [ ] 2. **Agent Logging**
-   - Log LLM reasoning, HTTP requests/responses, and extracted state for debugging.
+## Phase 7: Advanced capabilities
+- [ ] 1. Support multi-step modal dialogs.
+- [ ] 2. Support file uploads.

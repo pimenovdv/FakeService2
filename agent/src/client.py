@@ -1,5 +1,8 @@
 import httpx
+import logging
 from typing import Any, Dict, Optional
+
+logger = logging.getLogger(__name__)
 
 class AgentClient:
     """
@@ -24,17 +27,31 @@ class AgentClient:
 
     async def get(self, url: str, **kwargs) -> httpx.Response:
         """Perform a GET request."""
-        return await self.client.get(url, **kwargs)
+        logger.debug(f"AgentClient GET request to {url}")
+        try:
+            response = await self.client.get(url, **kwargs)
+            response.raise_for_status()
+            return response
+        except httpx.HTTPError as e:
+            logger.error(f"HTTPError on GET {url}: {e}")
+            raise
 
     async def fetch_html(self, url: str) -> str:
         """Fetch pre-rendered HTML from a given URL."""
+        logger.debug(f"AgentClient fetching HTML from {url}")
         response = await self.get(url)
-        response.raise_for_status()
         return response.text
 
     async def post(self, url: str, **kwargs) -> httpx.Response:
         """Perform a POST request."""
-        return await self.client.post(url, **kwargs)
+        logger.debug(f"AgentClient POST request to {url}")
+        try:
+            response = await self.client.post(url, **kwargs)
+            response.raise_for_status()
+            return response
+        except httpx.HTTPError as e:
+            logger.error(f"HTTPError on POST {url}: {e}")
+            raise
 
     async def close(self):
         """Close the underlying HTTP client."""

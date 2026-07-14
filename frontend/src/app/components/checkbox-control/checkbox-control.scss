@@ -1,0 +1,35 @@
+.control-container {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+
+    input[type="checkbox"] {
+      margin-right: 0.5rem;
+      cursor: pointer;
+
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+
+    .label-text {
+      font-weight: 500;
+    }
+
+    .required-marker {
+      color: red;
+      margin-left: 0.25rem;
+    }
+  }
+
+  .error-messages {
+    margin-top: 0.25rem;
+    color: red;
+    font-size: 0.875rem;
+  }
+}

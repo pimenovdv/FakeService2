@@ -35,3 +35,31 @@ def test_get_dynamic_data_search_and_pagination():
     assert len(data) == 1
     # Both Canada and United States have "a".
     assert data[0]["name"] in ["Canada", "United States"]
+
+def test_get_dynamic_data_sort_asc():
+    response = client.get("/api/data/countries?sort_by=name&sort_order=asc")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) >= 3
+    assert data[0]["name"] == "Canada"
+    assert data[1]["name"] == "United Kingdom"
+    assert data[2]["name"] == "United States"
+
+def test_get_dynamic_data_sort_desc():
+    response = client.get("/api/data/countries?sort_by=name&sort_order=desc")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) >= 3
+    assert data[0]["name"] == "United States"
+    assert data[1]["name"] == "United Kingdom"
+    assert data[2]["name"] == "Canada"
+
+def test_get_dynamic_data_sort_invalid_field():
+    # Sorting by a non-existent field shouldn't break, it should just push these items to the end or keep their original relative order.
+    response = client.get("/api/data/countries?sort_by=nonexistent")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) >= 3

@@ -185,6 +185,75 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[4]["role"], "assistant")
         self.assertEqual(session.messages[4]["content"], "Today is a good day.")
 
+
+    async def test_call_llm_success(self):
+        mock_client = AsyncMock()
+        mock_client.chat.completions.create.return_value = "response"
+
+        session = ChatSession(system_prompt="Test", client=mock_client)
+        res = await session._call_llm([{"role": "user", "content": "hi"}])
+        self.assertEqual(res, "response")
+        self.assertEqual(mock_client.chat.completions.create.call_count, 1)
+
+    async def test_call_llm_retry_success(self):
+        import asyncio
+        mock_client = AsyncMock()
+        # Fail first two times, succeed on the third
+        mock_client.chat.completions.create.side_effect = [
+            Exception("Fail 1"),
+            Exception("Fail 2"),
+            "success"
+        ]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, max_retries=3)
+
+        # Patch asyncio.sleep to not actually sleep
+        with unittest.mock.patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+            res = await session._call_llm([{"role": "user", "content": "hi"}])
+            self.assertEqual(res, "success")
+            self.assertEqual(mock_client.chat.completions.create.call_count, 3)
+            self.assertEqual(mock_sleep.call_count, 2)
+
+    async def test_call_llm_retry_failure(self):
+        import asyncio
+        mock_client = AsyncMock()
+        mock_client.chat.completions.create.side_effect = Exception("Fail")
+
+        session = ChatSession(system_prompt="Test", client=mock_client, max_retries=2)
+
+        with unittest.mock.patch('asyncio.sleep', new_callable=AsyncMock) as mock_sleep:
+            with self.assertRaises(Exception) as context:
+                await session._call_llm([{"role": "user", "content": "hi"}])
+
+            self.assertEqual(str(context.exception), "Fail")
+            self.assertEqual(mock_client.chat.completions.create.call_count, 2)
+            self.assertEqual(mock_sleep.call_count, 1)
+
+    async def test_call_llm_timeout(self):
+        import asyncio
+        mock_client = AsyncMock()
+
+        # We don't need a custom slow_create, we can just mock wait_for
+        # But wait, wait_for gets `coro`, so if we mock wait_for, `coro` is never awaited,
+        # which causes the RuntimeWarning because mock_client.chat.completions.create is an AsyncMock
+        # that returns a coroutine.
+        # To avoid the unawaited coroutine warning, we can just use a regular MagicMock for create,
+        # or we can await the coroutine in our mocked wait_for.
+
+        async def mock_wait_for(coro, timeout):
+            # Await it and just ignore the result, then raise TimeoutError
+            try:
+                await coro
+            except Exception:
+                pass
+            raise asyncio.TimeoutError()
+
+        session = ChatSession(system_prompt="Test", client=mock_client, max_retries=1)
+
+        with unittest.mock.patch('asyncio.wait_for', side_effect=mock_wait_for):
+            with self.assertRaises(asyncio.TimeoutError):
+                await session._call_llm([{"role": "user", "content": "hi"}])
+
 class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_exit(self):
         session = MagicMock()

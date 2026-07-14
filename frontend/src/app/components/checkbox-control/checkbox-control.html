@@ -1,0 +1,18 @@
+<div class="control-container">
+  <label class="checkbox-label" [attr.for]="def.id">
+    <input
+      type="checkbox"
+      [id]="def.id"
+      [name]="def.id"
+      [ngModel]="value"
+      (ngModelChange)="onValueChange($event)"
+      [disabled]="def.disabled || false"
+      (blur)="touched = true; validate(); isValidChange.emit(isValid)"
+    />
+    <span class="label-text">{{ def.label }}</span>
+    <span *ngIf="def.validations && def.validations.length > 0" class="required-marker">*</span>
+  </label>
+  <div *ngIf="touched && errors.length > 0" class="error-messages">
+    <div *ngFor="let err of errors" class="error-text">{{ err }}</div>
+  </div>
+</div>

@@ -29,6 +29,22 @@
           "message": "Country is required"
         }
       ]
+    },
+    {
+      "id": "radio_field",
+      "type": "radio",
+      "label": "Radio Field",
+      "options": [
+        {
+          "label": "Option A",
+          "value": "A"
+        },
+        {
+          "label": "Option B",
+          "value": "B"
+        }
+      ],
+      "validations": []
     }
   ],
   "buttons": [

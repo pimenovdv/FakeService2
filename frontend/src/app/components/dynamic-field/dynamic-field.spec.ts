@@ -47,6 +47,14 @@ describe('DynamicFieldComponent', () => {
     expect(compiled.querySelector('app-text-input')).toBeTruthy();
   });
 
+  it('should render radio component', () => {
+    component.componentDef = { id: 'fieldRadio', type: 'radio', label: 'Radio Field' } as ComponentDef;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    expect(compiled.querySelector('app-radio-control')).toBeTruthy();
+  });
+
   it('should render fallback for unknown component type', () => {
     component.componentDef = { id: 'field2', type: 'unknown' as any, label: 'Unknown Field' } as ComponentDef;
     fixture.detectChanges();

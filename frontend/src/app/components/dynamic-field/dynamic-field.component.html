@@ -2,6 +2,7 @@
   <app-text-input *ngSwitchCase="'text'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-text-input>
   <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-combobox-control>
   <app-checkbox-control *ngSwitchCase="'checkbox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-checkbox-control>
+  <app-radio-control *ngSwitchCase="'radio'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-radio-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

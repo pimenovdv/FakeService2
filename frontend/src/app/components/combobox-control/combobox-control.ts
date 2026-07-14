@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseControl } from '../base-control/base-control';
@@ -13,6 +13,7 @@ import { ApiService } from '../../services/api';
 })
 export class ComboboxControlComponent extends BaseControl implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
+  private cdr = inject(ChangeDetectorRef);
 
   options: any[] = [];
   loadingOptions = false;
@@ -37,11 +38,13 @@ export class ComboboxControlComponent extends BaseControl implements OnInit, OnD
       next: (data: any[]) => {
         this.options = data;
         this.loadingOptions = false;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('Failed to load dynamic options', err);
         this.optionsError = 'Failed to load options';
         this.loadingOptions = false;
+        this.cdr.markForCheck();
       }
     });
   }

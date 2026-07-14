@@ -1,0 +1,14 @@
+<div class="control-group checkbox-group" [ngClass]="{ 'has-error': !isValid && touched }">
+  <label>
+    <input
+      type="checkbox"
+      [id]="def.id"
+      [disabled]="def.disabled || false"
+      [hidden]="def.hidden"
+      [ngModel]="value"
+      (ngModelChange)="onValueChange($event)"
+      (blur)="touched = true; validate()"
+    >
+    {{ def.label }} <span *ngIf="def.validations && def.validations.length > 0" class="required-marker">*</span>
+  </label>
+</div>

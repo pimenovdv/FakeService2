@@ -75,7 +75,9 @@ export class Player implements OnInit {
 
       this.apiService.nextStep(this.serviceId, currentScreen.id, answers).subscribe({
         next: (response) => {
-          if (response && response.id) {
+          if (response && response.next_screen) {
+            this.stateService.setScreen(response.next_screen);
+          } else if (response && response.id) {
             this.stateService.setScreen(response);
           }
           this.loading = false;

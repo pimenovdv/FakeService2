@@ -1,21 +1,34 @@
 import { test, expect } from '@playwright/test';
 
-test('completes service_1 flow', async ({ page }) => {
+test('Player component user flow - service_1', async ({ page }) => {
+  // Navigate to service_1 screen 1
   await page.goto('/service_1/1');
 
-  // Wait for loading options to disappear
-  await expect(page.locator('.options-loading')).toHaveCount(0);
+  // Wait for the main container to be visible (screen loaded)
+  const appPlayer = page.locator('app-player');
+  await expect(appPlayer).toBeVisible();
 
-  // Fill first screen
-  await page.locator('#name_input').fill('John Doe');
+  // Wait for header text to verify screen 1 loaded
+  await expect(page.locator('h1')).toContainText('Welcome to Service 1');
 
-  // Use page.selectOption by value
-  await page.locator('#country_input').selectOption({ label: 'United States' });
-  await page.locator('body').click(); // blur to trigger validation
+  // Fill out the Full Name input
+  const nameInput = page.locator('input[id="name_input"]');
+  await nameInput.fill('John Test');
 
-  await page.locator('button', { hasText: 'Next' }).click();
+  // Select a value in the Country combobox
+  // Wait for at least one option (other than the disabled placeholder) to appear
+  const countryCombobox = page.locator('select[id="country_input"]');
+  await expect(countryCombobox.locator('option').nth(1)).toBeAttached({ timeout: 5000 });
+  await countryCombobox.selectOption({ label: 'United States' });
 
-  // Wait for screen 2
+  // Click outside to trigger blur/validation
+  await page.locator('body').click();
+
+  // Click the Next button
+  const nextButton = page.locator('button', { hasText: 'Next' });
+  await nextButton.click();
+
+  // Assert the next screen is rendered by checking the header text
   await expect(page.locator('h1')).toContainText('Confirm Details');
 
   // Ensure our new Checkbox Component works!

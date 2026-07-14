@@ -91,6 +91,11 @@ class ChatSession:
         self.form_submitted = False
         self.submitted_data = None
 
+        # Token usage tracking
+        self.total_tokens_used = 0
+        self.prompt_tokens_used = 0
+        self.completion_tokens_used = 0
+
 
     async def _call_llm(self, messages, tools=None, tool_choice=None):
         for attempt in range(self.max_retries):
@@ -107,7 +112,15 @@ class ChatSession:
                 # The openai client natively supports `timeout` param, but we can also use wait_for
                 # for strict enforcement. We pass timeout to create() as well.
                 coro = self.client.chat.completions.create(**kwargs, timeout=self.timeout)
-                return await asyncio.wait_for(coro, timeout=self.timeout + 5.0)
+                response = await asyncio.wait_for(coro, timeout=self.timeout + 5.0)
+
+                # Update usage tracking
+                if hasattr(response, "usage") and response.usage:
+                    self.total_tokens_used += getattr(response.usage, "total_tokens", 0) or 0
+                    self.prompt_tokens_used += getattr(response.usage, "prompt_tokens", 0) or 0
+                    self.completion_tokens_used += getattr(response.usage, "completion_tokens", 0) or 0
+
+                return response
             except Exception as e:
                 logger.warning(f"LLM API call failed (attempt {attempt + 1}/{self.max_retries}): {e}")
                 if attempt == self.max_retries - 1:

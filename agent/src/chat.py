@@ -41,6 +41,23 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "download_and_parse_file",
+                    "description": "Download a file from a given URL and parse its content. Use this to retrieve downloaded files.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "The URL of the file to download."
+                            }
+                        },
+                        "required": ["url"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_current_datetime",
                     "description": "Get the current date and time to help calculate date offsets or relative dates like 'tomorrow'.",
                     "parameters": {
@@ -204,6 +221,47 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (datetime): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "download_and_parse_file":
+                    args = json.loads(tool_call.function.arguments)
+                    url = args.get("url")
+
+                    if self.agent_client:
+                        try:
+                            res = await self.agent_client.get(url)
+                            if res.status_code == 200:
+                                content_type = res.headers.get("content-type", "")
+                                if "application/json" in content_type.lower():
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = res.text
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to download file, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self.client.chat.completions.create(
+                            model=self.model,
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (download_and_parse_file): {e}")
                         return "I encountered an error processing your request."
 
         return response_message.content or ""

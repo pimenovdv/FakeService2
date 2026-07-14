@@ -25,3 +25,15 @@ class AgentActions:
         response = await self.client.post(url, json=payload)
         response.raise_for_status()
         return response.json()
+
+    async def download_and_parse_file(self, url: str) -> Any:
+        """
+        Download a file from the given URL and parse it if it's JSON,
+        otherwise return its text content.
+        """
+        response = await self.client.get(url)
+        response.raise_for_status()
+        content_type = response.headers.get("content-type", "")
+        if "application/json" in content_type.lower():
+            return response.json()
+        return response.text

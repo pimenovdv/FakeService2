@@ -22,6 +22,45 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[-1]["content"], "What is your name?")
         self.assertFalse(session.form_submitted)
 
+    async def test_process_user_input_download_and_parse_file_tool(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_789"
+        tool_call.type = "function"
+        tool_call.function.name = "download_and_parse_file"
+        tool_call.function.arguments = json.dumps({"url": "/api/file.json"})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "I downloaded the file."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        mock_agent_res = MagicMock()
+        mock_agent_res.status_code = 200
+        mock_agent_res.headers = {"content-type": "application/json"}
+        mock_agent_res.json.return_value = {"file": "content"}
+        mock_agent_client.get.return_value = mock_agent_res
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("Download file please")
+
+        self.assertEqual(response, "I downloaded the file.")
+        mock_agent_client.get.assert_called_once_with("/api/file.json")
+        self.assertEqual(session.messages[-2]["role"], "tool")
+        self.assertEqual(session.messages[-2]["content"], '{"file": "content"}')
+        self.assertEqual(session.messages[-1]["role"], "assistant")
+
     async def test_process_user_input_tool_call(self):
         mock_client = AsyncMock()
 

@@ -4,9 +4,12 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Completed Phases (1-7)
-- **Phases 1-6:** Project setup completed. HTTP client configured. SSR HTML extraction and parsing implemented. LLM integration with prompt engineering and interactive chat loop completed. Form interaction, simulated API actions, autocomplete handling, form validation/submission, and screen transitions are implemented. Robustness (graceful error handling) and agent logging (LLM reasoning and HTTP requests) have also been added.
-- **Phase 7:** Added support for parsing multi-step modal dialogs and file uploads in the agent.
+## Completed Phases (1-8)
+- **Phases 1-8:** Project setup, HTTP client, SSR HTML parsing (including dialogs and file uploads), LLM chat loop integration, form validation/submission, and advanced tools like downloading and parsing files are implemented.
 
-## Phase 8: Advanced Agent Tools
-- [ ] 1. Support retrieving and parsing downloaded files.
+## Phase 9: LLM Resilience
+- [ ] 1. Add retry logic for LLM API calls to handle transient errors.
+- [ ] 2. Implement timeout handling for long-running LLM queries.
+
+## Phase 10: Usage Tracking
+- [ ] 1. Implement token usage tracking.

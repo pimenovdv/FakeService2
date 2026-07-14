@@ -59,5 +59,5 @@ This document outlines the step-by-step development process for the Angular-base
    - Test data models, `StateService` logic, and dynamic component rendering.
 2. [x] **End-to-End Tests**
    - Simulate a user flow for a specific `service_id`, verifying component interactions and correct payload submission.
-3. [ ] **Documentation**
+3. [x] **Documentation**
    - Document supported component types, validation rule formats, and REST metadata structures in this directory.

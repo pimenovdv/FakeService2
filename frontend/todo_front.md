@@ -11,5 +11,8 @@ This document outlines the step-by-step development process for the Angular-base
 - **Phase 6: Refinement and Testing** (Unit Tests, End-to-End Tests, Documentation)
 
 ## Phase 7: Implementing Additional Controls
-- [x] **Checkbox Control**
-  - Boolean checkbox field extending BaseControl.
+- [x] Checkbox Control (Boolean checkbox field extending BaseControl).
+
+## Phase 8: Implementing Radio Control
+- [x] **Radio Control**
+  - Radio button group extending BaseControl.

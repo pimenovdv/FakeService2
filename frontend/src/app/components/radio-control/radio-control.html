@@ -1,0 +1,19 @@
+<div class="control-container radio-control">
+  <label class="control-label" *ngIf="def.label">{{ def.label }} <span *ngIf="def.validations && def.validations.length > 0 && def.validations[0].type === 'required'" class="required-asterisk">*</span></label>
+  <div class="radio-group" [class.invalid]="(!isValid && touched)">
+    <div class="radio-option" *ngFor="let option of def.options; let i = index">
+      <input type="radio"
+             [id]="def.id + '-' + i"
+             [name]="def.id"
+             [value]="option.value !== undefined ? option.value : option" [attr.value]="option.value !== undefined ? option.value : option"
+             [(ngModel)]="value"
+             (ngModelChange)="onValueChange($event)"
+             (blur)="touched = true; validate(); isValidChange.emit(isValid)"
+             [attr.disabled]="def.disabled ? true : null">
+      <label [for]="def.id + '-' + i">{{ option.label !== undefined ? option.label : option }}</label>
+    </div>
+  </div>
+  <div class="error-message" *ngIf="(!isValid && touched)">
+    {{ errors[0] }}
+  </div>
+</div>

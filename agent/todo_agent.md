@@ -8,8 +8,8 @@ This document outlines the step-by-step development process for the Python agent
 - **Phases 1-8:** Project setup, HTTP client, SSR HTML parsing (including dialogs and file uploads), LLM chat loop integration, form validation/submission, and advanced tools like downloading and parsing files are implemented.
 
 ## Phase 9: LLM Resilience
-- [ ] 1. Add retry logic for LLM API calls to handle transient errors.
-- [ ] 2. Implement timeout handling for long-running LLM queries.
+- [x] 1. Add retry logic for LLM API calls to handle transient errors.
+- [x] 2. Implement timeout handling for long-running LLM queries.
 
 ## Phase 10: Usage Tracking
 - [ ] 1. Implement token usage tracking.

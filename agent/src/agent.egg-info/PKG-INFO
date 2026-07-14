@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: agent
+Version: 0.1.0
+Summary: Agent tests
+Requires-Python: >=3.12
+Requires-Dist: beautifulsoup4>=4.15.0
+Requires-Dist: httpx>=0.28.1
+Requires-Dist: openai>=2.45.0
+Requires-Dist: pytest
+Requires-Dist: pytest-asyncio>=1.4.0

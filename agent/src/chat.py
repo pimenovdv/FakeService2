@@ -1,5 +1,6 @@
 from src.client import AgentClient
 import json
+import asyncio
 import datetime
 import logging
 from typing import List, Dict, Any, Callable, Awaitable
@@ -9,7 +10,9 @@ from openai.types.chat import ChatCompletionMessageParam
 logger = logging.getLogger(__name__)
 
 class ChatSession:
-    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, agent_client: AgentClient = None, model: str = "gpt-4o-mini"):
+    def __init__(self, system_prompt: str, client: AsyncOpenAI = None, agent_client: AgentClient = None, model: str = "gpt-4o-mini", max_retries: int = 3, timeout: float = 30.0):
+        self.max_retries = max_retries
+        self.timeout = timeout
         self.client = client or AsyncOpenAI()
         self.model = model
         self.agent_client = agent_client
@@ -88,6 +91,29 @@ class ChatSession:
         self.form_submitted = False
         self.submitted_data = None
 
+
+    async def _call_llm(self, messages, tools=None, tool_choice=None):
+        for attempt in range(self.max_retries):
+            try:
+                kwargs = {
+                    "model": self.model,
+                    "messages": messages,
+                }
+                if tools:
+                    kwargs["tools"] = tools
+                if tool_choice:
+                    kwargs["tool_choice"] = tool_choice
+
+                # The openai client natively supports `timeout` param, but we can also use wait_for
+                # for strict enforcement. We pass timeout to create() as well.
+                coro = self.client.chat.completions.create(**kwargs, timeout=self.timeout)
+                return await asyncio.wait_for(coro, timeout=self.timeout + 5.0)
+            except Exception as e:
+                logger.warning(f"LLM API call failed (attempt {attempt + 1}/{self.max_retries}): {e}")
+                if attempt == self.max_retries - 1:
+                    raise
+                await asyncio.sleep(2 ** attempt)
+
     async def process_user_input(self, user_input: str) -> str:
         """
         Process user input and get a response from the LLM, potentially handling tool calls.
@@ -96,8 +122,7 @@ class ChatSession:
         self.messages.append({"role": "user", "content": user_input})
 
         try:
-            response = await self.client.chat.completions.create(
-                model=self.model,
+            response = await self._call_llm(
                 messages=self.messages,
                 tools=self.tools,
                 tool_choice="auto"
@@ -145,8 +170,7 @@ class ChatSession:
 
                     # Get final conversational response after tool call
                     try:
-                        second_response = await self.client.chat.completions.create(
-                            model=self.model,
+                        second_response = await self._call_llm(
                             messages=self.messages
                         )
                         final_msg = second_response.choices[0].message
@@ -185,8 +209,7 @@ class ChatSession:
 
                     # After fetching data, we need to let the LLM generate a response
                     try:
-                        second_response = await self.client.chat.completions.create(
-                            model=self.model,
+                        second_response = await self._call_llm(
                             messages=self.messages
                         )
                         final_msg = second_response.choices[0].message
@@ -208,8 +231,7 @@ class ChatSession:
                     })
 
                     try:
-                        second_response = await self.client.chat.completions.create(
-                            model=self.model,
+                        second_response = await self._call_llm(
                             messages=self.messages
                         )
                         final_msg = second_response.choices[0].message
@@ -249,8 +271,7 @@ class ChatSession:
                     })
 
                     try:
-                        second_response = await self.client.chat.completions.create(
-                            model=self.model,
+                        second_response = await self._call_llm(
                             messages=self.messages
                         )
                         final_msg = second_response.choices[0].message

@@ -1,4 +1,4 @@
-export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea';
+export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea' | 'file';
 
 export interface ValidationRule {
   type: 'required' | 'regex' | 'min' | 'max' | 'minLength' | 'maxLength';
@@ -30,6 +30,8 @@ export interface ComponentDef {
   disabled?: boolean;
   showIf?: Condition;
   disableIf?: Condition;
+  accept?: string; // For file uploads
+  multiple?: boolean; // For file uploads
   dependsOn?: string[]; // IDs of components this depends on
 }
 

@@ -1,4 +1,4 @@
-export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea' | 'file';
+export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea' | 'file' | 'number';
 
 export interface ValidationRule {
   type: 'required' | 'regex' | 'min' | 'max' | 'minLength' | 'maxLength';

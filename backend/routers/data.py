@@ -6,7 +6,16 @@ router = APIRouter(prefix="/api/data", tags=["data"])
 MOCK_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mock_data")
 
 @router.get("/{data_source}")
-def get_dynamic_data(data_source: str, page: int = 1, limit: int | None = None, search: str | None = None, sort_by: str | None = None, sort_order: str = "asc"):
+def get_dynamic_data(
+    data_source: str,
+    page: int = 1,
+    limit: int | None = None,
+    search: str | None = None,
+    sort_by: str | None = None,
+    sort_order: str = "asc",
+    filter_field: str | None = None,
+    filter_value: str | None = None
+):
     filename = f"{data_source}.json"
     filepath = os.path.join(MOCK_DATA_DIR, filename)
 
@@ -17,6 +26,13 @@ def get_dynamic_data(data_source: str, page: int = 1, limit: int | None = None, 
         try:
             data = json.load(f)
             if isinstance(data, list):
+                if filter_field and filter_value is not None:
+                    filter_value_lower = filter_value.lower()
+                    data = [
+                        item for item in data
+                        if isinstance(item, dict) and filter_field in item and str(item[filter_field]).lower() == filter_value_lower
+                    ]
+
                 if search:
                     search_lower = search.lower()
                     data = [

@@ -336,3 +336,46 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(response, "I encountered an error processing your request.")
         self.assertFalse(session.form_submitted)
+
+class TestChatSessionPersistence(unittest.TestCase):
+    def test_save_and_load_state(self):
+        import tempfile
+        import os
+
+        # Initialize and modify state
+
+        mock_client = AsyncMock()
+        session = ChatSession(system_prompt="You are a helpful assistant.", client=mock_client, model="test-model", max_retries=5, timeout=42.0)
+
+        session.messages.append({"role": "user", "content": "Hello"})
+        session.form_submitted = True
+        session.submitted_data = {"key": "value"}
+        session.total_tokens_used = 100
+        session.prompt_tokens_used = 60
+        session.completion_tokens_used = 40
+
+        # Save state to temporary file
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
+            tmp_path = tmp.name
+
+        try:
+            session.save_state(tmp_path)
+
+            # Load state into new instance
+            loaded_session = ChatSession.load_state(tmp_path, client=mock_client)
+
+            # Assert properties match
+            self.assertEqual(loaded_session.model, "test-model")
+            self.assertEqual(loaded_session.max_retries, 5)
+            self.assertEqual(loaded_session.timeout, 42.0)
+            self.assertEqual(len(loaded_session.messages), 2)
+            self.assertEqual(loaded_session.messages[0]["content"], "You are a helpful assistant.")
+            self.assertEqual(loaded_session.messages[1]["content"], "Hello")
+            self.assertTrue(loaded_session.form_submitted)
+            self.assertEqual(loaded_session.submitted_data, {"key": "value"})
+            self.assertEqual(loaded_session.total_tokens_used, 100)
+            self.assertEqual(loaded_session.prompt_tokens_used, 60)
+            self.assertEqual(loaded_session.completion_tokens_used, 40)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)

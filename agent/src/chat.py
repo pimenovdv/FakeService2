@@ -97,6 +97,48 @@ class ChatSession:
         self.completion_tokens_used = 0
 
 
+
+    def save_state(self, filepath: str) -> None:
+        """
+        Save the current state of the chat session to a JSON file.
+        """
+        state = {
+            "model": self.model,
+            "messages": self.messages,
+            "form_submitted": self.form_submitted,
+            "submitted_data": self.submitted_data,
+            "total_tokens_used": self.total_tokens_used,
+            "prompt_tokens_used": self.prompt_tokens_used,
+            "completion_tokens_used": self.completion_tokens_used,
+            "max_retries": self.max_retries,
+            "timeout": self.timeout
+        }
+        with open(filepath, 'w', encoding='utf-8') as f:
+            json.dump(state, f, ensure_ascii=False, indent=2)
+
+    @classmethod
+    def load_state(cls, filepath: str, client: AsyncOpenAI = None, agent_client: AgentClient = None) -> 'ChatSession':
+        """
+        Load a ChatSession from a previously saved state JSON file.
+        """
+        with open(filepath, 'r', encoding='utf-8') as f:
+            state = json.load(f)
+
+        # Initialize with dummy prompt, we will overwrite messages
+        session = cls(system_prompt="", client=client, agent_client=agent_client,
+                      model=state.get("model", "gpt-4o-mini"),
+                      max_retries=state.get("max_retries", 3),
+                      timeout=state.get("timeout", 30.0))
+
+        session.messages = state.get("messages", [])
+        session.form_submitted = state.get("form_submitted", False)
+        session.submitted_data = state.get("submitted_data", None)
+        session.total_tokens_used = state.get("total_tokens_used", 0)
+        session.prompt_tokens_used = state.get("prompt_tokens_used", 0)
+        session.completion_tokens_used = state.get("completion_tokens_used", 0)
+
+        return session
+
     async def _call_llm(self, messages, tools=None, tool_choice=None):
         for attempt in range(self.max_retries):
             try:

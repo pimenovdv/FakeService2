@@ -6,12 +6,13 @@ import { TextInputComponent } from '../text-input/text-input';
 import { ComboboxControlComponent } from '../combobox-control/combobox-control';
 import { CheckboxControlComponent } from '../checkbox-control/checkbox-control';
 import { RadioControlComponent } from '../radio-control/radio-control';
+import { DatepickerControlComponent } from '../datepicker-control/datepicker-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent],
   templateUrl: './dynamic-field.component.html'
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {

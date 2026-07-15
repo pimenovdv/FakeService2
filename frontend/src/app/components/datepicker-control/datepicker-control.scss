@@ -1,0 +1,32 @@
+.datepicker-control-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+
+  label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  input[type="date"] {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+
+    &:disabled {
+      background-color: #f5f5f5;
+      color: #999;
+      cursor: not-allowed;
+    }
+  }
+
+  .error-messages {
+    margin-top: 0.25rem;
+  }
+
+  .error-text {
+    color: red;
+    font-size: 0.875rem;
+  }
+}

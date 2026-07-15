@@ -2,17 +2,9 @@
 
 This document outlines the step-by-step development process for the Angular-based screen player application.
 
-## Completed Phases (1-6)
-- **Phase 1: Project Setup and Architecture** (Initialized Angular Project, Defined Data Models, Core Services)
-- **Phase 2: Routing and Initialization** (Route Configuration, Player Component Initialization)
-- **Phase 3: Dynamic Component Rendering Engine** (Screen Layout Skeleton, Dynamic Component Loader, Base Control Component)
-- **Phase 4: Implementing Specific Controls** (Text Input Control, ComboBox / Select Control, Interactive/Dependent Controls, Action Buttons)
-- **Phase 5: Validation and Submission** (Form Validation Engine, Next Step Submission)
-- **Phase 6: Refinement and Testing** (Unit Tests, End-to-End Tests, Documentation)
+## Completed Phases (1-8)
+- **Phase 1-8:** Project Setup and Architecture, Routing, Dynamic Component Engine, Text Input, ComboBox, Actions, Validation, Testing, Checkbox Control, and Radio Control.
 
-## Phase 7: Implementing Additional Controls
-- [x] Checkbox Control (Boolean checkbox field extending BaseControl).
-
-## Phase 8: Implementing Radio Control
-- [x] **Radio Control**
-  - Radio button group extending BaseControl.
+## Phase 9: Implementing Datepicker Control
+- [x] **Datepicker Control**
+  - Datepicker field extending BaseControl.

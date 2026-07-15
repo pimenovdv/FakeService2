@@ -3,6 +3,7 @@
   <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-combobox-control>
   <app-checkbox-control *ngSwitchCase="'checkbox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-checkbox-control>
   <app-radio-control *ngSwitchCase="'radio'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-radio-control>
+  <app-datepicker-control *ngSwitchCase="'datepicker'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-datepicker-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

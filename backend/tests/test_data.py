@@ -63,3 +63,26 @@ def test_get_dynamic_data_sort_invalid_field():
     data = response.json()
     assert isinstance(data, list)
     assert len(data) >= 3
+
+def test_get_dynamic_data_filter_field():
+    response = client.get("/api/data/countries?filter_field=name&filter_value=canada")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["name"] == "Canada"
+
+def test_get_dynamic_data_filter_pagination():
+    response = client.get("/api/data/countries?filter_field=name&filter_value=Canada&page=1&limit=1")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 1
+    assert data[0]["name"] == "Canada"
+
+def test_get_dynamic_data_filter_no_match():
+    response = client.get("/api/data/countries?filter_field=name&filter_value=not_a_country")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 0

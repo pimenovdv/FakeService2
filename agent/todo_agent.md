@@ -8,4 +8,4 @@ This document outlines the step-by-step development process for the Python agent
 - **Phases 1-10:** Project setup, HTTP client, SSR HTML parsing (including dialogs and file uploads), LLM chat loop integration, form validation/submission, advanced tools (downloading/parsing files), LLM resilience (retry logic, timeout handling), and token usage tracking are implemented.
 
 ## Phase 11: System Prompt Personalization
-- [ ] 1. Add ability to load system prompts from a configuration file to personalize the agent behavior per service.
+- [x] 1. Add ability to load system prompts from a configuration file to personalize the agent behavior per service.

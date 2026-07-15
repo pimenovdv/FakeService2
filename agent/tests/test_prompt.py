@@ -34,3 +34,25 @@ class TestPromptEngineering(unittest.TestCase):
         # Check that prompt contains the JSON representation of fields
         expected_json = json.dumps(parsed_screen, ensure_ascii=False, indent=2)
         self.assertIn(expected_json, prompt)
+
+    def test_generate_system_prompt_with_config(self):
+        parsed_screen = {"fields": []}
+
+        # Test custom prompt
+        prompt = generate_system_prompt(
+            parsed_screen,
+            service_id="custom_service",
+            config_path="tests/test_config.json"
+        )
+        self.assertIn("You are a specialized agent for the custom service.", prompt)
+
+    def test_generate_system_prompt_with_config_fallback(self):
+        parsed_screen = {"fields": []}
+
+        # Test fallback when service not in config
+        prompt = generate_system_prompt(
+            parsed_screen,
+            service_id="unknown_service",
+            config_path="tests/test_config.json"
+        )
+        self.assertIn("You are an agent helping a user fill out a form.", prompt)

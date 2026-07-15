@@ -1,5 +1,7 @@
 import unittest
 import json
+import tempfile
+import os
 from src.prompt import generate_system_prompt
 
 class TestPromptEngineering(unittest.TestCase):
@@ -38,21 +40,35 @@ class TestPromptEngineering(unittest.TestCase):
     def test_generate_system_prompt_with_config(self):
         parsed_screen = {"fields": []}
 
-        # Test custom prompt
-        prompt = generate_system_prompt(
-            parsed_screen,
-            service_id="custom_service",
-            config_path="tests/test_config.json"
-        )
-        self.assertIn("You are a specialized agent for the custom service.", prompt)
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_config:
+            json.dump({"custom_service": "You are a specialized agent for the custom service."}, temp_config)
+            temp_config_path = temp_config.name
+
+        try:
+            # Test custom prompt
+            prompt = generate_system_prompt(
+                parsed_screen,
+                service_id="custom_service",
+                config_path=temp_config_path
+            )
+            self.assertIn("You are a specialized agent for the custom service.", prompt)
+        finally:
+            os.remove(temp_config_path)
 
     def test_generate_system_prompt_with_config_fallback(self):
         parsed_screen = {"fields": []}
 
-        # Test fallback when service not in config
-        prompt = generate_system_prompt(
-            parsed_screen,
-            service_id="unknown_service",
-            config_path="tests/test_config.json"
-        )
-        self.assertIn("You are an agent helping a user fill out a form.", prompt)
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_config:
+            json.dump({"custom_service": "You are a specialized agent for the custom service."}, temp_config)
+            temp_config_path = temp_config.name
+
+        try:
+            # Test fallback when service not in config
+            prompt = generate_system_prompt(
+                parsed_screen,
+                service_id="unknown_service",
+                config_path=temp_config_path
+            )
+            self.assertIn("You are an agent helping a user fill out a form.", prompt)
+        finally:
+            os.remove(temp_config_path)

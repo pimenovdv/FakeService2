@@ -61,6 +61,27 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "upload_file",
+                    "description": "Upload a local file to a given URL.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "url": {
+                                "type": "string",
+                                "description": "The URL to upload the file to."
+                            },
+                            "filepath": {
+                                "type": "string",
+                                "description": "The local path to the file to upload."
+                            }
+                        },
+                        "required": ["url", "filepath"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_current_datetime",
                     "description": "Get the current date and time to help calculate date offsets or relative dates like 'tomorrow'.",
                     "parameters": {
@@ -338,6 +359,46 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (download_and_parse_file): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "upload_file":
+                    args = json.loads(tool_call.function.arguments)
+                    url = args.get("url")
+                    filepath = args.get("filepath")
+
+                    if self.agent_client:
+                        try:
+                            with open(filepath, "rb") as f:
+                                res = await self.agent_client.post(url, files={"file": f})
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to upload file, status code {res.status_code}"})
+                        except FileNotFoundError:
+                            tool_content = json.dumps({"error": f"File not found: {filepath}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (upload_file): {e}")
                         return "I encountered an error processing your request."
 
         return response_message.content or ""

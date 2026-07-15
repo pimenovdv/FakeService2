@@ -222,6 +222,87 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[4]["content"], "Today is a good day.")
 
 
+    async def test_process_user_input_upload_file_success(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 200
+        mock_http_response.json.return_value = {"file_id": "test_id", "url": "/test"}
+        mock_agent_client.post.return_value = mock_http_response
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_upload_123"
+        tool_call.type = "function"
+        tool_call.function.name = "upload_file"
+        tool_call.function.arguments = json.dumps({"url": "/api/upload", "filepath": "test.txt"})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "File uploaded."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        import unittest.mock
+        with unittest.mock.patch('builtins.open', unittest.mock.mock_open(read_data=b"test data")) as mock_file:
+            response = await session.process_user_input("Upload this file")
+
+            self.assertEqual(response, "File uploaded.")
+            self.assertFalse(session.form_submitted)
+
+            mock_agent_client.post.assert_called_once_with("/api/upload", files={"file": mock_file.return_value})
+
+            self.assertEqual(len(session.messages), 5)
+            self.assertEqual(session.messages[3]["role"], "tool")
+            self.assertEqual(session.messages[3]["tool_call_id"], "call_upload_123")
+            self.assertEqual(json.loads(session.messages[3]["content"]), {"file_id": "test_id", "url": "/test"})
+
+    async def test_process_user_input_upload_file_not_found(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_upload_456"
+        tool_call.type = "function"
+        tool_call.function.name = "upload_file"
+        tool_call.function.arguments = json.dumps({"url": "/api/upload", "filepath": "missing.txt"})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "File not found."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        import unittest.mock
+        with unittest.mock.patch('builtins.open', side_effect=FileNotFoundError):
+            response = await session.process_user_input("Upload missing file")
+
+            self.assertEqual(response, "File not found.")
+            self.assertFalse(session.form_submitted)
+            mock_agent_client.post.assert_not_called()
+
+            self.assertEqual(session.messages[3]["role"], "tool")
+            self.assertEqual(json.loads(session.messages[3]["content"]), {"error": "File not found: missing.txt"})
+
     async def test_call_llm_success(self):
         mock_client = AsyncMock()
         mock_client.chat.completions.create.return_value = "response"

@@ -97,6 +97,45 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[-2]["content"], '{"file": "content"}')
         self.assertEqual(session.messages[-1]["role"], "assistant")
 
+    async def test_process_user_input_abort_form_success(self):
+        from unittest.mock import patch
+
+        mock_client = AsyncMock()
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_abort"
+        tool_call.type = "function"
+        tool_call.function.name = "abort_form"
+        tool_call.function.arguments = json.dumps({"reason": "User cancelled"})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply after tool execution
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "I have aborted the form."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+
+        with patch('src.chat.asyncio.wait_for', side_effect=[mock_response_1, mock_response_2]):
+            response = await session.process_user_input("Nevermind, stop.")
+
+            self.assertEqual(response, "I have aborted the form.")
+            self.assertTrue(session.form_aborted)
+            self.assertEqual(session.aborted_reason, "User cancelled")
+
+            # The tool result should have been added
+            self.assertEqual(len(session.messages), 5)
+            self.assertEqual(session.messages[3]["role"], "tool")
+            self.assertEqual(session.messages[3]["tool_call_id"], "call_abort")
+
     async def test_process_user_input_tool_call(self):
         mock_client = AsyncMock()
 
@@ -375,6 +414,7 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_exit(self):
         session = MagicMock()
         session.form_submitted = False
+        session.form_aborted = False
 
         input_func = AsyncMock(side_effect=["exit"])
         output_func = AsyncMock()
@@ -388,6 +428,7 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_submit(self):
         session = MagicMock()
         session.form_submitted = False
+        session.form_aborted = False
 
         async def mock_process(text):
             if text == "submit":
@@ -431,6 +472,8 @@ class TestChatSessionPersistence(unittest.TestCase):
         session.messages.append({"role": "user", "content": "Hello"})
         session.form_submitted = True
         session.submitted_data = {"key": "value"}
+        session.form_aborted = True
+        session.aborted_reason = "Test reason"
         session.total_tokens_used = 100
         session.prompt_tokens_used = 60
         session.completion_tokens_used = 40
@@ -454,6 +497,8 @@ class TestChatSessionPersistence(unittest.TestCase):
             self.assertEqual(loaded_session.messages[1]["content"], "Hello")
             self.assertTrue(loaded_session.form_submitted)
             self.assertEqual(loaded_session.submitted_data, {"key": "value"})
+            self.assertTrue(loaded_session.form_aborted)
+            self.assertEqual(loaded_session.aborted_reason, "Test reason")
             self.assertEqual(loaded_session.total_tokens_used, 100)
             self.assertEqual(loaded_session.prompt_tokens_used, 60)
             self.assertEqual(loaded_session.completion_tokens_used, 40)

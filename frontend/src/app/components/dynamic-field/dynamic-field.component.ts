@@ -10,12 +10,13 @@ import { DatepickerControlComponent } from '../datepicker-control/datepicker-con
 import { TextareaControlComponent } from '../textarea-control/textarea-control';
 import { FileControlComponent } from '../file-control/file-control';
 import { NumberControlComponent } from '../number-control/number-control';
+import { PasswordControlComponent } from '../password-control/password-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent],
   templateUrl: './dynamic-field.component.html'
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {

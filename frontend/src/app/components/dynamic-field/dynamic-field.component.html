@@ -7,6 +7,7 @@
   <app-textarea-control *ngSwitchCase="'textarea'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-textarea-control>
   <app-file-control *ngSwitchCase="'file'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-file-control>
   <app-number-control *ngSwitchCase="'number'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-number-control>
+  <app-password-control *ngSwitchCase="'password'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-password-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

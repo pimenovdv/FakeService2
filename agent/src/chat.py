@@ -107,10 +107,29 @@ class ChatSession:
                         "required": ["answers"]
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "abort_form",
+                    "description": "Abort the form submission flow. Use this when the user explicitly cancels or when an unrecoverable error occurs.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "reason": {
+                                "type": "string",
+                                "description": "The reason for aborting the form submission."
+                            }
+                        },
+                        "required": ["reason"]
+                    }
+                }
             }
         ]
         self.form_submitted = False
         self.submitted_data = None
+        self.form_aborted = False
+        self.aborted_reason = None
 
         # Token usage tracking
         self.total_tokens_used = 0
@@ -128,6 +147,8 @@ class ChatSession:
             "messages": self.messages,
             "form_submitted": self.form_submitted,
             "submitted_data": self.submitted_data,
+            "form_aborted": self.form_aborted,
+            "aborted_reason": self.aborted_reason,
             "total_tokens_used": self.total_tokens_used,
             "prompt_tokens_used": self.prompt_tokens_used,
             "completion_tokens_used": self.completion_tokens_used,
@@ -154,6 +175,8 @@ class ChatSession:
         session.messages = state.get("messages", [])
         session.form_submitted = state.get("form_submitted", False)
         session.submitted_data = state.get("submitted_data", None)
+        session.form_aborted = state.get("form_aborted", False)
+        session.aborted_reason = state.get("aborted_reason", None)
         session.total_tokens_used = state.get("total_tokens_used", 0)
         session.prompt_tokens_used = state.get("prompt_tokens_used", 0)
         session.completion_tokens_used = state.get("completion_tokens_used", 0)
@@ -258,6 +281,33 @@ class ChatSession:
                         return final_msg.content or "Form submitted."
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (submit_form): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "abort_form":
+                    args = json.loads(tool_call.function.arguments)
+                    self.form_aborted = True
+                    self.aborted_reason = args.get("reason", "No reason provided")
+
+                    # Provide tool result back to the model
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({"status": "success", "message": "Form aborted successfully."})
+                    })
+
+                    # Get final conversational response after tool call
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or "Form aborted."
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (abort_form): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "fetch_autocomplete_options":
                     args = json.loads(tool_call.function.arguments)
@@ -413,7 +463,7 @@ async def run_chat_loop(
     """
     await output_func("Agent initialized. What would you like to do?")
 
-    while not session.form_submitted:
+    while not session.form_submitted and not session.form_aborted:
         user_text = await input_func()
         if user_text.lower() in ["exit", "quit"]:
             await output_func("Exiting chat.")
@@ -424,3 +474,5 @@ async def run_chat_loop(
 
     if session.form_submitted:
         await output_func(f"Form submission complete with data: {session.submitted_data}")
+    elif session.form_aborted:
+        await output_func(f"Form aborted with reason: {session.aborted_reason}")

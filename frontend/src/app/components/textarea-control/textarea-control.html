@@ -1,0 +1,16 @@
+<div class="textarea-control-container">
+  <label [for]="def.id">{{ def.label }}</label>
+  <textarea
+    [id]="def.id"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [placeholder]="def.placeholder || ''"
+    [disabled]="def.disabled || false"
+    (blur)="touched = true; validate()"
+  ></textarea>
+  <div *ngIf="touched && !isValid" class="error-messages">
+    <div *ngFor="let error of errors" class="error-text">
+      {{ error }}
+    </div>
+  </div>
+</div>

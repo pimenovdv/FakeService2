@@ -11,6 +11,7 @@
   <app-slider-control *ngSwitchCase="'slider'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-slider-control>
   <app-color-control *ngSwitchCase="'color'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-color-control>
   <app-time-control *ngSwitchCase="'time'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-time-control>
+  <app-toggle-control *ngSwitchCase="'toggle'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-toggle-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

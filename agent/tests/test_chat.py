@@ -131,6 +131,33 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[-2]["role"], "tool")
         self.assertIn("Handoff to human requested successfully", session.messages[-2]["content"])
 
+    async def test_process_user_input_pause_session_success(self):
+        mock_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_message = MagicMock()
+        mock_message.content = None
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_pause"
+        mock_tool_call.function.name = "pause_session"
+        mock_tool_call.function.arguments = '{"reason": "Need to wait for an email"}'
+        mock_message.tool_calls = [mock_tool_call]
+        mock_response.choices = [MagicMock(message=mock_message)]
+
+        mock_second_response = MagicMock()
+        mock_second_message = MagicMock()
+        mock_second_message.content = "Session paused. I will wait."
+        mock_second_response.choices = [MagicMock(message=mock_second_message)]
+
+        mock_client.chat.completions.create.side_effect = [mock_response, mock_second_response]
+
+        session = ChatSession(system_prompt="Test", client=mock_client)
+        response = await session.process_user_input("Pause the session please.")
+
+        self.assertTrue(session.session_paused)
+        self.assertEqual(session.paused_reason, "Need to wait for an email")
+        self.assertEqual(response, "Session paused. I will wait.")
+        self.assertEqual(len(session.messages), 5) # system, user, assistant(tool), tool result, final answer
+
     async def test_process_user_input_abort_form_success(self):
         from unittest.mock import patch
 
@@ -450,6 +477,7 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         session.form_submitted = False
         session.form_aborted = False
         session.handoff_requested = False
+        session.session_paused = False
 
         input_func = AsyncMock(side_effect=["exit"])
         output_func = AsyncMock()
@@ -460,11 +488,36 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         output_func.assert_any_call("Exiting chat.")
         self.assertFalse(session.process_user_input.called)
 
+    async def test_run_chat_loop_pause(self):
+        session = MagicMock()
+        session.form_submitted = False
+        session.form_aborted = False
+        session.handoff_requested = False
+        session.session_paused = False
+
+        async def mock_process(text):
+            if text == "pause":
+                session.session_paused = True
+                session.paused_reason = "User needs a break."
+                return "Session paused."
+            return "Ok"
+
+        session.process_user_input = AsyncMock(side_effect=mock_process)
+
+        input_func = AsyncMock(side_effect=["pause"])
+        output_func = AsyncMock()
+
+        await run_chat_loop(session, input_func, output_func)
+
+        output_func.assert_any_call("Session paused.")
+        output_func.assert_any_call("Session paused. Reason: User needs a break.")
+
     async def test_run_chat_loop_handoff(self):
         session = MagicMock()
         session.form_submitted = False
         session.form_aborted = False
         session.handoff_requested = False
+        session.session_paused = False
 
         async def mock_process(text):
             if text == "handoff":
@@ -488,6 +541,7 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         session.form_submitted = False
         session.form_aborted = False
         session.handoff_requested = False
+        session.session_paused = False
 
         async def mock_process(text):
             if text == "submit":
@@ -533,6 +587,8 @@ class TestChatSessionPersistence(unittest.TestCase):
         session.submitted_data = {"key": "value"}
         session.form_aborted = True
         session.aborted_reason = "Test reason"
+        session.session_paused = True
+        session.paused_reason = "Waiting for external API"
         session.total_tokens_used = 100
         session.prompt_tokens_used = 60
         session.completion_tokens_used = 40

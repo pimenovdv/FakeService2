@@ -1,0 +1,22 @@
+<div class="control-container" [class.hidden]="def?.hidden">
+  <label *ngIf="def?.label" class="control-label">{{ def?.label }}</label>
+
+  <div class="rating-stars" (mouseleave)="clearHover()">
+    <span
+      *ngFor="let star of stars"
+      class="star"
+      [class.filled]="star <= (hoverValue || value)"
+      [class.disabled]="def?.disabled === true"
+      (click)="setRating(star)"
+      (mouseenter)="setHover(star)"
+    >
+      ★
+    </span>
+  </div>
+
+  <div *ngIf="def?.placeholder && !value" class="rating-placeholder">{{ def?.placeholder }}</div>
+
+  <div *ngIf="errors.length > 0 && touched" class="error-message">
+    {{ errors[0] }}
+  </div>
+</div>

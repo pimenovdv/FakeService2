@@ -128,6 +128,23 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "export_chat_history",
+                    "description": "Exports the current chat history to a specified local JSON file.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "filepath": {
+                                "type": "string",
+                                "description": "The local path where the chat history should be saved as a JSON file."
+                            }
+                        },
+                        "required": ["filepath"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "pause_session",
                     "description": "Pause the current session, saving the state so it can be resumed later. Use this when you are waiting for a long-running process or need the user to take actions before continuing.",
                     "parameters": {
@@ -379,6 +396,37 @@ class ChatSession:
                         return final_msg.content or "Form aborted."
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (abort_form): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "export_chat_history":
+                    args = json.loads(tool_call.function.arguments)
+                    filepath = args.get("filepath")
+
+                    try:
+                        with open(filepath, "w", encoding="utf-8") as f:
+                            json.dump(self.messages, f, ensure_ascii=False, indent=2)
+                        tool_content = json.dumps({"status": "success", "message": f"Chat history exported to {filepath}"})
+                    except Exception as e:
+                        tool_content = json.dumps({"status": "error", "message": f"Failed to export chat history: {e}"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or f"Chat history exported to {filepath}."
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (export_chat_history): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "request_human_handoff":
                     args = json.loads(tool_call.function.arguments)

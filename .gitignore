@@ -1,2 +1,4 @@
 __pycache__/
 *.pyc
+backend_output.log
+frontend_output.log

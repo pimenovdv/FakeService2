@@ -131,6 +131,57 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[-2]["role"], "tool")
         self.assertIn("Handoff to human requested successfully", session.messages[-2]["content"])
 
+    async def test_process_user_input_export_chat_history_success(self):
+        import tempfile
+        import os
+        import json
+
+        mock_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_message = MagicMock()
+        mock_message.role = "assistant"
+        mock_message.content = None
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "export_chat_history"
+        mock_tool_call.function.arguments = json.dumps({"filepath": "/tmp/dummy"})
+
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            filepath = tmp_file.name
+
+        try:
+            mock_tool_call.function.arguments = json.dumps({"filepath": filepath})
+            mock_message.tool_calls = [mock_tool_call]
+            mock_response.choices = [MagicMock(message=mock_message)]
+
+            mock_second_response = MagicMock()
+            mock_second_response.choices = [MagicMock(message=MagicMock(content="History exported."))]
+
+            mock_client.chat.completions.create.side_effect = [mock_response, mock_second_response]
+
+            session = ChatSession(system_prompt="Test prompt", client=mock_client)
+            session.messages = [{"role": "system", "content": "Test prompt"}] # ensure predictability
+
+            response = await session.process_user_input("export history")
+
+            self.assertEqual(response, "History exported.")
+
+            # verify file contents
+            with open(filepath, "r") as f:
+                saved_history = json.load(f)
+
+            self.assertTrue(len(saved_history) > 0)
+            self.assertEqual(saved_history[0]["role"], "system")
+            self.assertEqual(saved_history[0]["content"], "Test prompt")
+
+            # verify tool output
+            self.assertEqual(session.messages[-2]["role"], "tool")
+            self.assertIn("success", session.messages[-2]["content"])
+        finally:
+            if os.path.exists(filepath):
+                os.remove(filepath)
+
     async def test_process_user_input_pause_session_success(self):
         mock_client = AsyncMock()
         mock_response = MagicMock()

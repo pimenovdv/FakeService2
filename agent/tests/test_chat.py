@@ -97,6 +97,40 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[-2]["content"], '{"file": "content"}')
         self.assertEqual(session.messages[-1]["role"], "assistant")
 
+    async def test_process_user_input_request_human_handoff(self):
+        from unittest.mock import patch
+
+        mock_client = AsyncMock()
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_handoff"
+        tool_call.type = "function"
+        tool_call.function.name = "request_human_handoff"
+        tool_call.function.arguments = json.dumps({"summary": "User needs complex support."})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply after tool execution
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "I have requested a human operator to assist you."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+        response = await session.process_user_input("I want to speak to a human.")
+
+        self.assertEqual(response, "I have requested a human operator to assist you.")
+        self.assertTrue(session.handoff_requested)
+        self.assertEqual(session.handoff_summary, "User needs complex support.")
+        self.assertEqual(session.messages[-2]["role"], "tool")
+        self.assertIn("Handoff to human requested successfully", session.messages[-2]["content"])
+
     async def test_process_user_input_abort_form_success(self):
         from unittest.mock import patch
 
@@ -415,6 +449,7 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         session = MagicMock()
         session.form_submitted = False
         session.form_aborted = False
+        session.handoff_requested = False
 
         input_func = AsyncMock(side_effect=["exit"])
         output_func = AsyncMock()
@@ -425,10 +460,34 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         output_func.assert_any_call("Exiting chat.")
         self.assertFalse(session.process_user_input.called)
 
+    async def test_run_chat_loop_handoff(self):
+        session = MagicMock()
+        session.form_submitted = False
+        session.form_aborted = False
+        session.handoff_requested = False
+
+        async def mock_process(text):
+            if text == "handoff":
+                session.handoff_requested = True
+                session.handoff_summary = "Help needed."
+                return "Handoff requested."
+            return "Ok"
+
+        session.process_user_input = AsyncMock(side_effect=mock_process)
+
+        input_func = AsyncMock(side_effect=["handoff"])
+        output_func = AsyncMock()
+
+        await run_chat_loop(session, input_func, output_func)
+
+        output_func.assert_any_call("Handoff requested.")
+        output_func.assert_any_call("Handoff to human requested. Summary: Help needed.")
+
     async def test_run_chat_loop_submit(self):
         session = MagicMock()
         session.form_submitted = False
         session.form_aborted = False
+        session.handoff_requested = False
 
         async def mock_process(text):
             if text == "submit":

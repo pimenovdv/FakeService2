@@ -128,6 +128,23 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "pause_session",
+                    "description": "Pause the current session, saving the state so it can be resumed later. Use this when you are waiting for a long-running process or need the user to take actions before continuing.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "reason": {
+                                "type": "string",
+                                "description": "The reason for pausing the session."
+                            }
+                        },
+                        "required": ["reason"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "request_human_handoff",
                     "description": "Escalate the session to a human operator. Use this when you are unable to assist the user further or when they explicitly request human assistance.",
                     "parameters": {
@@ -149,6 +166,8 @@ class ChatSession:
         self.aborted_reason = None
         self.handoff_requested = False
         self.handoff_summary = None
+        self.session_paused = False
+        self.paused_reason = None
 
         # Token usage tracking
         self.total_tokens_used = 0
@@ -170,6 +189,8 @@ class ChatSession:
             "aborted_reason": self.aborted_reason,
             "handoff_requested": self.handoff_requested,
             "handoff_summary": self.handoff_summary,
+            "session_paused": self.session_paused,
+            "paused_reason": self.paused_reason,
             "total_tokens_used": self.total_tokens_used,
             "prompt_tokens_used": self.prompt_tokens_used,
             "completion_tokens_used": self.completion_tokens_used,
@@ -200,6 +221,8 @@ class ChatSession:
         session.aborted_reason = state.get("aborted_reason", None)
         session.handoff_requested = state.get("handoff_requested", False)
         session.handoff_summary = state.get("handoff_summary", None)
+        session.session_paused = state.get("session_paused", False)
+        session.paused_reason = state.get("paused_reason", None)
         session.total_tokens_used = state.get("total_tokens_used", 0)
         session.prompt_tokens_used = state.get("prompt_tokens_used", 0)
         session.completion_tokens_used = state.get("completion_tokens_used", 0)
@@ -304,6 +327,31 @@ class ChatSession:
                         return final_msg.content or "Form submitted."
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (submit_form): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "pause_session":
+                    args = json.loads(tool_call.function.arguments)
+                    self.session_paused = True
+                    self.paused_reason = args.get("reason", "No reason provided")
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({"status": "success", "message": "Session paused successfully."})
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or "Session paused."
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (pause_session): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "abort_form":
                     args = json.loads(tool_call.function.arguments)
@@ -513,7 +561,7 @@ async def run_chat_loop(
     """
     await output_func("Agent initialized. What would you like to do?")
 
-    while not session.form_submitted and not session.form_aborted and not session.handoff_requested:
+    while not session.form_submitted and not session.form_aborted and not session.handoff_requested and not getattr(session, "session_paused", False):
         user_text = await input_func()
         if user_text.lower() in ["exit", "quit"]:
             await output_func("Exiting chat.")
@@ -528,3 +576,5 @@ async def run_chat_loop(
         await output_func(f"Form aborted with reason: {session.aborted_reason}")
     elif session.handoff_requested:
         await output_func(f"Handoff to human requested. Summary: {session.handoff_summary}")
+    elif session.session_paused:
+        await output_func(f"Session paused. Reason: {session.paused_reason}")

@@ -1,20 +1,32 @@
 {
-  "id": "screen1",
-  "header": "Currency Control Test",
-  "content": "Please enter amount.",
+  "id": "test_service_screen_1",
+  "header": "Contact Information",
+  "content": "Please enter your email and phone number.",
   "components": [
     {
-      "id": "amount",
-      "type": "currency",
-      "label": "Amount",
-      "currencySymbol": "$"
+      "id": "email_input",
+      "type": "email",
+      "label": "Email Address",
+      "placeholder": "you@example.com",
+      "validations": [
+        {
+          "type": "required",
+          "message": "Email is required"
+        }
+      ]
+    },
+    {
+      "id": "phone_input",
+      "type": "phone",
+      "label": "Phone Number",
+      "placeholder": "+1 555-555-5555"
     }
   ],
   "buttons": [
     {
-      "id": "btn_next",
-      "label": "Next",
-      "action": "next_step",
+      "id": "submit_btn",
+      "label": "Submit",
+      "action": "submit",
       "color": "primary"
     }
   ]

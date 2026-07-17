@@ -1,0 +1,16 @@
+<div class="control-container">
+  <label [for]="def.id">{{ def.label }} <span *ngIf="isRequired" class="required-asterisk">*</span></label>
+  <input
+    type="email"
+    [id]="def.id"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [placeholder]="def.placeholder || ''"
+    [disabled]="def.disabled === true"
+    [ngModelOptions]="{standalone: true}"
+    (blur)="touched = true; validate()"
+  />
+  <div class="error-message" *ngIf="errors.length > 0 && touched">
+    <span *ngFor="let err of errors">{{ err }}</span>
+  </div>
+</div>

@@ -9,5 +9,11 @@ This document outlines the step-by-step development process for the FastAPI-base
 ## Phase 21: Real-time Communication
 1. [x] **Implement Mock WebSocket Endpoint**
    - Create `backend/routers/websocket.py` with `ws /api/ws/notifications` that accepts connections and echoes messages back to the client.
-2. [ ] **Implement Mock Server-Sent Events (SSE) Endpoint**
+2. [x] **Implement Mock Server-Sent Events (SSE) Endpoint**
    - Create an endpoint `GET /api/stream` that streams mock events to the client.
+
+## Phase 22: Authentication and Authorization
+1. [ ] **Implement OAuth2 Mock Login Flow**
+   - Create endpoints for testing OAuth2 login redirection, callback handling, and token generation.
+2. [ ] **Implement Role-Based Access Control (RBAC)**
+   - Add permission checks to sensitive endpoints using dependencies based on token roles.

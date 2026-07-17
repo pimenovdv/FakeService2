@@ -4,6 +4,52 @@ from unittest.mock import AsyncMock, MagicMock
 from src.chat import ChatSession, run_chat_loop
 
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
+    async def test_reset_session(self):
+        mock_client = AsyncMock()
+
+        # First response: call reset_session tool
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "reset_session"
+        mock_tool_call.function.arguments = "{}"
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        # Second response: final assistant reply after reset
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Session has been reset."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None # to prevent json serialization error in _call_llm
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+        session.messages.append({"role": "user", "content": "Some old history"})
+        session.form_aborted = True
+        session.aborted_reason = "Something failed"
+        session.session_paused = True
+
+        response = await session.process_user_input("Reset my session")
+
+        self.assertEqual(response, "Session has been reset.")
+        self.assertFalse(session.form_aborted)
+        self.assertIsNone(session.aborted_reason)
+        self.assertFalse(session.session_paused)
+
+        # messages should be system prompt + assistant tool call + reset tool result + final assistant reply
+        self.assertEqual(len(session.messages), 4)
+        self.assertEqual(session.messages[0]["role"], "system")
+        self.assertEqual(session.messages[1]["role"], "assistant")
+        self.assertEqual(session.messages[2]["role"], "tool")
+        self.assertEqual(session.messages[3]["role"], "assistant")
+
     async def test_usage_tracking(self):
         mock_client = AsyncMock()
 

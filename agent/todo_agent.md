@@ -4,8 +4,8 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Completed Phases (1-16)
-- **Phases 1-16:** Implemented project setup, HTTP client, SSR HTML parsing, LLM chat loop integration, form validation/submission, advanced tools (download/parse files, file upload), LLM resilience, token usage tracking, system prompt personalization via config, state persistence, form abortion tool, request human handoff tool, and session pausing.
+## Completed Phases (1-17)
+- **Phases 1-17:** Implemented project setup, HTTP client, SSR HTML parsing, LLM chat loop integration, form validation/submission, advanced tools (download/parse files, file upload), LLM resilience, token usage tracking, system prompt personalization via config, state persistence, form abortion tool, request human handoff tool, session pausing, and chat history export.
 
-## Phase 17: Chat History Export
-- [x] 1. Implement `export_chat_history` tool in the agent, allowing the LLM to save the current conversation history to a specified local JSON file upon the user's request.
+## Phase 18: Reset Session Tool
+- [x] 1. Implement `reset_session` tool in the agent, allowing the LLM to reset the chat history and all session states to start over.

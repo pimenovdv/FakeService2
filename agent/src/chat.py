@@ -44,6 +44,18 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "reset_session",
+                    "description": "Resets the chat session state, clearing the conversation history and resetting all session states. Use this when the user wants to start over from scratch.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "download_and_parse_file",
                     "description": "Download a file from a given URL and parse its content. Use this to retrieve downloaded files.",
                     "parameters": {
@@ -396,6 +408,40 @@ class ChatSession:
                         return final_msg.content or "Form aborted."
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (abort_form): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "reset_session":
+                    # Truncate messages to only the system prompt and the assistant tool call message
+                    self.messages = [self.messages[0], self.messages[-1]]
+
+                    # Reset all session states
+                    self.form_submitted = False
+                    self.submitted_data = None
+                    self.form_aborted = False
+                    self.aborted_reason = None
+                    self.handoff_requested = False
+                    self.handoff_summary = None
+                    self.session_paused = False
+                    self.paused_reason = None
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({"status": "success", "message": "Session reset successfully."})
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or "Session reset."
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (reset_session): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "export_chat_history":
                     args = json.loads(tool_call.function.arguments)

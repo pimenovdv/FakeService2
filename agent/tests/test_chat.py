@@ -46,6 +46,62 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertIn("service_1", tool_msg["content"])
         self.assertIn("service_2", tool_msg["content"])
 
+    async def test_generate_mock_data(self):
+        mock_client = AsyncMock()
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_mock_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "generate_mock_data"
+        mock_tool_call.function.arguments = json.dumps({
+            "fields": [
+                {"id": "field_email", "type": "email", "name": "email", "label": "Email Address"},
+                {"id": "field_phone", "type": "text", "name": "phone_num", "label": "Phone Number"},
+                {"id": "field_name", "type": "text", "name": "first_name", "label": "First Name"},
+                {"id": "field_age", "type": "number", "name": "age", "label": "Age"},
+                {"id": "field_unknown", "type": "text", "name": "custom", "label": "Custom"}
+            ]
+        })
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Mock data generated."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+        response = await session.process_user_input("Generate some mock data for me.")
+
+        self.assertEqual(response, "Mock data generated.")
+
+        # Verify tool messages
+        tool_msg = next((msg for msg in session.messages if msg.get("role") == "tool" and msg.get("tool_call_id") == "call_mock_123"), None)
+        self.assertIsNotNone(tool_msg)
+
+        tool_content = json.loads(tool_msg["content"])
+        self.assertIn("mock_data", tool_content)
+        mock_data = tool_content["mock_data"]
+
+        self.assertIn("field_email", mock_data)
+        self.assertIn("@example.com", mock_data["field_email"])
+        self.assertIn("field_phone", mock_data)
+        self.assertTrue(mock_data["field_phone"].startswith("555-01"))
+        self.assertIn("field_name", mock_data)
+        self.assertEqual(mock_data["field_name"], "Mock Name")
+        self.assertIn("field_age", mock_data)
+        # Should be a numeric string
+        self.assertTrue(mock_data["field_age"].isdigit())
+        self.assertIn("field_unknown", mock_data)
+        self.assertTrue(mock_data["field_unknown"].startswith("Mock Value "))
+
     async def test_update_user_preferences(self):
         mock_client = AsyncMock()
 

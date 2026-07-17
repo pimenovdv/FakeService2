@@ -44,6 +44,18 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_session_stats",
+                    "description": "Retrieve current session statistics, including token usage and message count.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "reset_session",
                     "description": "Resets the chat session state, clearing the conversation history and resetting all session states. Use this when the user wants to start over from scratch.",
                     "parameters": {
@@ -442,6 +454,36 @@ class ChatSession:
                         return final_msg.content or "Session reset."
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (reset_session): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "get_session_stats":
+                    stats = {
+                        "prompt_tokens_used": self.prompt_tokens_used,
+                        "completion_tokens_used": self.completion_tokens_used,
+                        "total_tokens_used": self.total_tokens_used,
+                        "message_count": len(self.messages)
+                    }
+                    tool_content = json.dumps(stats)
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or "Here are the session stats."
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (get_session_stats): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "export_chat_history":
                     args = json.loads(tool_call.function.arguments)

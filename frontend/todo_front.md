@@ -8,5 +8,5 @@ This document outlines the step-by-step development process for the Angular-base
 ## Phase 20: Advanced Controls 9
 - [x] **Currency Control**
   - Numeric input field for currency extending BaseControl.
-- [ ] **Tags Control**
+- [x] **Tags Control**
   - Input field for tags extending BaseControl.

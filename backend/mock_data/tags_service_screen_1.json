@@ -1,0 +1,22 @@
+{
+  "id": "screen1",
+  "header": "Tags Control Test",
+  "content": "Please enter tags.",
+  "components": [
+    {
+      "id": "tags_input",
+      "type": "tags",
+      "label": "Favorite Tags",
+      "placeholder": "Add a tag...",
+      "validations": [{"type": "required"}]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "btn_next",
+      "label": "Next",
+      "action": "next_step",
+      "color": "primary"
+    }
+  ]
+}

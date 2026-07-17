@@ -18,12 +18,13 @@ import { ToggleControlComponent } from '../toggle-control/toggle-control';
 import { RatingControlComponent } from '../rating-control/rating-control';
 import { StepperControlComponent } from '../stepper-control/stepper-control';
 import { CurrencyControlComponent } from '../currency-control/currency-control';
+import { TagsControlComponent } from '../tags-control/tags-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent],
   templateUrl: './dynamic-field.component.html'
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {

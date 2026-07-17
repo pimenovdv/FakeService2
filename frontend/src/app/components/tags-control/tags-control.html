@@ -1,0 +1,31 @@
+<div class="control-container" [class.has-error]="errors.length > 0 && touched">
+  <label *ngIf="def.label" class="control-label" [for]="def.id">
+    {{ def.label }}
+    <span *ngIf="isRequired" class="required-asterisk">*</span>
+  </label>
+
+  <div class="tags-input-container" [class.disabled]="def.disabled" (click)="tagInput.focus()">
+    <div class="tags-list">
+      <span *ngFor="let tag of tags; let i = index" class="tag">
+        {{ tag }}
+        <button type="button" class="remove-tag" (click)="removeTag(i)" [disabled]="def.disabled">&times;</button>
+      </span>
+    </div>
+    <input
+      #tagInput
+      type="text"
+      [id]="def.id"
+      class="tag-input"
+      [(ngModel)]="inputValue"
+      [placeholder]="tags.length === 0 ? (def.placeholder || '') : ''"
+      [disabled]="def.disabled || false"
+      (keydown)="onKeyDown($event)"
+      (blur)="onBlur()"
+      [ngModelOptions]="{standalone: true}"
+    />
+  </div>
+
+  <div *ngIf="errors.length > 0 && touched" class="error-messages">
+    <div *ngFor="let err of errors" class="error-message">{{ err }}</div>
+  </div>
+</div>

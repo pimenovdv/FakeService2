@@ -2,6 +2,8 @@ from src.client import AgentClient
 import json
 import asyncio
 import datetime
+import random
+import string
 import logging
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
@@ -48,6 +50,33 @@ class ChatSession:
                         "type": "object",
                         "properties": {},
                         "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "generate_mock_data",
+                    "description": "Auto-generate mock values for the provided fields to help the user fill out a form faster.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "fields": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {"type": "string"},
+                                        "name": {"type": "string"},
+                                        "type": {"type": "string"},
+                                        "label": {"type": "string"}
+                                    },
+                                    "required": ["id"]
+                                },
+                                "description": "The fields to generate mock values for."
+                            }
+                        },
+                        "required": ["fields"]
                     }
                 }
             },
@@ -664,6 +693,62 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (datetime): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "generate_mock_data":
+                    try:
+                        args = json.loads(tool_call.function.arguments)
+                        fields = args.get("fields", [])
+
+                        mocked_data = {}
+
+                        for field in fields:
+                            field_id = field.get("id")
+                            if not field_id:
+                                continue
+
+                            field_type = str(field.get("type", "")).lower()
+                            field_name = str(field.get("name", "")).lower()
+                            field_label = str(field.get("label", "")).lower()
+
+                            if "email" in field_type or "email" in field_name or "email" in field_label:
+                                val = "mockuser" + str(random.randint(100, 999)) + "@example.com"
+                            elif "phone" in field_type or "phone" in field_name or "phone" in field_label:
+                                val = "555-01" + str(random.randint(10, 99))
+                            elif field_type == "number":
+                                val = str(random.randint(1, 100))
+                            elif "date" in field_type or "date" in field_name:
+                                val = "2024-01-01"
+                            elif "name" in field_name or "name" in field_label:
+                                val = "Mock Name"
+                            else:
+                                val = "Mock Value " + ''.join(random.choices(string.ascii_letters, k=5))
+
+                            mocked_data[field_id] = val
+
+                        tool_content = json.dumps({"mock_data": mocked_data})
+                    except Exception as e:
+                        logger.error(f"Error generating mock data: {e}")
+                        tool_content = json.dumps({"error": str(e)})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (generate_mock_data): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "retrieve_available_services":
                     if self.agent_client:

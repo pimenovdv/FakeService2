@@ -13,6 +13,7 @@
   <app-time-control *ngSwitchCase="'time'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-time-control>
   <app-toggle-control *ngSwitchCase="'toggle'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-toggle-control>
   <app-rating-control *ngSwitchCase="'rating'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-rating-control>
+  <app-stepper-control *ngSwitchCase="'stepper'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-stepper-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

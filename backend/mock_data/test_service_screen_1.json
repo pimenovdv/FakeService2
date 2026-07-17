@@ -1,0 +1,25 @@
+{
+  "id": "screen1",
+  "header": "Stepper Control Test",
+  "content": "Please select a quantity.",
+  "components": [
+    {
+      "id": "quantity",
+      "type": "stepper",
+      "label": "Quantity",
+      "validations": [
+        {"type": "required"},
+        {"type": "min", "value": 1},
+        {"type": "max", "value": 5}
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "btn_next",
+      "label": "Next",
+      "action": "next_step",
+      "color": "primary"
+    }
+  ]
+}

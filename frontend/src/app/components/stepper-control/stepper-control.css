@@ -1,0 +1,84 @@
+.control-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.control-label {
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+
+.required-asterisk {
+    color: red;
+    margin-left: 0.2rem;
+}
+
+.stepper-wrapper {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    overflow: hidden;
+    width: fit-content;
+}
+
+.has-error .stepper-wrapper {
+    border-color: red;
+}
+
+.stepper-btn {
+    background-color: #f0f0f0;
+    border: none;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #333;
+    transition: background-color 0.2s;
+}
+
+.stepper-btn:hover:not(:disabled) {
+    background-color: #e0e0e0;
+}
+
+.stepper-btn:disabled {
+    color: #aaa;
+    cursor: not-allowed;
+    background-color: #f9f9f9;
+}
+
+.stepper-input {
+    border: none;
+    text-align: center;
+    padding: 0.5rem;
+    width: 60px;
+    font-size: 1rem;
+    -moz-appearance: textfield;
+}
+
+.stepper-input::-webkit-outer-spin-button,
+.stepper-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.stepper-input:focus {
+    outline: none;
+    background-color: #fdfdfd;
+}
+
+.stepper-input:disabled {
+    background-color: #f9f9f9;
+    color: #888;
+}
+
+.error-messages {
+    color: red;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.error-text {
+    display: block;
+}

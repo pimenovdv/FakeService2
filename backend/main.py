@@ -2,7 +2,7 @@ import asyncio
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from routers import screens, data, upload, auth, crud, tasks, download, health
+from routers import screens, data, upload, auth, crud, tasks, download, health, websocket
 
 app = FastAPI()
 
@@ -49,3 +49,4 @@ app.include_router(crud.router)
 app.include_router(tasks.router)
 app.include_router(download.router)
 app.include_router(health.router)
+app.include_router(websocket.router)

@@ -4,6 +4,13 @@ import pytest
 
 client = TestClient(app)
 
+def test_get_available_services():
+    response = client.get("/api/screens/available_services")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert "service_1" in data
+
 def test_start_scenario_success():
     response = client.post("/api/screens/start", json={"service_id": "service_1"})
     assert response.status_code == 200

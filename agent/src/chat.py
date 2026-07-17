@@ -19,7 +19,26 @@ class ChatSession:
         self.messages: List[ChatCompletionMessageParam] = [
             {"role": "system", "content": system_prompt}
         ]
+        self.user_preferences: Dict[str, Any] = {}
         self.tools = [
+            {
+                "type": "function",
+                "function": {
+                    "name": "update_user_preferences",
+                    "description": "Update the user's preferences (e.g., tone, language, verbosity) for the session.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "preferences": {
+                                "type": "object",
+                                "description": "A dictionary of key-value pairs representing the user preferences.",
+                                "additionalProperties": True
+                            }
+                        },
+                        "required": ["preferences"]
+                    }
+                }
+            },
             {
                 "type": "function",
                 "function": {
@@ -236,7 +255,8 @@ class ChatSession:
             "prompt_tokens_used": self.prompt_tokens_used,
             "completion_tokens_used": self.completion_tokens_used,
             "max_retries": self.max_retries,
-            "timeout": self.timeout
+            "timeout": self.timeout,
+            "user_preferences": self.user_preferences
         }
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(state, f, ensure_ascii=False, indent=2)
@@ -267,6 +287,7 @@ class ChatSession:
         session.total_tokens_used = state.get("total_tokens_used", 0)
         session.prompt_tokens_used = state.get("prompt_tokens_used", 0)
         session.completion_tokens_used = state.get("completion_tokens_used", 0)
+        session.user_preferences = state.get("user_preferences", {})
 
         return session
 
@@ -454,6 +475,34 @@ class ChatSession:
                         return final_msg.content or "Session reset."
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (reset_session): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "update_user_preferences":
+                    args = json.loads(tool_call.function.arguments)
+                    preferences = args.get("preferences", {})
+                    self.user_preferences.update(preferences)
+
+                    tool_content = json.dumps({"status": "success", "user_preferences": self.user_preferences})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or "Preferences updated."
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (update_user_preferences): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "get_session_stats":
                     stats = {

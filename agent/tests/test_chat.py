@@ -4,6 +4,44 @@ from unittest.mock import AsyncMock, MagicMock
 from src.chat import ChatSession, run_chat_loop
 
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
+    async def test_update_user_preferences(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_pref_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "update_user_preferences"
+        mock_tool_call.function.arguments = json.dumps({"preferences": {"language": "Spanish", "tone": "friendly"}})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Preferences updated successfully."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+
+        response = await session.process_user_input("Speak to me in Spanish and be friendly.")
+
+        self.assertEqual(response, "Preferences updated successfully.")
+        self.assertEqual(session.user_preferences, {"language": "Spanish", "tone": "friendly"})
+
+        tool_msg = session.messages[-2]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertEqual(tool_msg["name"], "update_user_preferences")
+        content = json.loads(tool_msg["content"])
+        self.assertEqual(content["status"], "success")
+        self.assertEqual(content["user_preferences"], {"language": "Spanish", "tone": "friendly"})
+
     async def test_get_session_stats(self):
         mock_client = AsyncMock()
 
@@ -748,6 +786,7 @@ class TestChatSessionPersistence(unittest.TestCase):
         session.total_tokens_used = 100
         session.prompt_tokens_used = 60
         session.completion_tokens_used = 40
+        session.user_preferences = {"theme": "dark", "language": "French"}
 
         # Save state to temporary file
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as tmp:
@@ -773,6 +812,7 @@ class TestChatSessionPersistence(unittest.TestCase):
             self.assertEqual(loaded_session.total_tokens_used, 100)
             self.assertEqual(loaded_session.prompt_tokens_used, 60)
             self.assertEqual(loaded_session.completion_tokens_used, 40)
+            self.assertEqual(loaded_session.user_preferences, {"theme": "dark", "language": "French"})
         finally:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)

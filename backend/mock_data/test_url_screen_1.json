@@ -1,0 +1,27 @@
+{
+  "id": "1",
+  "header": "URL Input Screen",
+  "content": "Please provide your website URL.",
+  "components": [
+    {
+      "id": "website_url",
+      "type": "url",
+      "label": "Website URL",
+      "placeholder": "https://...",
+      "validations": [
+        {
+          "type": "required",
+          "message": "URL is required"
+        }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "submit_btn",
+      "label": "Submit",
+      "action": "submit",
+      "color": "primary"
+    }
+  ]
+}

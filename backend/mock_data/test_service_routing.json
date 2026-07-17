@@ -1,3 +1,8 @@
 {
-  "mock_data/test_service_screen_1.json": "mock_data/test_service_screen_2.json"
+  "start_screen_id": "test_service_screen_1",
+  "routes": {
+    "test_service_screen_1": {
+      "next": "end"
+    }
+  }
 }

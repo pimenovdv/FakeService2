@@ -16,6 +16,8 @@
   <app-stepper-control *ngSwitchCase="'stepper'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-stepper-control>
   <app-currency-control *ngSwitchCase="'currency'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-currency-control>
   <app-tags-control *ngSwitchCase="'tags'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-tags-control>
+  <app-email-control *ngSwitchCase="'email'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-email-control>
+  <app-phone-control *ngSwitchCase="'phone'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-phone-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

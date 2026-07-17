@@ -1,0 +1,19 @@
+<div class="control-container">
+  <label [for]="def.id">{{ def.label }}</label>
+  <div class="input-with-symbol">
+    <span class="currency-symbol" *ngIf="def.currencySymbol">{{ def.currencySymbol }}</span>
+    <input
+      type="number"
+      [id]="def.id"
+      [ngModel]="value"
+      [ngModelOptions]="{standalone: true}"
+      (ngModelChange)="onValueChange($event)"
+      [placeholder]="def.placeholder || ''"
+      [disabled]="def.disabled === true"
+      class="form-control"
+    />
+  </div>
+  <div *ngIf="errors.length > 0 && touched" class="error-message">
+    <div *ngFor="let err of errors">{{ err }}</div>
+  </div>
+</div>

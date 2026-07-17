@@ -1,7 +1,7 @@
 from typing import Literal, List, Optional, Any, Dict
 from pydantic import BaseModel, Field
 
-ControlType = Literal['text', 'combobox', 'checkbox', 'radio', 'datepicker', 'textarea', 'file', 'number', 'password', 'slider', 'color', 'time', 'toggle', 'rating', 'stepper', 'currency', 'tags', 'email', 'phone']
+ControlType = Literal['text', 'combobox', 'checkbox', 'radio', 'datepicker', 'textarea', 'file', 'number', 'password', 'slider', 'color', 'time', 'toggle', 'rating', 'stepper', 'currency', 'tags', 'email', 'phone', 'url']
 
 class ValidationRule(BaseModel):
     type: Literal['required', 'regex', 'min', 'max', 'minLength', 'maxLength']

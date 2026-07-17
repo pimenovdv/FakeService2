@@ -42,6 +42,18 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "retrieve_available_services",
+                    "description": "Retrieve the list of available service IDs from the backend that the user can start a form for.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "fetch_autocomplete_options",
                     "description": "Fetch available options for an autocomplete field from the backend.",
                     "parameters": {
@@ -652,6 +664,39 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (datetime): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "retrieve_available_services":
+                    if self.agent_client:
+                        try:
+                            res = await self.agent_client.get("/api/screens/available_services")
+                            if res.status_code == 200:
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to fetch services, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (retrieve_available_services): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "download_and_parse_file":
                     args = json.loads(tool_call.function.arguments)

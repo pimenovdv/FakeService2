@@ -7,6 +7,16 @@ MOCK_DATA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "mock_d
 
 class ScenarioManager:
     @staticmethod
+    def get_available_services() -> list[str]:
+        services = []
+        if os.path.exists(MOCK_DATA_DIR):
+            for filename in os.listdir(MOCK_DATA_DIR):
+                if filename.endswith("_screen_1.json"):
+                    service_id = filename.replace("_screen_1.json", "")
+                    services.append(service_id)
+        return sorted(list(set(services)))
+
+    @staticmethod
     def get_initial_screen(service_id: str) -> dict:
         filename = f"{service_id}_screen_1.json"
         filepath = os.path.join(MOCK_DATA_DIR, filename)

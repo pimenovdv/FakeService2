@@ -5,6 +5,10 @@ from services.scenario_manager import ScenarioManager
 
 router = APIRouter(prefix="/api/screens", tags=["screens"])
 
+@router.get("/available_services", response_model=list[str])
+def get_available_services():
+    return ScenarioManager.get_available_services()
+
 @router.post("/start", response_model=ScreenDef)
 def start_scenario(request: StartRequest):
     screen_data = ScenarioManager.get_initial_screen(request.service_id)

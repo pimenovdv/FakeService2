@@ -1,17 +1,13 @@
 {
   "id": "screen1",
-  "header": "Stepper Control Test",
-  "content": "Please select a quantity.",
+  "header": "Currency Control Test",
+  "content": "Please enter amount.",
   "components": [
     {
-      "id": "quantity",
-      "type": "stepper",
-      "label": "Quantity",
-      "validations": [
-        {"type": "required"},
-        {"type": "min", "value": 1},
-        {"type": "max", "value": 5}
-      ]
+      "id": "amount",
+      "type": "currency",
+      "label": "Amount",
+      "currencySymbol": "$"
     }
   ],
   "buttons": [

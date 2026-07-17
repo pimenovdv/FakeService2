@@ -4,6 +4,65 @@ from unittest.mock import AsyncMock, MagicMock
 from src.chat import ChatSession, run_chat_loop
 
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
+    async def test_get_session_stats(self):
+        mock_client = AsyncMock()
+
+        # First response: call get_session_stats tool
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_stats_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_session_stats"
+        mock_tool_call.function.arguments = "{}"
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.usage.prompt_tokens = 50
+        mock_response_1.usage.completion_tokens = 10
+        mock_response_1.usage.total_tokens = 60
+
+        # Second response: final assistant reply after stats
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Here are your stats."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+        mock_response_2.usage.prompt_tokens = 100
+        mock_response_2.usage.completion_tokens = 20
+        mock_response_2.usage.total_tokens = 120
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+        session.prompt_tokens_used = 10
+        session.completion_tokens_used = 5
+        session.total_tokens_used = 15
+
+        response = await session.process_user_input("What are my stats?")
+
+        self.assertEqual(response, "Here are your stats.")
+        self.assertEqual(session.prompt_tokens_used, 160)
+        self.assertEqual(session.completion_tokens_used, 35)
+        self.assertEqual(session.total_tokens_used, 195)
+
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[0]["role"], "system")
+        self.assertEqual(session.messages[1]["role"], "user")
+        self.assertEqual(session.messages[2]["role"], "assistant")
+        self.assertEqual(session.messages[3]["role"], "tool")
+
+        tool_content = json.loads(session.messages[3]["content"])
+        self.assertEqual(tool_content["prompt_tokens_used"], 60) # 10 + 50
+        self.assertEqual(tool_content["completion_tokens_used"], 15) # 5 + 10
+        self.assertEqual(tool_content["total_tokens_used"], 75) # 15 + 60
+        self.assertEqual(tool_content["message_count"], 3) # system, user, assistant(tool call), tool (itself not appended yet when len calculated)
+
+        self.assertEqual(session.messages[4]["role"], "assistant")
+
+
     async def test_reset_session(self):
         mock_client = AsyncMock()
 

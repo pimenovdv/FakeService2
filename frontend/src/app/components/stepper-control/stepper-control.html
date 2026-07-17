@@ -1,0 +1,40 @@
+<div class="control-container" [class.has-error]="errors.length > 0 && touched">
+  <label *ngIf="def.label" [for]="def.id" class="control-label">
+    {{ def.label }}
+    <span *ngIf="isRequired" class="required-asterisk">*</span>
+  </label>
+
+  <div class="stepper-wrapper">
+    <button
+        type="button"
+        class="stepper-btn decrement-btn"
+        (click)="decrement()"
+        [disabled]="def.disabled || (value !== undefined && value !== null && value <= min)">
+        -
+    </button>
+    <input
+        type="number"
+        class="stepper-input"
+        [id]="def.id"
+        [name]="def.id"
+        [ngModel]="value"
+        (ngModelChange)="onValueChange($event)"
+        (blur)="onInputBlur()"
+        [placeholder]="def.placeholder || ''"
+        [disabled]="!!def.disabled"
+        [attr.min]="min"
+        [attr.max]="max"
+        [ngModelOptions]="{standalone: true}">
+    <button
+        type="button"
+        class="stepper-btn increment-btn"
+        (click)="increment()"
+        [disabled]="def.disabled || (value !== undefined && value !== null && value >= max)">
+        +
+    </button>
+  </div>
+
+  <div *ngIf="errors.length > 0 && touched" class="error-messages">
+    <span *ngFor="let err of errors" class="error-text">{{ err }}</span>
+  </div>
+</div>

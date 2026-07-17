@@ -19,6 +19,10 @@ export class RatingControlComponent extends BaseControl {
     super();
   }
 
+  get isRequired(): boolean {
+    return !!this.def?.validations?.some(v => v.type === 'required');
+  }
+
   setRating(rating: number) {
     if (!this.def?.disabled && this.def?.disabled !== true) {
       this.onValueChange(rating);

@@ -76,6 +76,21 @@ def test_cross_field_match_failure():
     assert response.json() == {"detail": "Passwords do not match"}
 
 
+def test_cross_field_required_if_failure():
+    response = client.post("/api/screens/next_step", json={
+        "service_id": "service_validation",
+        "current_screen_id": "screen_1",
+        "answers": {
+            "password": "mypassword",
+            "confirm_password": "mypassword",
+            "has_pet": "yes"
+            # pet_name is missing
+        }
+    })
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Pet name is required if you have a pet"}
+
+
 def test_all_validations_pass():
     response = client.post("/api/screens/next_step", json={
         "service_id": "service_validation",
@@ -85,7 +100,8 @@ def test_all_validations_pass():
             "age": "25",
             "bio": "this is a valid bio",
             "password": "mypassword",
-            "confirm_password": "mypassword"
+            "confirm_password": "mypassword",
+            "has_pet": "no"
         }
     })
     assert response.status_code == 200

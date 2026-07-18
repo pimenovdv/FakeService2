@@ -4,8 +4,8 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Completed Phases (1-21)
-- **Phases 1-21:** Implemented HTTP client, SSR HTML parsing, LLM chat loop, form validation, download/upload tools, resilience, token tracking, custom prompts, state persistence, form abort/handoff/pause, chat export, reset session, stats, preferences, and retrieve available services tools.
+## Completed Phases (1-22)
+- **Phases 1-22:** Implemented HTTP client, SSR HTML parsing, LLM chat loop, form validation, download/upload tools, resilience, token tracking, custom prompts, state persistence, form abort/handoff/pause, chat export, reset session, stats, preferences, retrieve available services tools, and generate mock data tool.
 
-## Phase 22: Generate Mock Data Tool
-- [x] 1. Implement `generate_mock_data` tool to auto-generate mock values for the current form to help the user fill it out faster.
+## Phase 23: System Health Tool
+- [x] 1. Implement `get_system_health` tool to retrieve current backend system status and connected services.

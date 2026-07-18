@@ -1,10 +1,40 @@
 import asyncio
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+import time
 from fastapi.responses import JSONResponse
 from routers import screens, data, upload, auth, crud, tasks, download, health, websocket, stream
 
 app = FastAPI()
+
+class RateLimiter:
+    def __init__(self):
+        self.clients = {}
+
+    def is_allowed(self, client_ip: str, limit: int, window: int) -> bool:
+        now = time.time()
+        if client_ip not in self.clients:
+            self.clients[client_ip] = []
+        # Remove timestamps outside the current window
+        self.clients[client_ip] = [t for t in self.clients[client_ip] if now - t < window]
+        if len(self.clients[client_ip]) >= limit:
+            return False
+        self.clients[client_ip].append(now)
+        return True
+
+rate_limiter = RateLimiter()
+
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    limit_str = request.headers.get("x-mock-rate-limit")
+    if limit_str and limit_str.isdigit():
+        limit = int(limit_str)
+        client_ip = request.client.host if request.client else "unknown"
+        # Using a fixed 60-second window for the mock rate limiter
+        if not rate_limiter.is_allowed(client_ip, limit, window=60):
+            return JSONResponse(status_code=429, content={"detail": "Too Many Requests"})
+
+    return await call_next(request)
 
 @app.middleware("http")
 async def mock_testing_middleware(request: Request, call_next):

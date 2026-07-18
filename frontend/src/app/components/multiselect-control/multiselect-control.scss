@@ -1,0 +1,47 @@
+.control-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.required-marker {
+  color: red;
+}
+
+.form-control {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.has-error .form-control {
+  border-color: red;
+}
+
+.error-messages {
+  color: red;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.options-loading {
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.options-error {
+  font-size: 0.875rem;
+  color: red;
+  margin-bottom: 0.25rem;
+}
+
+select[multiple] {
+  height: auto;
+  min-height: 100px;
+}

@@ -23,6 +23,7 @@
   <app-search-control *ngSwitchCase="'search'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-search-control>
   <app-week-control *ngSwitchCase="'week'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-week-control>
   <app-datetime-control *ngSwitchCase="'datetime'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-datetime-control>
+  <app-multiselect-control *ngSwitchCase="'multiselect'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-multiselect-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

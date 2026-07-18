@@ -8,5 +8,5 @@ This document outlines the step-by-step development process for the Angular-base
 ## Phase 24: Advanced Controls 13
 - [x] **Search Control**
   - Input field for search extending BaseControl.
-- [ ] **Week Control**
+- [x] **Week Control**
   - Input field for weeks extending BaseControl.

@@ -43,6 +43,45 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertIn("temperature", tool_content)
         self.assertIn("condition", tool_content)
 
+    async def test_get_exchange_rate(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_exchange_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_exchange_rate"
+        mock_tool_call.function.arguments = json.dumps({"base_currency": "USD", "target_currency": "EUR"})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "The exchange rate for USD to EUR is 0.85."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession("System Prompt", client=mock_client)
+
+        response = await session.process_user_input("What is the exchange rate from USD to EUR?")
+
+        self.assertEqual(response, "The exchange rate for USD to EUR is 0.85.")
+        self.assertEqual(mock_client.chat.completions.create.call_count, 2)
+
+        # Check tool execution
+        tool_msg = next((m for m in session.messages if m.get("role") == "tool"), None)
+        self.assertIsNotNone(tool_msg)
+        tool_content = json.loads(tool_msg["content"])
+        self.assertEqual(tool_content["base_currency"], "USD")
+        self.assertEqual(tool_content["target_currency"], "EUR")
+        self.assertIn("exchange_rate", tool_content)
+
     async def test_get_system_health(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

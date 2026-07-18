@@ -1,0 +1,24 @@
+{
+  "id": "search_screen_1",
+  "header": "Search Demo",
+  "content": "Please perform a search.",
+  "components": [
+    {
+      "id": "searchQuery",
+      "type": "search",
+      "label": "Search for items",
+      "placeholder": "Enter search query...",
+      "validations": [
+        { "type": "required", "message": "Search query is required." }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "btn_submit",
+      "label": "Submit",
+      "action": "submit",
+      "color": "primary"
+    }
+  ]
+}

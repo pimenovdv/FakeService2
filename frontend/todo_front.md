@@ -2,9 +2,11 @@
 
 This document outlines the step-by-step development process for the Angular-based screen player application.
 
-## Completed Phases (1-22)
-- **Phase 1-22:** Project Setup and Architecture, Routing, Dynamic Component Engine, Text Input, ComboBox, Actions, Validation, Testing, Checkbox Control, Radio Control, Datepicker Control, Textarea Control, File Control, Number Control, Password Control, Slider Control, Color Control, Time Control, Toggle Control, Rating Control, Stepper Control, Currency Control, Tags Control, Email Control, Phone Control, and URL Control.
+## Completed Phases (1-23)
+- **Phases 1-23:** Project Setup, Routing, Dynamic Component Engine, Actions, Validation, Testing, and all base & advanced controls (Text, ComboBox, Checkbox, Radio, Datepicker, Textarea, File, Number, Password, Slider, Color, Time, Toggle, Rating, Stepper, Currency, Tags, Email, Phone, URL, Month).
 
-## Phase 23: Advanced Controls 12
-- [x] **Month Control**
-  - Input field for months extending BaseControl.
+## Phase 24: Advanced Controls 13
+- [x] **Search Control**
+  - Input field for search extending BaseControl.
+- [ ] **Week Control**
+  - Input field for weeks extending BaseControl.

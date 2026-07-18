@@ -4,6 +4,48 @@ from unittest.mock import AsyncMock, MagicMock
 from src.chat import ChatSession, run_chat_loop
 
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
+    async def test_get_system_health(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_health_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_system_health"
+        mock_tool_call.function.arguments = "{}"
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "System health retrieved."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        mock_api_res = MagicMock()
+        mock_api_res.status_code = 200
+        mock_api_res.json.return_value = {"status": "healthy"}
+        mock_agent_client.get.return_value = mock_api_res
+
+        session = ChatSession("System Prompt", client=mock_client, agent_client=mock_agent_client)
+
+        response = await session.process_user_input("What is the system health?")
+
+        self.assertEqual(response, "System health retrieved.")
+
+        # Verify tool messages
+        tool_msg = next((msg for msg in session.messages if msg.get("role") == "tool" and msg.get("tool_call_id") == "call_health_123"), None)
+        self.assertIsNotNone(tool_msg)
+        self.assertEqual(json.loads(tool_msg["content"]), {"status": "healthy"})
+
+
     async def test_retrieve_available_services(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

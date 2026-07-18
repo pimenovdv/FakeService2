@@ -2,18 +2,14 @@
 
 This document outlines the step-by-step development process for the FastAPI-based mock backend.
 
-## Completed Phases (1-20)
+## Completed Phases (1-22)
 - **Core, Data & Routing:** Initialized FastAPI app, dynamic endpoints, `ScenarioManager`, validation, filtering/pagination, and mock middleware.
 - **Mock Features & Health:** Implemented file uploads (`/api/upload`), authentication (`/api/auth`), generic CRUD operations (`/api/resource`), background tasks (`/api/tasks`), file downloads (`/api/download`), and system health endpoint (`/api/health`).
+- **Real-time Communication:** Implemented Mock WebSocket Endpoint (`/api/ws/notifications`) and Mock Server-Sent Events (SSE) Endpoint (`/api/stream`).
+- **Authentication and Authorization:** Implemented OAuth2 Mock Login Flow (endpoints for testing OAuth2 login redirection, callback handling, and token generation) and Role-Based Access Control (RBAC) (permission checks to sensitive endpoints using dependencies based on token roles).
 
-## Phase 21: Real-time Communication
-1. [x] **Implement Mock WebSocket Endpoint**
-   - Create `backend/routers/websocket.py` with `ws /api/ws/notifications` that accepts connections and echoes messages back to the client.
-2. [x] **Implement Mock Server-Sent Events (SSE) Endpoint**
-   - Create an endpoint `GET /api/stream` that streams mock events to the client.
-
-## Phase 22: Authentication and Authorization
-1. [ ] **Implement OAuth2 Mock Login Flow**
-   - Create endpoints for testing OAuth2 login redirection, callback handling, and token generation.
-2. [ ] **Implement Role-Based Access Control (RBAC)**
-   - Add permission checks to sensitive endpoints using dependencies based on token roles.
+## Phase 23: Feature Extensions
+1. [ ] **Rate Limiting**
+   - Implement mock rate limiting middleware or dependencies.
+2. [ ] **Advanced Validation Scenarios**
+   - Implement cross-field validation mock endpoints or backend-driven validation rules beyond simple schemas.

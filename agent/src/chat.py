@@ -44,6 +44,23 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_weather",
+                    "description": "Get the current mock weather for a given location.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "location": {
+                                "type": "string",
+                                "description": "The location to get the weather for."
+                            }
+                        },
+                        "required": ["location"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_system_health",
                     "description": "Retrieve the current health status of the backend system and its connected services.",
                     "parameters": {
@@ -705,6 +722,40 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (datetime): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "get_weather":
+                    args = json.loads(tool_call.function.arguments)
+                    location = args.get("location", "Unknown Location")
+
+                    conditions = ["Sunny", "Cloudy", "Rainy", "Snowy", "Windy"]
+                    weather_condition = random.choice(conditions)
+                    temperature = random.randint(-10, 35)
+
+                    tool_content = json.dumps({
+                        "location": location,
+                        "temperature": f"{temperature}°C",
+                        "condition": weather_condition
+                    })
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (get_weather): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "generate_mock_data":
                     try:

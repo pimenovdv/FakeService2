@@ -4,6 +4,45 @@ from unittest.mock import AsyncMock, MagicMock
 from src.chat import ChatSession, run_chat_loop
 
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
+    async def test_get_weather(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_weather_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_weather"
+        mock_tool_call.function.arguments = json.dumps({"location": "London"})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "The weather in London is Sunny and 25°C."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession("System Prompt", client=mock_client)
+
+        response = await session.process_user_input("What is the weather in London?")
+
+        self.assertEqual(response, "The weather in London is Sunny and 25°C.")
+        self.assertEqual(mock_client.chat.completions.create.call_count, 2)
+
+        # Check tool execution
+        tool_msg = next((m for m in session.messages if m.get("role") == "tool"), None)
+        self.assertIsNotNone(tool_msg)
+        tool_content = json.loads(tool_msg["content"])
+        self.assertEqual(tool_content["location"], "London")
+        self.assertIn("temperature", tool_content)
+        self.assertIn("condition", tool_content)
+
     async def test_get_system_health(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

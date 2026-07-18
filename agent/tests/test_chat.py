@@ -82,6 +82,86 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(tool_content["target_currency"], "EUR")
         self.assertIn("exchange_rate", tool_content)
 
+    async def test_translate_text(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_translate_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "translate_text"
+        mock_tool_call.function.arguments = json.dumps({"text": "Hello", "source_language": "en", "target_language": "es"})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Hola"
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession("System Prompt", client=mock_client)
+
+        response = await session.process_user_input("Translate 'Hello' to Spanish.")
+
+        self.assertEqual(response, "Hola")
+        self.assertEqual(mock_client.chat.completions.create.call_count, 2)
+
+        # Check tool execution
+        tool_msg = next((m for m in session.messages if m.get("role") == "tool" and m.get("tool_call_id") == "call_translate_123"), None)
+        self.assertIsNotNone(tool_msg)
+        tool_content = json.loads(tool_msg["content"])
+        self.assertEqual(tool_content["text"], "Hello")
+        self.assertEqual(tool_content["source_language"], "en")
+        self.assertEqual(tool_content["target_language"], "es")
+        self.assertIn("translated_text", tool_content)
+
+    async def test_calculate_distance(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_distance_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "calculate_distance"
+        mock_tool_call.function.arguments = json.dumps({"origin": "New York", "destination": "London"})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "The distance is roughly 5500 km."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession("System Prompt", client=mock_client)
+
+        response = await session.process_user_input("What is the distance between New York and London?")
+
+        self.assertEqual(response, "The distance is roughly 5500 km.")
+        self.assertEqual(mock_client.chat.completions.create.call_count, 2)
+
+        # Check tool execution
+        tool_msg = next((m for m in session.messages if m.get("role") == "tool" and m.get("tool_call_id") == "call_distance_123"), None)
+        self.assertIsNotNone(tool_msg)
+        tool_content = json.loads(tool_msg["content"])
+        self.assertEqual(tool_content["origin"], "New York")
+        self.assertEqual(tool_content["destination"], "London")
+        self.assertIn("distance", tool_content)
+        self.assertIn("unit", tool_content)
+
     async def test_get_system_health(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

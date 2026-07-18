@@ -65,6 +65,52 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "translate_text",
+                    "description": "Mock tool to translate text from one language to another.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "description": "The text to translate."
+                            },
+                            "source_language": {
+                                "type": "string",
+                                "description": "The source language code (e.g., en)."
+                            },
+                            "target_language": {
+                                "type": "string",
+                                "description": "The target language code (e.g., es)."
+                            }
+                        },
+                        "required": ["text", "source_language", "target_language"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "calculate_distance",
+                    "description": "Mock tool to calculate the distance between two locations.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "origin": {
+                                "type": "string",
+                                "description": "The origin location."
+                            },
+                            "destination": {
+                                "type": "string",
+                                "description": "The destination location."
+                            }
+                        },
+                        "required": ["origin", "destination"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_weather",
                     "description": "Get the current mock weather for a given location.",
                     "parameters": {
@@ -810,6 +856,78 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (get_exchange_rate): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "translate_text":
+                    args = json.loads(tool_call.function.arguments)
+                    text = args.get("text", "")
+                    source_language = args.get("source_language", "")
+                    target_language = args.get("target_language", "")
+
+                    # Mock translation logic
+                    mock_translation = f"Translated '{text}' from {source_language} to {target_language} (mocked)"
+
+                    tool_content = json.dumps({
+                        "text": text,
+                        "source_language": source_language,
+                        "target_language": target_language,
+                        "translated_text": mock_translation
+                    })
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (translate_text): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "calculate_distance":
+                    args = json.loads(tool_call.function.arguments)
+                    origin = args.get("origin", "")
+                    destination = args.get("destination", "")
+
+                    # Mock distance logic
+                    mock_distance = round(random.uniform(10.0, 1000.0), 2)
+                    unit = "km"
+
+                    tool_content = json.dumps({
+                        "origin": origin,
+                        "destination": destination,
+                        "distance": mock_distance,
+                        "unit": unit
+                    })
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (calculate_distance): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "generate_mock_data":
                     try:

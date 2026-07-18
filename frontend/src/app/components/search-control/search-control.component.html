@@ -1,0 +1,21 @@
+<div class="control-container" [class.hidden]="def.hidden === true">
+  <label [for]="def.id" class="control-label">
+    {{ def.label }}
+    <span *ngIf="isRequired" class="required-asterisk">*</span>
+  </label>
+  <input
+    type="search"
+    [id]="def.id"
+    [ngModel]="value"
+    (ngModelChange)="onModelChange($event)"
+    (blur)="validate()"
+    [placeholder]="def.placeholder || ''"
+    [disabled]="def.disabled === true"
+    class="control-input"
+    [class.invalid]="errors.length > 0 && touched"
+    [ngModelOptions]="{standalone: true}"
+  />
+  <div *ngIf="errors.length > 0 && touched" class="error-container">
+    <div *ngFor="let err of errors" class="error-message">{{ err }}</div>
+  </div>
+</div>

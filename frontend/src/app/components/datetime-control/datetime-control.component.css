@@ -1,0 +1,43 @@
+.control-container {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.control-container.hidden {
+  display: none;
+}
+
+label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.required-asterisk {
+  color: red;
+  margin-left: 0.25rem;
+}
+
+input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+input.invalid {
+  border-color: red;
+}
+
+input:disabled {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.error-messages {
+  color: red;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  flex-direction: column;
+}

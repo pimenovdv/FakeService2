@@ -1,0 +1,21 @@
+<div class="control-container" [class.hidden]="def.hidden === true">
+  <label *ngIf="def.label" [for]="def.id">
+    {{ def.label }}<span *ngIf="isRequired" class="required-asterisk">*</span>
+  </label>
+  <input
+    type="datetime-local"
+    [id]="def.id"
+    [name]="def.id"
+    [ngModel]="value"
+    [ngModelOptions]="{standalone: true}"
+    (ngModelChange)="onValueChange($event)"
+    (blur)="validate()"
+    [disabled]="def.disabled === true"
+    [placeholder]="def.placeholder || ''"
+    [class.invalid]="errors.length > 0 && touched"
+  />
+
+  <div class="error-messages" *ngIf="errors.length > 0 && touched">
+    <span class="error-message" *ngFor="let err of errors">{{ err }}</span>
+  </div>
+</div>

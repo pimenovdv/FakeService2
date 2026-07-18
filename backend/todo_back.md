@@ -9,7 +9,7 @@ This document outlines the step-by-step development process for the FastAPI-base
 - **Authentication and Authorization:** Implemented OAuth2 Mock Login Flow (endpoints for testing OAuth2 login redirection, callback handling, and token generation) and Role-Based Access Control (RBAC) (permission checks to sensitive endpoints using dependencies based on token roles).
 
 ## Phase 23: Feature Extensions
-1. [ ] **Rate Limiting**
+1. [x] **Rate Limiting**
    - Implement mock rate limiting middleware or dependencies.
 2. [ ] **Advanced Validation Scenarios**
    - Implement cross-field validation mock endpoints or backend-driven validation rules beyond simple schemas.

@@ -26,12 +26,13 @@ import { MonthControlComponent } from '../month-control/month-control.component'
 import { SearchControlComponent } from '../search-control/search-control.component';
 import { WeekControlComponent } from '../week-control/week-control.component';
 import { DatetimeControlComponent } from '../datetime-control/datetime-control.component';
+import { MultiselectControlComponent } from '../multiselect-control/multiselect-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent],
   templateUrl: './dynamic-field.component.html'
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {

@@ -1,0 +1,25 @@
+<div class="control-group" [ngClass]="{ 'has-error': !isValid && touched }">
+  <label [for]="def.id">{{ def.label }} <span *ngIf="def.validations && def.validations.length > 0" class="required-marker">*</span></label>
+
+  <div *ngIf="loadingOptions" class="options-loading">Loading options...</div>
+  <div *ngIf="optionsError" class="options-error">{{ optionsError }}</div>
+
+  <select
+    multiple
+    [id]="def.id"
+    [disabled]="def.disabled === true || loadingOptions"
+    [hidden]="def.hidden === true"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    (blur)="touched = true; validate()"
+    class="form-control"
+  >
+    <option *ngFor="let option of options" [ngValue]="option.id || option.value || option">
+      {{ option.name || option.label || option }}
+    </option>
+  </select>
+
+  <div *ngIf="!isValid && touched" class="error-messages">
+    <div *ngFor="let error of errors" class="error-text">{{ error }}</div>
+  </div>
+</div>

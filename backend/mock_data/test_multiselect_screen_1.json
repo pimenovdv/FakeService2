@@ -1,0 +1,28 @@
+{
+  "id": "test_multiselect_screen_1",
+  "header": "Multiselect Control Test",
+  "content": "Please test the multiselect control below.",
+  "components": [
+    {
+      "id": "interests",
+      "type": "multiselect",
+      "label": "Interests",
+      "options": [
+        {"id": "sports", "name": "Sports"},
+        {"id": "music", "name": "Music"},
+        {"id": "tech", "name": "Technology"}
+      ],
+      "validations": [
+        {"type": "required", "message": "At least one interest is required"}
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "submit",
+      "label": "Submit",
+      "action": "submit",
+      "color": "primary"
+    }
+  ]
+}

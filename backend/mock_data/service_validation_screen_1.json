@@ -58,6 +58,16 @@
       "id": "confirm_password",
       "type": "text",
       "label": "Confirm Password"
+    },
+    {
+      "id": "has_pet",
+      "type": "text",
+      "label": "Has Pet"
+    },
+    {
+      "id": "pet_name",
+      "type": "text",
+      "label": "Pet Name"
     }
   ],
   "crossValidations": [
@@ -65,6 +75,13 @@
       "type": "match",
       "fields": ["password", "confirm_password"],
       "message": "Passwords do not match"
+    },
+    {
+      "type": "required_if",
+      "condition_field": "has_pet",
+      "condition_value": "yes",
+      "target_field": "pet_name",
+      "message": "Pet name is required if you have a pet"
     }
   ],
   "buttons": [

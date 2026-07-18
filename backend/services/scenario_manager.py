@@ -87,6 +87,15 @@ class ScenarioManager:
                         if answers.get(field) != first_val:
                             val_message = cross_validation.get("message", "Fields do not match")
                             raise HTTPException(status_code=400, detail=val_message)
+            elif cross_validation.get("type") == "required_if":
+                condition_field = cross_validation.get("condition_field")
+                condition_value = cross_validation.get("condition_value")
+                target_field = cross_validation.get("target_field")
+                val_message = cross_validation.get("message", f"{target_field} is required based on condition")
+
+                if answers.get(condition_field) == condition_value:
+                    if target_field not in answers or answers[target_field] is None or str(answers[target_field]).strip() == "":
+                        raise HTTPException(status_code=400, detail=val_message)
 
         # Configuration-driven routing logic
         routing_filename = f"{service_id}_routing.json"

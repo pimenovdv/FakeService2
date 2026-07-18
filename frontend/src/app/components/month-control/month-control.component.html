@@ -1,0 +1,22 @@
+<div class="control-container" [class.hidden]="def.hidden === true">
+  <label [for]="def.id" class="control-label">
+    {{ def.label }}
+    <span *ngIf="isRequired" class="required-asterisk">*</span>
+  </label>
+  <div class="input-wrapper">
+    <input
+      type="month"
+      [id]="def.id"
+      [ngModel]="value"
+      (ngModelChange)="onModelChange($event)"
+      [disabled]="def.disabled === true"
+      [ngModelOptions]="{standalone: true}"
+      class="control-input"
+      [class.has-error]="errors.length > 0 && touched"
+      (blur)="touched = true"
+    />
+  </div>
+  <div *ngIf="errors.length > 0 && touched" class="error-messages">
+    <span *ngFor="let err of errors" class="error-text">{{ err }}</span>
+  </div>
+</div>

@@ -44,6 +44,27 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_exchange_rate",
+                    "description": "Get the current mock exchange rate between two currencies.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "base_currency": {
+                                "type": "string",
+                                "description": "The base currency code (e.g., USD)."
+                            },
+                            "target_currency": {
+                                "type": "string",
+                                "description": "The target currency code (e.g., EUR)."
+                            }
+                        },
+                        "required": ["base_currency", "target_currency"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_weather",
                     "description": "Get the current mock weather for a given location.",
                     "parameters": {
@@ -756,6 +777,39 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (get_weather): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "get_exchange_rate":
+                    args = json.loads(tool_call.function.arguments)
+                    base_currency = args.get("base_currency", "USD").upper()
+                    target_currency = args.get("target_currency", "EUR").upper()
+
+                    rate = round(random.uniform(0.5, 1.5), 4)
+
+                    tool_content = json.dumps({
+                        "base_currency": base_currency,
+                        "target_currency": target_currency,
+                        "exchange_rate": rate
+                    })
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                    try:
+                        second_response = await self._call_llm(
+                            messages=self.messages
+                        )
+                        final_msg = second_response.choices[0].message
+                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (get_exchange_rate): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "generate_mock_data":
                     try:

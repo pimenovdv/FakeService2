@@ -1,0 +1,20 @@
+{
+  "id": "progress_service_screen_1",
+  "header": "Progress Bar Test",
+  "content": "Testing the progress bar control.",
+  "components": [
+    {
+      "id": "test_progress",
+      "type": "progress",
+      "label": "Completion Progress"
+    }
+  ],
+  "buttons": [
+    {
+      "id": "btn_next",
+      "label": "Next",
+      "action": "next_step",
+      "color": "primary"
+    }
+  ]
+}

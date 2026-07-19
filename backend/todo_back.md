@@ -13,3 +13,8 @@ This document outlines the step-by-step development process for the FastAPI-base
 - [ ] **Phase 28:** Mock Feature Flags
   - **Goal:** Allow frontend applications to dynamically toggle features based on backend configurations.
   - **Details:** Implement a service to retrieve active feature flags and an endpoint `GET /api/features` to list them, along with a `PUT /api/features/{flag}` to modify flag states.
+
+## Phase 29: Dynamic JSON Logic Injection
+- [ ] **Dynamic JSON Logic Injection**
+  - **Goal:** Enable the backend to serve JSON structures that contain embedded JavaScript logic or complex rules that dictate frontend behavior.
+  - **Details:** Update the backend data models and mock screen data structures to allow strings or objects that represent executable frontend logic, ensuring the frontend has the information it needs to build complex dynamic objects.

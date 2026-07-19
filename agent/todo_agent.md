@@ -10,3 +10,8 @@ This document outlines the step-by-step development process for the Python agent
 ## Phase 26: Additional Utility Tools
 - [x] 1. Implement `translate_text` tool to mock translate text from one language to another.
 - [x] 2. Implement `calculate_distance` tool to mock calculate distance between two locations.
+
+## Phase 27: Frontend JavaScript Logic Handling
+- [ ] 1. Enhance the HTTP client and HTML parsing logic to detect and extract embedded `<script>` blocks or inline event handlers from the frontend SSR response.
+- [ ] 2. Update LLM prompts to instruct the model to analyze and reason about the extracted JavaScript logic, simulating client-side behavior without a real browser.
+- [ ] 3. Implement tools or internal mechanisms within the agent to evaluate simple state changes dictated by the extracted frontend JS logic.

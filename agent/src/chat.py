@@ -38,6 +38,40 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "search_web",
+                    "description": "Search the web for information.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "The search query."
+                            }
+                        },
+                        "required": ["query"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "summarize_text",
+                    "description": "Summarize the provided text.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "text": {
+                                "type": "string",
+                                "description": "The text to summarize."
+                            }
+                        },
+                        "required": ["text"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "generate_uuid",
                     "description": "Generate a new UUID v4.",
                     "parameters": {
@@ -725,6 +759,35 @@ class ChatSession:
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": json.dumps({"uuid": new_uuid})
+                    })
+
+                elif tool_call.function.name == "search_web":
+                    args = json.loads(tool_call.function.arguments)
+                    query = args.get("query", "")
+
+                    # Mock web search
+                    mock_results = [
+                        {"title": f"Result 1 for {query}", "url": "https://example.com/1", "snippet": "This is a mock snippet."},
+                        {"title": f"Result 2 for {query}", "url": "https://example.com/2", "snippet": "Another mock snippet."}
+                    ]
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({"query": query, "results": mock_results})
+                    })
+
+                elif tool_call.function.name == "summarize_text":
+                    args = json.loads(tool_call.function.arguments)
+                    text = args.get("text", "")
+
+                    # Mock text summarization
+                    summary = f"Summary of the text: {text[:50]}..." if len(text) > 50 else f"Summary of the text: {text}"
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({"original_text": text, "summary": summary})
                     })
 
                 elif tool_call.function.name == "get_exchange_rate":

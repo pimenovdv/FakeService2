@@ -115,6 +115,80 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         tool_content = json.loads(tool_msg["content"])
         self.assertIn("uuid", tool_content)
 
+    async def test_search_web(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_search_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "search_web"
+        mock_tool_call.function.arguments = '{"query": "test query"}'
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Here are the search results."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client)
+        result = await session.process_user_input("Search for test query.")
+
+        self.assertEqual(result, "Here are the search results.")
+        self.assertEqual(len(session.messages), 5)
+
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertEqual(tool_msg["tool_call_id"], "call_search_123")
+        tool_content = json.loads(tool_msg["content"])
+        self.assertEqual(tool_content["query"], "test query")
+        self.assertIn("results", tool_content)
+
+    async def test_summarize_text(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_sum_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "summarize_text"
+        mock_tool_call.function.arguments = '{"text": "This is a long test text to summarize."}'
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Here is the summary."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client)
+        result = await session.process_user_input("Summarize this text.")
+
+        self.assertEqual(result, "Here is the summary.")
+        self.assertEqual(len(session.messages), 5)
+
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertEqual(tool_msg["tool_call_id"], "call_sum_123")
+        tool_content = json.loads(tool_msg["content"])
+        self.assertEqual(tool_content["original_text"], "This is a long test text to summarize.")
+        self.assertIn("summary", tool_content)
+
     async def test_get_exchange_rate(self):
         mock_client = AsyncMock()
 

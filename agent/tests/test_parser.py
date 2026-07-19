@@ -108,6 +108,38 @@ def test_screen_parser_file_upload():
     assert field["attributes"]["accept"] == "image/*, .pdf"
     assert field["attributes"]["multiple"] == ""  # bs4 might return "" for boolean attributes with no value
 
+def test_screen_parser_scripts():
+    html = '''
+    <script src="test.js"></script>
+    <script>console.log("hello");</script>
+    '''
+    parser = ScreenParser(html)
+    result = parser.parse()
+
+    assert "scripts" in result
+    assert len(result["scripts"]) == 2
+    assert result["scripts"][0]["src"] == "test.js"
+    assert result["scripts"][1]["content"] == 'console.log("hello");'
+
+def test_screen_parser_inline_events():
+    html = '''
+    <input type="text" id="username" name="user" onchange="validateUser()">
+    <button type="submit" id="submit-btn" onclick="submitForm()">Submit</button>
+    '''
+    parser = ScreenParser(html)
+    result = parser.parse()
+
+    assert len(result["fields"]) == 1
+    field = result["fields"][0]
+    assert "onchange" in field["attributes"]
+    assert field["attributes"]["onchange"] == "validateUser()"
+
+    assert len(result["buttons"]) == 1
+    button = result["buttons"][0]
+    assert "events" in button
+    assert "onclick" in button["events"]
+    assert button["events"]["onclick"] == "submitForm()"
+
 def test_parse_malformed_html_graceful_fallback(monkeypatch):
     html = '<input type="text" id="bad">'
     parser = ScreenParser(html)

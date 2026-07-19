@@ -858,6 +858,41 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
             self.assertEqual(session.messages[3]["tool_call_id"], "call_upload_123")
             self.assertEqual(json.loads(session.messages[3]["content"]), {"file_id": "test_id", "url": "/test"})
 
+    async def test_evaluate_js(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_js_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "evaluate_js"
+        mock_tool_call.function.arguments = json.dumps({"script_content": "console.log('hi');"})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "JS evaluated successfully."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client)
+        response = await session.process_user_input("evaluate this script")
+
+        self.assertEqual(response, "JS evaluated successfully.")
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[3]["name"], "evaluate_js")
+        tool_content = json.loads(session.messages[3]["content"])
+        self.assertEqual(tool_content["result"], "Mocked JS execution success")
+        self.assertEqual(tool_content["evaluated_script"], "console.log('hi');")
+
     async def test_process_user_input_upload_file_not_found(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

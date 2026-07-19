@@ -32,6 +32,7 @@ class TestPromptEngineering(unittest.TestCase):
         # Check that prompt contains required instructions
         self.assertIn("You are an agent helping a user fill out a form.", prompt)
         self.assertIn("Ask the user for this information, use autocomplete features when available, and determine the values to input.", prompt)
+        self.assertIn("Analyze any extracted scripts and inline event handlers to simulate client-side behavior and evaluate simple state changes.", prompt)
 
         # Check that prompt contains the JSON representation of fields
         expected_json = json.dumps(parsed_screen, ensure_ascii=False, indent=2)

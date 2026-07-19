@@ -111,6 +111,28 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "evaluate_js",
+                    "description": "Mock tool to evaluate simple JavaScript state changes based on extracted logic.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "script_content": {
+                                "type": "string",
+                                "description": "The JavaScript code to evaluate."
+                            },
+                            "context": {
+                                "type": "object",
+                                "description": "Current state/context variables to pass to the script.",
+                                "additionalProperties": True
+                            }
+                        },
+                        "required": ["script_content"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_weather",
                     "description": "Get the current mock weather for a given location.",
                     "parameters": {
@@ -928,6 +950,31 @@ class ChatSession:
                         return final_msg.content or ""
                     except Exception as e:
                         logger.error(f"Error during secondary LLM completion (calculate_distance): {e}")
+                        return "I encountered an error processing your request."
+                elif tool_call.function.name == "evaluate_js":
+                    args = json.loads(tool_call.function.arguments)
+                    script_content = args.get("script_content", "")
+
+                    # Mock evaluation logic
+                    tool_content = json.dumps({"result": "Mocked JS execution success", "evaluated_script": script_content})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_content
+                    })
+
+                    try:
+                        final_msg_response = await self._call_llm(self.messages)
+                        final_msg = final_msg_response.choices[0].message
+                        self.messages.append({
+                            "role": "assistant",
+                            "content": final_msg.content
+                        })
+                        return final_msg.content or ""
+                    except Exception as e:
+                        logger.error(f"Error during secondary LLM completion (evaluate_js): {e}")
                         return "I encountered an error processing your request."
                 elif tool_call.function.name == "generate_mock_data":
                     try:

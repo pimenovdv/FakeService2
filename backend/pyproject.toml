@@ -10,6 +10,7 @@ dependencies = [
     "pytest",
     "pytest-asyncio>=1.4.0",
     "python-multipart>=0.0.32",
+    "strawberry-graphql>=0.322.0",
     "uvicorn>=0.51.0",
 ]
 

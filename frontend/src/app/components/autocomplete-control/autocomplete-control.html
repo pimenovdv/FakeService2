@@ -1,0 +1,25 @@
+<div class="control-container">
+  <label [for]="def.id" class="control-label">
+    {{ def.label }}
+    <span *ngIf="isRequired" class="required-asterisk">*</span>
+  </label>
+  <input
+    type="text"
+    [id]="def.id"
+    class="control-input"
+    [class.error]="errors.length > 0 && touched"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [placeholder]="def.placeholder || ''"
+    [disabled]="def.disabled === true"
+    [attr.list]="datalistId"
+    (blur)="validate()"
+  />
+  <datalist [id]="datalistId">
+    <option *ngFor="let opt of options" [value]="opt.value || opt">{{ opt.label || opt.value || opt }}</option>
+  </datalist>
+
+  <div *ngIf="errors.length > 0 && touched" class="error-message">
+    <div *ngFor="let err of errors">{{ err }}</div>
+  </div>
+</div>

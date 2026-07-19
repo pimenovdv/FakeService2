@@ -1,0 +1,22 @@
+{
+  "id": "autocomplete_screen_1",
+  "header": "Autocomplete Test",
+  "content": "Please select a fruit.",
+  "components": [
+    {
+      "id": "fruit_autocomplete",
+      "type": "autocomplete",
+      "label": "Fruit",
+      "placeholder": "Type or select...",
+      "options": ["Apple", "Banana", "Cherry", "Date", "Elderberry", "Fig", "Grape"]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "submit_btn",
+      "label": "Submit",
+      "action": "submit",
+      "color": "primary"
+    }
+  ]
+}

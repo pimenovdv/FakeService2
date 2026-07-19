@@ -43,6 +43,78 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertIn("temperature", tool_content)
         self.assertIn("condition", tool_content)
 
+    async def test_get_current_datetime(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_datetime_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_current_datetime"
+        mock_tool_call.function.arguments = "{}"
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "The current datetime is 2024-01-01T12:00:00."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client)
+        result = await session.process_user_input("What time is it?")
+
+        self.assertEqual(result, "The current datetime is 2024-01-01T12:00:00.")
+        self.assertEqual(len(session.messages), 5)
+
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertEqual(tool_msg["tool_call_id"], "call_datetime_123")
+        tool_content = json.loads(tool_msg["content"])
+        self.assertIn("current_datetime", tool_content)
+
+    async def test_generate_uuid(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_uuid_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "generate_uuid"
+        mock_tool_call.function.arguments = "{}"
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Here is a uuid: 1234."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client)
+        result = await session.process_user_input("Generate a uuid")
+
+        self.assertEqual(result, "Here is a uuid: 1234.")
+        self.assertEqual(len(session.messages), 5)
+
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertEqual(tool_msg["tool_call_id"], "call_uuid_123")
+        tool_content = json.loads(tool_msg["content"])
+        self.assertIn("uuid", tool_content)
+
     async def test_get_exchange_rate(self):
         mock_client = AsyncMock()
 

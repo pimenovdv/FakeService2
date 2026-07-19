@@ -28,6 +28,10 @@ When working on any of the projects, you must adhere to the following workflow:
     *   For example, if you implement the "Text Input Control" in the frontend, update `frontend/todo_front.md` (or a linked architecture doc) to describe the actual Angular component structure, inputs, and validation logic used.
 4.  **Update TODOs**: If a task proves more complex than anticipated and requires breaking down, or if new necessary steps are discovered during implementation, you are authorized and encouraged to update the relevant `todo_*.md` file to reflect the new plan. Keep the TODOs accurate and reflective of the current state of work.
 
+
+## Mocking Policy
+* **Mocks are to be used ONLY for tests!** Any mock implementations (like mock tool results or mock data generators) should not be the final implementation in production code. If a real implementation is too complex for the current stage, use a `# TODO` comment in the code and add a plan item to the respective `todo_*.md` file.
+
 ## Project-Specific Instructions
 
 ### Frontend (Angular)

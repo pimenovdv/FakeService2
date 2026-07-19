@@ -794,6 +794,8 @@ class ChatSession:
                     args = json.loads(tool_call.function.arguments)
                     script_content = args.get("script_content", "")
 
+                    # TODO (Phase 30): The current implementation is a mock and only for tests.
+                    # Implementing a real JS execution engine (e.g., PyMiniRacer) is complex and deferred to Phase 30.
                     # Mock evaluation logic
                     tool_content = json.dumps({"result": "Mocked JS execution success", "evaluated_script": script_content})
 

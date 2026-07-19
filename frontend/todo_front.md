@@ -12,3 +12,8 @@ This document outlines the step-by-step development process for the Angular-base
 ## Phase 31: Markdown/Rich Text Viewer Control
 - [ ] **Rich Text Viewer Control**
   - Component to render static markdown or HTML content within the form.
+
+## Phase 32: Dynamic Logic and Complex Objects
+- [ ] **JavaScript Logic Execution and Dynamic Object Construction**
+  - Implement a mechanism to safely parse and evaluate logic received from the backend JSON.
+  - Update the dynamic rendering engine to build complex UI objects or adjust forms dynamically based on this backend-provided logic.

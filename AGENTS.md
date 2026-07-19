@@ -57,3 +57,8 @@ This includes, but is not limited to:
 *   Puppeteer
 
 The agent must interact with the frontend by making standard HTTP requests (e.g., using `httpx` or `requests`) to the Angular SSR endpoint and parsing the returned HTML using tools like `BeautifulSoup` or `lxml`. It must not launch or control a real browser.
+
+## Mandatory Reading: `memo.md`
+**CRITICAL:** Before beginning any task on this repository, you **MUST** read the `memo.md` file located in the root directory. This file contains overarching architectural goals and crucial task descriptions that dictate the current direction of the project (e.g., handling complex JavaScript logic across the stack).
+
+Additionally, you are required to record your thoughts, progress, and any significant design decisions in the "Мысли и прогресс агентов (Agent Thoughts)" section of `memo.md` as you work.

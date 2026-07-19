@@ -28,12 +28,13 @@ import { WeekControlComponent } from '../week-control/week-control.component';
 import { DatetimeControlComponent } from '../datetime-control/datetime-control.component';
 import { MultiselectControlComponent } from '../multiselect-control/multiselect-control';
 import { AutocompleteControlComponent } from '../autocomplete-control/autocomplete-control';
+import { ButtonGroupControlComponent } from '../button-group-control/button-group-control.component';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent],
   templateUrl: './dynamic-field.component.html'
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {

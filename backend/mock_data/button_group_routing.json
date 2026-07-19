@@ -1,0 +1,6 @@
+{
+  "initialScreen": "1",
+  "screens": {
+    "1": "button_group_screen_1.json"
+  }
+}

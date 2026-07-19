@@ -1,0 +1,18 @@
+{
+  "id": "screen_1",
+  "header": "Button Group Demo",
+  "content": "Select an option from the button group below.",
+  "components": [
+    {
+      "id": "my_bg",
+      "type": "button_group",
+      "label": "Select Option",
+      "options": [
+        { "label": "Option A", "value": "A" },
+        { "label": "Option B", "value": "B" },
+        { "label": "Option C", "value": "C" }
+      ]
+    }
+  ],
+  "buttons": []
+}

@@ -1,0 +1,25 @@
+<div class="control-container" [class.hidden]="def?.hidden === true">
+  <label *ngIf="def?.label" class="control-label">
+    {{ def?.label }}
+    <span *ngIf="isRequired" class="required-asterisk">*</span>
+  </label>
+
+  <div class="button-group" role="group" [attr.aria-label]="def?.label">
+    <ng-container *ngIf="def?.options">
+      <button
+        *ngFor="let option of def?.options"
+        type="button"
+        class="group-button"
+        [class.selected]="value === option.value"
+        [disabled]="def?.disabled === true"
+        (click)="selectOption(option.value)"
+        (blur)="validate()">
+        {{ option.label }}
+      </button>
+    </ng-container>
+  </div>
+
+  <div *ngIf="errors.length > 0 && touched" class="error-message">
+    <div *ngFor="let err of errors">{{ err }}</div>
+  </div>
+</div>

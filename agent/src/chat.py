@@ -487,39 +487,42 @@ class ChatSession:
         logger.info(f"User input: {user_input}")
         self.messages.append({"role": "user", "content": user_input})
 
-        try:
-            response = await self._call_llm(
-                messages=self.messages,
-                tools=self.tools,
-                tool_choice="auto"
-            )
-        except Exception as e:
-            logger.error(f"Error during initial LLM completion: {e}")
-            return "I encountered an error processing your request."
+        MAX_TURNS = 10
+        for turn in range(MAX_TURNS):
+            try:
+                response = await self._call_llm(
+                    messages=self.messages,
+                    tools=self.tools,
+                    tool_choice="auto"
+                )
+            except Exception as e:
+                logger.error(f"Error during LLM completion: {e}")
+                return "I encountered an error processing your request."
 
-        response_message = response.choices[0].message
-        logger.debug(f"LLM initial response content: {response_message.content}, tool_calls: {response_message.tool_calls}")
+            response_message = response.choices[0].message
+            logger.debug(f"LLM response content: {response_message.content}, tool_calls: {response_message.tool_calls}")
 
-        # We need to serialize the response message back into dict format if we append it
-        message_dict = {"role": "assistant"}
-        if response_message.content:
-            message_dict["content"] = response_message.content
-        if response_message.tool_calls:
-            message_dict["tool_calls"] = [
-                {
-                    "id": tool_call.id,
-                    "type": tool_call.type,
-                    "function": {
-                        "name": tool_call.function.name,
-                        "arguments": tool_call.function.arguments,
+            message_dict = {"role": "assistant"}
+            if response_message.content:
+                message_dict["content"] = response_message.content
+            if getattr(response_message, "tool_calls", None):
+                message_dict["tool_calls"] = [
+                    {
+                        "id": tool_call.id,
+                        "type": tool_call.type,
+                        "function": {
+                            "name": tool_call.function.name,
+                            "arguments": tool_call.function.arguments,
+                        }
                     }
-                }
-                for tool_call in response_message.tool_calls
-            ]
-        self.messages.append(message_dict)
+                    for tool_call in response_message.tool_calls
+                ]
+            self.messages.append(message_dict)
 
-        if response_message.tool_calls:
-            # Handle tool calls
+            if not getattr(response_message, "tool_calls", None):
+                # No more tool calls, we can return the response
+                return response_message.content or ""
+
             for tool_call in response_message.tool_calls:
                 logger.info(f"Executing tool call: {tool_call.function.name} with arguments: {tool_call.function.arguments}")
                 if tool_call.function.name == "submit_form":
@@ -534,21 +537,6 @@ class ChatSession:
                         "content": json.dumps({"status": "success", "message": "Form submitted successfully."})
                     })
 
-                    # Get final conversational response after tool call
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or "Form submitted."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (submit_form): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "pause_session":
                     args = json.loads(tool_call.function.arguments)
                     self.session_paused = True
@@ -560,20 +548,6 @@ class ChatSession:
                         "content": json.dumps({"status": "success", "message": "Session paused successfully."})
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or "Session paused."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (pause_session): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "abort_form":
                     args = json.loads(tool_call.function.arguments)
                     self.form_aborted = True
@@ -586,21 +560,6 @@ class ChatSession:
                         "content": json.dumps({"status": "success", "message": "Form aborted successfully."})
                     })
 
-                    # Get final conversational response after tool call
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or "Form aborted."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (abort_form): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "reset_session":
                     # Truncate messages to only the system prompt and the assistant tool call message
                     self.messages = [self.messages[0], self.messages[-1]]
@@ -621,20 +580,6 @@ class ChatSession:
                         "content": json.dumps({"status": "success", "message": "Session reset successfully."})
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or "Session reset."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (reset_session): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "update_user_preferences":
                     args = json.loads(tool_call.function.arguments)
                     preferences = args.get("preferences", {})
@@ -649,20 +594,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or "Preferences updated."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (update_user_preferences): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "get_session_stats":
                     stats = {
                         "prompt_tokens_used": self.prompt_tokens_used,
@@ -679,20 +610,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or "Here are the session stats."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (get_session_stats): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "export_chat_history":
                     args = json.loads(tool_call.function.arguments)
                     filepath = args.get("filepath")
@@ -710,20 +627,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or f"Chat history exported to {filepath}."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (export_chat_history): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "request_human_handoff":
                     args = json.loads(tool_call.function.arguments)
                     self.handoff_requested = True
@@ -736,21 +639,6 @@ class ChatSession:
                         "content": json.dumps({"status": "success", "message": "Handoff to human requested successfully."})
                     })
 
-                    # Get final conversational response after tool call
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or "Handoff requested."
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (request_human_handoff): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "fetch_autocomplete_options":
                     args = json.loads(tool_call.function.arguments)
                     data_source = args.get("data_source")
@@ -776,20 +664,6 @@ class ChatSession:
                     })
 
                     # After fetching data, we need to let the LLM generate a response
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (fetch_autocomplete): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "get_current_datetime":
                     tool_content = datetime.datetime.now().isoformat()
                     self.messages.append({
@@ -798,20 +672,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (datetime): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "get_weather":
                     args = json.loads(tool_call.function.arguments)
                     location = args.get("location", "Unknown Location")
@@ -832,20 +692,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (get_weather): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "get_exchange_rate":
                     args = json.loads(tool_call.function.arguments)
                     base_currency = args.get("base_currency", "USD").upper()
@@ -865,20 +711,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (get_exchange_rate): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "translate_text":
                     args = json.loads(tool_call.function.arguments)
                     text = args.get("text", "")
@@ -901,20 +733,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (translate_text): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "calculate_distance":
                     args = json.loads(tool_call.function.arguments)
                     origin = args.get("origin", "")
@@ -937,20 +755,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (calculate_distance): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "evaluate_js":
                     args = json.loads(tool_call.function.arguments)
                     script_content = args.get("script_content", "")
@@ -965,17 +769,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        final_msg_response = await self._call_llm(self.messages)
-                        final_msg = final_msg_response.choices[0].message
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (evaluate_js): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "generate_mock_data":
                     try:
                         args = json.loads(tool_call.function.arguments)
@@ -1018,20 +811,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (generate_mock_data): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "retrieve_available_services":
                     if self.agent_client:
                         try:
@@ -1051,20 +830,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (retrieve_available_services): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "get_system_health":
                     if self.agent_client:
                         try:
@@ -1084,20 +849,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (get_system_health): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "download_and_parse_file":
                     args = json.loads(tool_call.function.arguments)
                     url = args.get("url")
@@ -1124,20 +875,6 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (download_and_parse_file): {e}")
-                        return "I encountered an error processing your request."
                 elif tool_call.function.name == "upload_file":
                     args = json.loads(tool_call.function.arguments)
                     url = args.get("url")
@@ -1164,22 +901,11 @@ class ChatSession:
                         "content": tool_content
                     })
 
-                    try:
-                        second_response = await self._call_llm(
-                            messages=self.messages
-                        )
-                        final_msg = second_response.choices[0].message
-                        logger.debug(f"LLM final response after tool call: {final_msg.content}")
-                        self.messages.append({
-                            "role": "assistant",
-                            "content": final_msg.content
-                        })
-                        return final_msg.content or ""
-                    except Exception as e:
-                        logger.error(f"Error during secondary LLM completion (upload_file): {e}")
-                        return "I encountered an error processing your request."
 
-        return response_message.content or ""
+
+
+
+        return "I'm sorry, but I was unable to complete the request within the allowed number of steps."
 
 async def run_chat_loop(
     session: ChatSession,

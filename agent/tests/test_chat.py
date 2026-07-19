@@ -597,7 +597,11 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
             mock_response.choices = [MagicMock(message=mock_message)]
 
             mock_second_response = MagicMock()
-            mock_second_response.choices = [MagicMock(message=MagicMock(content="History exported."))]
+
+            mock_second_message = MagicMock()
+            mock_second_message.content = "History exported."
+            mock_second_message.tool_calls = None
+            mock_second_response.choices = [MagicMock(message=mock_second_message)]
 
             mock_client.chat.completions.create.side_effect = [mock_response, mock_second_response]
 
@@ -638,6 +642,7 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         mock_second_response = MagicMock()
         mock_second_message = MagicMock()
         mock_second_message.content = "Session paused. I will wait."
+        mock_second_message.tool_calls = None
         mock_second_response.choices = [MagicMock(message=mock_second_message)]
 
         mock_client.chat.completions.create.side_effect = [mock_response, mock_second_response]
@@ -997,6 +1002,68 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         with unittest.mock.patch('asyncio.wait_for', side_effect=mock_wait_for):
             with self.assertRaises(asyncio.TimeoutError):
                 await session._call_llm([{"role": "user", "content": "hi"}])
+
+    async def test_process_user_input_multi_turn_tool_calling(self):
+        import json
+        mock_client = AsyncMock()
+
+        # Turn 1: user asks a question, LLM responds with tool call 1 (translate)
+        mock_response_1 = MagicMock()
+        mock_msg_1 = MagicMock()
+        mock_msg_1.content = None
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_1"
+        mock_tool_call_1.type = "function"
+        mock_tool_call_1.function.name = "translate_text"
+        mock_tool_call_1.function.arguments = json.dumps({
+            "text": "Hello",
+            "source_language": "en",
+            "target_language": "es"
+        })
+        mock_msg_1.tool_calls = [mock_tool_call_1]
+        mock_response_1.choices = [MagicMock(message=mock_msg_1)]
+
+        # Turn 2: LLM responds with tool call 2 (get_weather)
+        mock_response_2 = MagicMock()
+        mock_msg_2 = MagicMock()
+        mock_msg_2.content = None
+        mock_tool_call_2 = MagicMock()
+        mock_tool_call_2.id = "call_2"
+        mock_tool_call_2.type = "function"
+        mock_tool_call_2.function.name = "get_weather"
+        mock_tool_call_2.function.arguments = json.dumps({
+            "location": "Madrid"
+        })
+        mock_msg_2.tool_calls = [mock_tool_call_2]
+        mock_response_2.choices = [MagicMock(message=mock_msg_2)]
+
+        # Turn 3: LLM responds with final message
+        mock_response_3 = MagicMock()
+        mock_msg_3 = MagicMock()
+        mock_msg_3.content = "Hola! The weather in Madrid is Sunny."
+        mock_msg_3.tool_calls = None
+        mock_response_3.choices = [MagicMock(message=mock_msg_3)]
+
+        mock_client.chat.completions.create.side_effect = [
+            mock_response_1,
+            mock_response_2,
+            mock_response_3
+        ]
+
+        session = ChatSession(system_prompt="Test", client=mock_client)
+        response = await session.process_user_input("Translate Hello to Spanish and get weather in Madrid")
+
+        self.assertEqual(response, "Hola! The weather in Madrid is Sunny.")
+        # messages: system, user, assistant(call1), tool1, assistant(call2), tool2, assistant(final)
+        self.assertEqual(len(session.messages), 7)
+        self.assertEqual(session.messages[1]["role"], "user")
+        self.assertEqual(session.messages[2]["role"], "assistant")
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[4]["role"], "assistant")
+        self.assertEqual(session.messages[5]["role"], "tool")
+        self.assertEqual(session.messages[6]["role"], "assistant")
+        self.assertEqual(session.messages[6]["content"], "Hola! The weather in Madrid is Sunny.")
+
 
 class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_exit(self):

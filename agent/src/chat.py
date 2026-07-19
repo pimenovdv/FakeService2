@@ -26,6 +26,30 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_current_datetime",
+                    "description": "Get the current date and time.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "generate_uuid",
+                    "description": "Generate a new UUID v4.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "update_user_preferences",
                     "description": "Update the user's preferences (e.g., tone, language, verbosity) for the session.",
                     "parameters": {
@@ -664,13 +688,6 @@ class ChatSession:
                     })
 
                     # After fetching data, we need to let the LLM generate a response
-                elif tool_call.function.name == "get_current_datetime":
-                    tool_content = datetime.datetime.now().isoformat()
-                    self.messages.append({
-                        "role": "tool",
-                        "tool_call_id": tool_call.id,
-                        "content": tool_content
-                    })
 
                 elif tool_call.function.name == "get_weather":
                     args = json.loads(tool_call.function.arguments)
@@ -690,6 +707,24 @@ class ChatSession:
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": tool_content
+                    })
+
+                elif tool_call.function.name == "get_current_datetime":
+                    import datetime
+                    now = datetime.datetime.now().isoformat()
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({"current_datetime": now})
+                    })
+
+                elif tool_call.function.name == "generate_uuid":
+                    import uuid
+                    new_uuid = str(uuid.uuid4())
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps({"uuid": new_uuid})
                     })
 
                 elif tool_call.function.name == "get_exchange_rate":

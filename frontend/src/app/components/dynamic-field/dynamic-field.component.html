@@ -26,6 +26,7 @@
   <app-multiselect-control *ngSwitchCase="'multiselect'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-multiselect-control>
   <app-autocomplete-control *ngSwitchCase="'autocomplete'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-autocomplete-control>
   <app-button-group-control *ngSwitchCase="'button_group'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-button-group-control>
+  <app-captcha-control *ngSwitchCase="'captcha'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-captcha-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

@@ -1,0 +1,27 @@
+{
+  "id": "captcha_screen",
+  "header": "Captcha Test",
+  "content": "Please verify you are human.",
+  "components": [
+    {
+      "id": "cap1",
+      "type": "captcha",
+      "label": "Are you human?",
+      "validations": [{"type": "required"}]
+    },
+    {
+      "id": "cap2",
+      "type": "captcha",
+      "label": "Another captcha (optional)",
+      "disabled": true
+    }
+  ],
+  "buttons": [
+    {
+      "id": "submit_btn",
+      "label": "Submit",
+      "action": "submit",
+      "color": "primary"
+    }
+  ]
+}

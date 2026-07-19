@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
 from fastapi.responses import JSONResponse
-from routers import screens, data, upload, auth, crud, tasks, download, health, websocket, stream, graphql
+from routers import screens, data, upload, auth, crud, tasks, download, health, websocket, stream, graphql, webhooks, cache
 
 app = FastAPI()
 
@@ -82,3 +82,5 @@ app.include_router(health.router)
 app.include_router(websocket.router)
 app.include_router(stream.router)
 app.include_router(graphql.router)
+app.include_router(webhooks.router)
+app.include_router(cache.router)

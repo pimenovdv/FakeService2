@@ -1,6 +1,7 @@
-INFO:     Started server process [103471]
+INFO:     Started server process [107631]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:42744 - "POST /api/screens/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:46854 - "POST /api/screens/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43600 - "POST /api/screens/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43050 - "POST /api/screens/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:43060 - "POST /api/screens/start HTTP/1.1" 200 OK

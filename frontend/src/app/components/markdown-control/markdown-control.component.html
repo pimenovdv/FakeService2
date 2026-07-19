@@ -1,0 +1,7 @@
+<div class="control-container" [class.hidden]="def.hidden === true">
+  <label *ngIf="def.label" class="control-label">{{ def.label }}</label>
+  <div class="markdown-content prose max-w-none" [innerHTML]="sanitizedHtml"></div>
+  <div class="error-container" *ngIf="errors.length > 0 && touched">
+    <div class="error-message" *ngFor="let err of errors">{{ err }}</div>
+  </div>
+</div>

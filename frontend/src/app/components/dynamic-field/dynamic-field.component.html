@@ -28,6 +28,7 @@
   <app-button-group-control *ngSwitchCase="'button_group'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-button-group-control>
   <app-captcha-control *ngSwitchCase="'captcha'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-captcha-control>
   <app-progress-control *ngSwitchCase="'progress'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-progress-control>
+  <app-markdown-control *ngSwitchCase="'markdown'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-markdown-control>
 
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})

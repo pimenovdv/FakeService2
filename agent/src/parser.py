@@ -22,8 +22,22 @@ class ScreenParser:
             result = {
                 "fields": [],
                 "buttons": [],
-                "dialogs": []
+                "dialogs": [],
+                "scripts": []
             }
+
+            # Extract scripts
+            for script in self.soup.find_all('script'):
+                script_info = {}
+                if script.has_attr('src'):
+                    script_info['src'] = script.get('src')
+                if script.string:
+                    script_info['content'] = script.string.strip()
+
+                # Only append if we found something useful
+                if script_info:
+                    result["scripts"].append(script_info)
+                script.extract() # Remove script so it's processed
 
             # Extract dialogs first so their children don't pollute the main fields
             for dialog in self.soup.find_all('dialog'):
@@ -71,6 +85,15 @@ class ScreenParser:
             "id": button.get('id'),
             "name": button.get('name')
         }
+
+        # Extract inline event handlers (attributes starting with 'on')
+        events = {}
+        for attr, val in button.attrs.items():
+            if attr.startswith('on'):
+                events[attr] = val
+        if events:
+            btn_info['events'] = events
+
         # Clean up Nones
         return {k: v for k, v in btn_info.items() if v is not None}
 
@@ -128,5 +151,10 @@ class ScreenParser:
                     attrs[attr] = True
                 else:
                     attrs[attr] = val
+
+        # Extract inline event handlers (attributes starting with 'on')
+        for attr, val in element.attrs.items():
+            if attr.startswith('on'):
+                attrs[attr] = val
 
         return attrs

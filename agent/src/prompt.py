@@ -23,7 +23,8 @@ def generate_system_prompt(parsed_screen: Dict[str, Any], service_id: Optional[s
         f"{prompt_template} "
         f"The form requires the following fields:\n{parsed_fields}\n"
         "Ask the user for this information, use autocomplete features when available, "
-        "and determine the values to input."
+        "and determine the values to input. "
+        "Analyze any extracted scripts and inline event handlers to simulate client-side behavior and evaluate simple state changes."
     )
 
     return prompt

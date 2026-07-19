@@ -1,0 +1,32 @@
+.control-container {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.control-label {
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+}
+
+.required-asterisk {
+  color: red;
+  margin-left: 0.25rem;
+}
+
+.control-input {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.control-input.error {
+  border-color: red;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}

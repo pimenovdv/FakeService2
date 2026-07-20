@@ -39,6 +39,11 @@ class ButtonDef(BaseModel):
     action: Literal['next_step', 'previous_step', 'cancel', 'submit']
     color: Optional[Literal['primary', 'secondary', 'warn']] = None
 
+class ScriptDef(BaseModel):
+    trigger: Literal['onLoad', 'onChange']
+    targetComponentId: Optional[str] = None
+    code: str
+
 class ScreenDef(BaseModel):
     id: str
     header: str
@@ -46,3 +51,4 @@ class ScreenDef(BaseModel):
     components: List[ComponentDef]
     buttons: List[ButtonDef]
     crossValidations: Optional[List[CrossValidationRule]] = None
+    scripts: Optional[List[ScriptDef]] = None

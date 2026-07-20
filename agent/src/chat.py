@@ -7,6 +7,7 @@ import string
 import logging
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
+from py_mini_racer import MiniRacer
 from openai.types.chat import ChatCompletionMessageParam
 
 logger = logging.getLogger(__name__)
@@ -793,11 +794,20 @@ class ChatSession:
                 elif tool_call.function.name == "evaluate_js":
                     args = json.loads(tool_call.function.arguments)
                     script_content = args.get("script_content", "")
+                    context_data = args.get("context", {})
 
-                    # TODO (Phase 30): The current implementation is a mock and only for tests.
-                    # Implementing a real JS execution engine (e.g., PyMiniRacer) is complex and deferred to Phase 30.
-                    # Mock evaluation logic
-                    tool_content = json.dumps({"result": "Mocked JS execution success", "evaluated_script": script_content})
+                    try:
+                        ctx = MiniRacer()
+                        if context_data:
+                            for key, value in context_data.items():
+                                val_json = json.dumps(value)
+                                ctx.eval(f"var {key} = {val_json};")
+
+                        result = ctx.eval(script_content)
+                        tool_content = json.dumps({"result": result, "evaluated_script": script_content})
+                    except Exception as e:
+                        logger.error(f"Error evaluating JS: {e}")
+                        tool_content = json.dumps({"error": str(e), "evaluated_script": script_content})
 
                     self.messages.append({
                         "role": "tool",

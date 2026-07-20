@@ -184,3 +184,15 @@ def test_conditional_routing_previous_step_default():
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == "screen_1"
+
+def test_dynamic_logic_injection():
+    response = client.post("/api/screens/start", json={"service_id": "logic_service"})
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == "screen_1"
+    assert "scripts" in data
+    assert len(data["scripts"]) == 1
+    script = data["scripts"][0]
+    assert script["trigger"] == "onChange"
+    assert script["targetComponentId"] == "trigger_input"
+    assert script["code"] == "console.log('Value changed');"

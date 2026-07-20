@@ -8,6 +8,6 @@ This document outlines the step-by-step development process for the Python agent
 - **Phases 1-31:** Core agent loop, SSR parsing, tools, state management, JS execution engine integration, and offline form validation logic evaluation before submission.
 
 ## Planned Features
-- [ ] **Phase 32:** Implement file size and type validation logic for mock uploads.
+- [x] **Phase 32:** Implement file size and type validation logic for mock uploads.
 - [ ] **Phase 33:** Add simulated mock authentication token management to AgentClient.
 - [ ] **Phase 34:** Enhance offline form validation to support cross-field evaluations (e.g., match, required_if).

@@ -970,6 +970,82 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(tool_content["result"], 3)
         self.assertEqual(tool_content["evaluated_script"], "a + b;")
 
+    async def test_process_user_input_upload_file_size_validation_fails(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_upload_789"
+        tool_call.type = "function"
+        tool_call.function.name = "upload_file"
+        tool_call.function.arguments = json.dumps({"url": "/api/upload", "filepath": "toolarge.txt", "max_size": 100})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "File too large."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        import unittest.mock
+        with unittest.mock.patch('os.path.exists', return_value=True), \
+             unittest.mock.patch('os.path.getsize', return_value=150):
+            response = await session.process_user_input("Upload large file")
+
+            self.assertEqual(response, "File too large.")
+            self.assertFalse(session.form_submitted)
+            mock_agent_client.post.assert_not_called()
+
+            self.assertEqual(session.messages[3]["role"], "tool")
+            self.assertEqual(json.loads(session.messages[3]["content"]), {"error": "File exceeds maximum size of 100 bytes"})
+
+    async def test_process_user_input_upload_file_type_validation_fails(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_upload_abc"
+        tool_call.type = "function"
+        tool_call.function.name = "upload_file"
+        tool_call.function.arguments = json.dumps({"url": "/api/upload", "filepath": "badtype.exe", "allowed_types": ["image/png", "application/pdf"]})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "File type not allowed."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        import unittest.mock
+        with unittest.mock.patch('os.path.exists', return_value=True), \
+             unittest.mock.patch('mimetypes.guess_type', return_value=("application/x-msdownload", None)):
+            response = await session.process_user_input("Upload bad type file")
+
+            self.assertEqual(response, "File type not allowed.")
+            self.assertFalse(session.form_submitted)
+            mock_agent_client.post.assert_not_called()
+
+            self.assertEqual(session.messages[3]["role"], "tool")
+            self.assertEqual(json.loads(session.messages[3]["content"]), {"error": "File type application/x-msdownload not allowed"})
+
     async def test_process_user_input_upload_file_not_found(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

@@ -6,6 +6,8 @@ import datetime
 import random
 import string
 import logging
+import os
+import mimetypes
 from typing import List, Dict, Any, Callable, Awaitable
 from openai import AsyncOpenAI
 from py_mini_racer import MiniRacer
@@ -301,6 +303,17 @@ class ChatSession:
                             "filepath": {
                                 "type": "string",
                                 "description": "The local path to the file to upload."
+                            },
+                            "max_size": {
+                                "type": "integer",
+                                "description": "The maximum allowed file size in bytes (optional)."
+                            },
+                            "allowed_types": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "A list of allowed MIME types for the file (optional)."
                             }
                         },
                         "required": ["url", "filepath"]
@@ -1024,9 +1037,23 @@ class ChatSession:
                     args = json.loads(tool_call.function.arguments)
                     url = args.get("url")
                     filepath = args.get("filepath")
+                    max_size = args.get("max_size")
+                    allowed_types = args.get("allowed_types")
 
                     if self.agent_client:
                         try:
+                            # File validation
+                            if os.path.exists(filepath):
+                                if max_size is not None:
+                                    file_size = os.path.getsize(filepath)
+                                    if file_size > max_size:
+                                        raise ValueError(f"File exceeds maximum size of {max_size} bytes")
+
+                                if allowed_types is not None and len(allowed_types) > 0:
+                                    mime_type, _ = mimetypes.guess_type(filepath)
+                                    if mime_type not in allowed_types:
+                                        raise ValueError(f"File type {mime_type} not allowed")
+
                             with open(filepath, "rb") as f:
                                 res = await self.agent_client.post(url, files={"file": f})
                                 if res.status_code == 200:

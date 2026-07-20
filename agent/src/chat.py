@@ -1,5 +1,6 @@
 from src.client import AgentClient
 import json
+import re
 import asyncio
 import datetime
 import random
@@ -321,6 +322,32 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "validate_form",
+                    "description": "Evaluate offline form validation logic (required, minlength, maxlength, pattern, min, max, etc.) for a set of answers against a set of fields before submission.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "answers": {
+                                "type": "object",
+                                "description": "The current answers provided by the user.",
+                                "additionalProperties": True
+                            },
+                            "fields": {
+                                "type": "array",
+                                "description": "The field definitions extracted from the screen.",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": True
+                                }
+                            }
+                        },
+                        "required": ["answers", "fields"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "submit_form",
                     "description": "Submit the form data once all required fields are gathered.",
                     "parameters": {
@@ -560,6 +587,77 @@ class ChatSession:
                         "role": "tool",
                         "tool_call_id": tool_call.id,
                         "content": json.dumps({"status": "success", "message": "Form submitted successfully."})
+                    })
+
+
+                elif tool_call.function.name == "validate_form":
+                    args = json.loads(tool_call.function.arguments)
+                    answers = args.get("answers", {})
+                    fields = args.get("fields", [])
+
+                    errors = []
+                    for field in fields:
+                        field_id = field.get("id") or field.get("name")
+                        if not field_id:
+                            continue
+
+                        val = answers.get(field_id)
+                        attrs = field.get("attributes", {})
+
+                        # required
+                        if attrs.get("required") and (val is None or val == ""):
+                            errors.append({"field": field_id, "error": "required"})
+
+                        if val is not None and val != "":
+                            # minlength
+                            if "minlength" in attrs:
+                                try:
+                                    if len(str(val)) < int(attrs["minlength"]):
+                                        errors.append({"field": field_id, "error": f"minlength ({attrs['minlength']})"})
+                                except ValueError:
+                                    pass
+
+                            # maxlength
+                            if "maxlength" in attrs:
+                                try:
+                                    if len(str(val)) > int(attrs["maxlength"]):
+                                        errors.append({"field": field_id, "error": f"maxlength ({attrs['maxlength']})"})
+                                except ValueError:
+                                    pass
+
+                            # pattern
+                            if "pattern" in attrs:
+                                try:
+                                    if not re.search(attrs["pattern"], str(val)):
+                                        errors.append({"field": field_id, "error": f"pattern mismatch ({attrs['pattern']})"})
+                                except Exception as e:
+                                    logger.error(f"Error evaluating pattern {attrs['pattern']} on field {field_id}: {e}")
+
+                            # min
+                            if "min" in attrs:
+                                try:
+                                    if float(val) < float(attrs["min"]):
+                                        errors.append({"field": field_id, "error": f"min ({attrs['min']})"})
+                                except ValueError:
+                                    pass
+
+                            # max
+                            if "max" in attrs:
+                                try:
+                                    if float(val) > float(attrs["max"]):
+                                        errors.append({"field": field_id, "error": f"max ({attrs['max']})"})
+                                except ValueError:
+                                    pass
+
+                    result = {
+                        "valid": len(errors) == 0,
+                        "errors": errors
+                    }
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(result)
                     })
 
                 elif tool_call.function.name == "pause_session":

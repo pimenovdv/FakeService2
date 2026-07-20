@@ -942,7 +942,7 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         mock_tool_call.id = "call_js_123"
         mock_tool_call.type = "function"
         mock_tool_call.function.name = "evaluate_js"
-        mock_tool_call.function.arguments = json.dumps({"script_content": "console.log('hi');"})
+        mock_tool_call.function.arguments = json.dumps({"script_content": "a + b;", "context": {"a": 1, "b": 2}})
 
         mock_response_1 = MagicMock()
         mock_response_1.choices = [MagicMock()]
@@ -967,8 +967,8 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[3]["role"], "tool")
         self.assertEqual(session.messages[3]["name"], "evaluate_js")
         tool_content = json.loads(session.messages[3]["content"])
-        self.assertEqual(tool_content["result"], "Mocked JS execution success")
-        self.assertEqual(tool_content["evaluated_script"], "console.log('hi');")
+        self.assertEqual(tool_content["result"], 3)
+        self.assertEqual(tool_content["evaluated_script"], "a + b;")
 
     async def test_process_user_input_upload_file_not_found(self):
         mock_client = AsyncMock()

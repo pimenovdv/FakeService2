@@ -1137,6 +1137,51 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[6]["content"], "Hola! The weather in Madrid is Sunny.")
 
 
+
+    async def test_validate_form(self):
+        mock_client = MagicMock()
+        mock_agent_client = MagicMock()
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_validate"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "validate_form"
+        mock_tool_call.function.arguments = '{"answers": {"name": "Jo", "age": "17"}, "fields": [{"id": "name", "attributes": {"required": true, "minlength": 3}}, {"id": "age", "attributes": {"min": 18}}]}'
+
+        mock_message1 = MagicMock()
+        mock_message1.content = None
+        mock_message1.tool_calls = [mock_tool_call]
+
+        mock_message2 = MagicMock()
+        mock_message2.content = "Validation complete"
+        mock_message2.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message1)]),
+            MagicMock(choices=[MagicMock(message=mock_message2)])
+        ])
+
+        response = await session.process_user_input("Validate my form")
+        self.assertEqual(response, "Validation complete")
+
+        # System prompt + user + assistant (tool call) + tool (result) + assistant (final)
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+
+        result_json = session.messages[3]["content"]
+        import json
+        result = json.loads(result_json)
+
+        self.assertFalse(result["valid"])
+        self.assertEqual(len(result["errors"]), 2)
+
+        errors = {e["field"]: e["error"] for e in result["errors"]}
+        self.assertTrue(errors["name"].startswith("minlength"))
+        self.assertTrue(errors["age"].startswith("min"))
+
+
 class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_exit(self):
         session = MagicMock()

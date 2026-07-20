@@ -4,7 +4,10 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Completed Phases (1-30)
-- **Phases 1-29:** Core agent loop, SSR parsing, tools, state, and context capabilities completed.
-- [x] **Phase 30:** Implement a real JS execution engine (e.g., PyMiniRacer or PyV8) to make the `evaluate_js` tool non-mock, allowing the agent to evaluate actual frontend JavaScript logic instead of relying on mocks.
-- [ ] **Phase 31:** Implement offline form validation logic evaluation before submission.
+## Completed Phases (1-31)
+- **Phases 1-31:** Core agent loop, SSR parsing, tools, state management, JS execution engine integration, and offline form validation logic evaluation before submission.
+
+## Planned Features
+- [ ] **Phase 32:** Implement file size and type validation logic for mock uploads.
+- [ ] **Phase 33:** Add simulated mock authentication token management to AgentClient.
+- [ ] **Phase 34:** Enhance offline form validation to support cross-field evaluations (e.g., match, required_if).

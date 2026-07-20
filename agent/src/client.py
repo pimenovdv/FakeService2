@@ -24,6 +24,25 @@ class AgentClient:
             follow_redirects=True,
             timeout=30.0
         )
+        self._auth_token: Optional[str] = None
+
+    @property
+    def auth_token(self) -> Optional[str]:
+        """Get the current mock auth token."""
+        return self._auth_token
+
+    def set_auth_token(self, token: str):
+        """Set the mock auth token and update headers."""
+        self._auth_token = token
+        self.client.headers["Authorization"] = f"Bearer {token}"
+        logger.debug(f"Auth token set in headers.")
+
+    def clear_auth_token(self):
+        """Clear the mock auth token and remove from headers."""
+        self._auth_token = None
+        if "Authorization" in self.client.headers:
+            del self.client.headers["Authorization"]
+        logger.debug("Auth token cleared from headers.")
 
     async def get(self, url: str, **kwargs) -> httpx.Response:
         """Perform a GET request."""

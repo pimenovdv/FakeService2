@@ -42,3 +42,21 @@ async def test_agent_client_fetch_html_http_error_handling(httpx_mock):
     async with AgentClient() as client:
         with pytest.raises(httpx.HTTPStatusError):
             await client.fetch_html("http://localhost:4200/error")
+
+@pytest.mark.asyncio
+async def test_agent_client_auth_token_management():
+    client = AgentClient()
+
+    assert client.auth_token is None
+    assert "Authorization" not in client.client.headers
+
+    token = "test_mock_token_123"
+    client.set_auth_token(token)
+    assert client.auth_token == token
+    assert client.client.headers["Authorization"] == f"Bearer {token}"
+
+    client.clear_auth_token()
+    assert client.auth_token is None
+    assert "Authorization" not in client.client.headers
+
+    await client.close()

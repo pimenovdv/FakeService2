@@ -2,9 +2,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Player } from './player';
 import { ApiService } from '../../services/api';
 import { StateService } from '../../services/state';
+import { LogicService } from '../../services/logic';
 import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, of } from 'rxjs';
-import { Screen } from '../../models/screen.model';
+import { BehaviorSubject, Subject, of } from 'rxjs';
+import { Screen, ComponentDef } from '../../models/screen.model';
 import { vi, expect, describe, it, beforeEach } from 'vitest';
 
 describe('Player', () => {
@@ -12,11 +13,16 @@ describe('Player', () => {
   let fixture: ComponentFixture<Player>;
   let mockApiService: any;
   let mockStateService: any;
+  let mockLogicService: any;
   let mockActivatedRoute: any;
   let currentScreenSubject: BehaviorSubject<Screen | null>;
+  let componentDefsSubject: BehaviorSubject<ComponentDef[]>;
+  let answerChangesSubject: Subject<{componentId: string, value: any}>;
 
   beforeEach(async () => {
     currentScreenSubject = new BehaviorSubject<Screen | null>(null);
+    componentDefsSubject = new BehaviorSubject<ComponentDef[]>([]);
+    answerChangesSubject = new Subject();
 
     mockApiService = {
       start: vi.fn().mockReturnValue(of({ id: 'test-screen' } as any)),
@@ -27,6 +33,8 @@ describe('Player', () => {
       setScreen: vi.fn().mockImplementation((screen) => currentScreenSubject.next(screen)),
       getScreen: vi.fn().mockReturnValue({ id: 'test-screen' }),
       currentScreen$: currentScreenSubject.asObservable(),
+      componentDefs$: componentDefsSubject.asObservable(),
+      answerChanges$: answerChangesSubject.asObservable(),
       answers$: of({}),
       evaluateCondition: vi.fn().mockReturnValue(false),
       setSubmitAttempted: vi.fn(),
@@ -34,6 +42,10 @@ describe('Player', () => {
       getAllAnswers: vi.fn().mockReturnValue({ field1: 'value' }),
       submitAttempted$: of(false),
       setValidation: vi.fn()
+    };
+
+    mockLogicService = {
+      execute: vi.fn()
     };
 
     mockActivatedRoute = {
@@ -45,6 +57,7 @@ describe('Player', () => {
       providers: [
         { provide: ApiService, useValue: mockApiService },
         { provide: StateService, useValue: mockStateService },
+        { provide: LogicService, useValue: mockLogicService },
         { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ]
     }).compileComponents();
@@ -89,6 +102,32 @@ describe('Player', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.screen-header h1')?.textContent).toContain('Test Header');
     expect(compiled.querySelector('.screen-content p')?.textContent).toContain('Test Content');
+  });
+
+  describe('logic execution', () => {
+    it('should execute onLoad scripts when starting', () => {
+      mockApiService.start.mockReturnValue(of({
+        id: 'test-screen',
+        scripts: [{ trigger: 'onLoad', code: 'console.log("loaded");' }]
+      } as any));
+
+      component.ngOnInit();
+
+      expect(mockLogicService.execute).toHaveBeenCalledWith('console.log("loaded");');
+    });
+
+    it('should execute onChange scripts on answer change', () => {
+      mockStateService.getScreen.mockReturnValue({
+        id: 'test-screen',
+        scripts: [{ trigger: 'onChange', targetComponentId: 'q1', code: 'console.log("changed");' }]
+      });
+
+      component.ngOnInit();
+
+      answerChangesSubject.next({ componentId: 'q1', value: 'newVal' });
+
+      expect(mockLogicService.execute).toHaveBeenCalledWith('console.log("changed");', { componentId: 'q1', value: 'newVal' });
+    });
   });
 
   describe('onButtonClick', () => {

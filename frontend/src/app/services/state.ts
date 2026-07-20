@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { Screen, Condition } from '../models/screen.model';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { Screen, Condition, ComponentDef } from '../models/screen.model';
 
 @Injectable({
   providedIn: 'root'
@@ -9,8 +9,13 @@ export class StateService {
 private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
   public currentScreen$ = this.currentScreenSubject.asObservable();
 
+  private componentDefsSubject = new BehaviorSubject<ComponentDef[]>([]);
+  public componentDefs$ = this.componentDefsSubject.asObservable();
+
   private answersSubject = new BehaviorSubject<Record<string, any>>({});
   public answers$ = this.answersSubject.asObservable();
+
+  public answerChanges$ = new Subject<{componentId: string, value: any}>();
 
   private validationState: Record<string, boolean> = {};
 
@@ -21,6 +26,7 @@ private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
 
   setScreen(screen: Screen) {
     this.currentScreenSubject.next(screen);
+    this.componentDefsSubject.next(screen.components || []);
     this.answersSubject.next({}); // Reset answers on new screen
     this.validationState = {};
     this.submitAttemptedSubject.next(false);
@@ -34,6 +40,18 @@ private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
     const currentAnswers = this.answersSubject.value;
     const newAnswers = { ...currentAnswers, [componentId]: value };
     this.answersSubject.next(newAnswers);
+    this.answerChanges$.next({ componentId, value });
+  }
+
+  updateComponentDef(componentId: string, updates: Partial<ComponentDef>) {
+    const currentDefs = this.componentDefsSubject.value;
+    const newDefs = currentDefs.map(def => {
+      if (def.id === componentId) {
+        return { ...def, ...updates };
+      }
+      return def;
+    });
+    this.componentDefsSubject.next(newDefs);
   }
 
   getAnswer(componentId: string): any {
@@ -58,6 +76,7 @@ getAllAnswers(): Record<string, any> {
 
   clearState() {
     this.currentScreenSubject.next(null);
+    this.componentDefsSubject.next([]);
     this.answersSubject.next({});
     this.validationState = {};
     this.submitAttemptedSubject.next(false);

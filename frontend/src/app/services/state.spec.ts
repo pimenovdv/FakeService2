@@ -55,6 +55,33 @@ describe('StateService', () => {
     expect(service.getAllAnswers()).toEqual({});
   });
 
+  it('should notify on answer changes', () => {
+    return new Promise<void>((resolve) => {
+      service.answerChanges$.subscribe(change => {
+        expect(change).toEqual({ componentId: 'q3', value: 'newValue' });
+        resolve();
+      });
+      service.setAnswer('q3', 'newValue');
+    });
+  });
+
+  it('should update component definitions', () => {
+    const dummyScreen: Screen = {
+      id: 'screen1',
+      header: 'Test Screen',
+      content: 'This is a test',
+      components: [{ id: 'c1', type: 'text', label: 'C1' }],
+      buttons: []
+    };
+    service.setScreen(dummyScreen);
+
+    service.updateComponentDef('c1', { hidden: true });
+
+    service.componentDefs$.subscribe(defs => {
+      expect(defs.find(d => d.id === 'c1')?.hidden).toBe(true);
+    });
+  });
+
   it('should clear state', () => {
     const dummyScreen: Screen = {
       id: 'screen1',

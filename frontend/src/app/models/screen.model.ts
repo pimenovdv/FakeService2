@@ -43,10 +43,17 @@ export interface ButtonDef {
   color?: 'primary' | 'secondary' | 'warn';
 }
 
+export interface ScriptDef {
+  trigger: 'onLoad' | 'onChange';
+  targetComponentId?: string;
+  code: string;
+}
+
 export interface Screen {
   id: string;
   header: string;
   content: string;
   components: ComponentDef[];
   buttons: ButtonDef[];
+  scripts?: ScriptDef[];
 }

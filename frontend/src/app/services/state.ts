@@ -3,10 +3,10 @@ import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { Screen, Condition, ComponentDef } from '../models/screen.model';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class StateService {
-private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
+  private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
   public currentScreen$ = this.currentScreenSubject.asObservable();
 
   private componentDefsSubject = new BehaviorSubject<ComponentDef[]>([]);
@@ -15,14 +15,14 @@ private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
   private answersSubject = new BehaviorSubject<Record<string, any>>({});
   public answers$ = this.answersSubject.asObservable();
 
-  public answerChanges$ = new Subject<{componentId: string, value: any}>();
+  public answerChanges$ = new Subject<{ componentId: string; value: any }>();
 
   private validationState: Record<string, boolean> = {};
 
   private submitAttemptedSubject = new BehaviorSubject<boolean>(false);
   public submitAttempted$ = this.submitAttemptedSubject.asObservable();
 
-  constructor() { }
+  constructor() {}
 
   setScreen(screen: Screen) {
     this.currentScreenSubject.next(screen);
@@ -45,7 +45,7 @@ private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
 
   updateComponentDef(componentId: string, updates: Partial<ComponentDef>) {
     const currentDefs = this.componentDefsSubject.value;
-    const newDefs = currentDefs.map(def => {
+    const newDefs = currentDefs.map((def) => {
       if (def.id === componentId) {
         return { ...def, ...updates };
       }
@@ -54,11 +54,15 @@ private currentScreenSubject = new BehaviorSubject<Screen | null>(null);
     this.componentDefsSubject.next(newDefs);
   }
 
+  getComponentDef(componentId: string): ComponentDef | undefined {
+    return this.componentDefsSubject.value.find((def) => def.id === componentId);
+  }
+
   getAnswer(componentId: string): any {
     return this.answersSubject.value[componentId];
   }
 
-getAllAnswers(): Record<string, any> {
+  getAllAnswers(): Record<string, any> {
     return { ...this.answersSubject.value };
   }
 
@@ -67,7 +71,7 @@ getAllAnswers(): Record<string, any> {
   }
 
   isFormValid(): boolean {
-    return Object.values(this.validationState).every(v => v);
+    return Object.values(this.validationState).every((v) => v);
   }
 
   setSubmitAttempted(value: boolean) {

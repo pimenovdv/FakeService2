@@ -12,14 +12,14 @@ describe('LogicService', () => {
       setAnswer: vi.fn(),
       getAnswer: vi.fn(),
       updateComponentDef: vi.fn(),
-      isFormValid: vi.fn()
+      isFormValid: vi.fn(),
+      getComponentDef: vi.fn(),
+      getAllAnswers: vi.fn(),
+      evaluateCondition: vi.fn(),
     };
 
     TestBed.configureTestingModule({
-      providers: [
-        LogicService,
-        { provide: StateService, useValue: stateServiceMock }
-      ]
+      providers: [LogicService, { provide: StateService, useValue: stateServiceMock }],
     });
     service = TestBed.inject(LogicService);
   });
@@ -50,6 +50,31 @@ describe('LogicService', () => {
     expect(stateServiceMock.updateComponentDef).toHaveBeenCalledWith('q3', { hidden: true });
     expect(stateServiceMock.isFormValid).toHaveBeenCalled();
     expect(stateServiceMock.setAnswer).toHaveBeenCalledWith('q4', 'valid');
+  });
+
+  it('should expose advanced state methods (getComponentDef, getAllAnswers, evaluateCondition)', () => {
+    stateServiceMock.getComponentDef.mockReturnValue({ id: 'q1', type: 'text' });
+    stateServiceMock.getAllAnswers.mockReturnValue({ q1: 'test' });
+    stateServiceMock.evaluateCondition.mockReturnValue(true);
+
+    const code = `
+      var def = state.getComponentDef('q1');
+      var all = state.getAllAnswers();
+      var isMatch = state.evaluateCondition({ field: 'q1', operator: '==', value: 'test' });
+      if (def.type === 'text' && all.q1 === 'test' && isMatch) {
+        state.setAnswer('result', 'success');
+      }
+    `;
+    service.execute(code);
+
+    expect(stateServiceMock.getComponentDef).toHaveBeenCalledWith('q1');
+    expect(stateServiceMock.getAllAnswers).toHaveBeenCalled();
+    expect(stateServiceMock.evaluateCondition).toHaveBeenCalledWith({
+      field: 'q1',
+      operator: '==',
+      value: 'test',
+    });
+    expect(stateServiceMock.setAnswer).toHaveBeenCalledWith('result', 'success');
   });
 
   it('should gracefully handle execution errors', () => {

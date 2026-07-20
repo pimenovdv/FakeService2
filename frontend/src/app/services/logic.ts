@@ -3,7 +3,7 @@ import { StateService } from './state';
 import Interpreter from 'js-interpreter';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class LogicService {
   private stateService = inject(StateService);
@@ -17,23 +17,68 @@ export class LogicService {
       const setAnswerWrapper = (componentId: string, value: any) => {
         this.stateService.setAnswer(componentId, interpreter.pseudoToNative(value));
       };
-      interpreter.setProperty(stateObj, 'setAnswer', interpreter.createNativeFunction(setAnswerWrapper));
+      interpreter.setProperty(
+        stateObj,
+        'setAnswer',
+        interpreter.createNativeFunction(setAnswerWrapper),
+      );
 
       const getAnswerWrapper = (componentId: string) => {
         const val = this.stateService.getAnswer(componentId);
         return interpreter.nativeToPseudo(val);
       };
-      interpreter.setProperty(stateObj, 'getAnswer', interpreter.createNativeFunction(getAnswerWrapper));
+      interpreter.setProperty(
+        stateObj,
+        'getAnswer',
+        interpreter.createNativeFunction(getAnswerWrapper),
+      );
 
       const updateComponentDefWrapper = (componentId: string, updates: any) => {
         this.stateService.updateComponentDef(componentId, interpreter.pseudoToNative(updates));
       };
-      interpreter.setProperty(stateObj, 'updateComponentDef', interpreter.createNativeFunction(updateComponentDefWrapper));
+      interpreter.setProperty(
+        stateObj,
+        'updateComponentDef',
+        interpreter.createNativeFunction(updateComponentDefWrapper),
+      );
 
       const isFormValidWrapper = () => {
         return interpreter.nativeToPseudo(this.stateService.isFormValid());
       };
-      interpreter.setProperty(stateObj, 'isFormValid', interpreter.createNativeFunction(isFormValidWrapper));
+      interpreter.setProperty(
+        stateObj,
+        'isFormValid',
+        interpreter.createNativeFunction(isFormValidWrapper),
+      );
+
+      const getComponentDefWrapper = (componentId: string) => {
+        return interpreter.nativeToPseudo(this.stateService.getComponentDef(componentId));
+      };
+      interpreter.setProperty(
+        stateObj,
+        'getComponentDef',
+        interpreter.createNativeFunction(getComponentDefWrapper),
+      );
+
+      const getAllAnswersWrapper = () => {
+        return interpreter.nativeToPseudo(this.stateService.getAllAnswers());
+      };
+      interpreter.setProperty(
+        stateObj,
+        'getAllAnswers',
+        interpreter.createNativeFunction(getAllAnswersWrapper),
+      );
+
+      const evaluateConditionWrapper = (condition: any) => {
+        return interpreter.nativeToPseudo(
+          this.stateService.evaluateCondition(interpreter.pseudoToNative(condition)),
+        );
+      };
+      interpreter.setProperty(
+        stateObj,
+        'evaluateCondition',
+        interpreter.createNativeFunction(evaluateConditionWrapper),
+      );
     };
 
     try {

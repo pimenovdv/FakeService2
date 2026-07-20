@@ -1,11 +1,14 @@
 import { TestBed } from '@angular/core/testing';
 import { LogicService } from './logic';
 import { StateService } from './state';
+import { ApiService } from './api';
+import { of, throwError } from 'rxjs';
 import { expect, describe, it, beforeEach, vi } from 'vitest';
 
 describe('LogicService', () => {
   let service: LogicService;
   let stateServiceMock: any;
+  let apiServiceMock: any;
 
   beforeEach(() => {
     stateServiceMock = {
@@ -18,8 +21,16 @@ describe('LogicService', () => {
       evaluateCondition: vi.fn(),
     };
 
+    apiServiceMock = {
+      dynamicCall: vi.fn()
+    };
+
     TestBed.configureTestingModule({
-      providers: [LogicService, { provide: StateService, useValue: stateServiceMock }],
+      providers: [
+        LogicService,
+        { provide: StateService, useValue: stateServiceMock },
+        { provide: ApiService, useValue: apiServiceMock }
+      ],
     });
     service = TestBed.inject(LogicService);
   });
@@ -75,6 +86,52 @@ describe('LogicService', () => {
       value: 'test',
     });
     expect(stateServiceMock.setAnswer).toHaveBeenCalledWith('result', 'success');
+  });
+
+  it('should execute apiCall asynchronously', async () => {
+    apiServiceMock.dynamicCall.mockReturnValue(of({ result: 'api_success' }));
+
+    const code = `
+      var res = apiCall('/api/test', 'GET', { filter: 'test' });
+      if (res && res.result === 'api_success') {
+        state.setAnswer('async_result', 'success');
+      }
+    `;
+    service.execute(code);
+
+    // Wait for the async macro-task (setTimeout inside runInterpreter and rxjs macro tasks if any)
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({
+      endpoint: '/api/test',
+      method: 'GET',
+      params: { filter: 'test' }
+    });
+    expect(stateServiceMock.setAnswer).toHaveBeenCalledWith('async_result', 'success');
+  });
+
+  it('should handle apiCall errors asynchronously', async () => {
+    apiServiceMock.dynamicCall.mockReturnValue(throwError(() => new Error('API Error')));
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const code = `
+      var res = apiCall('/api/error', 'POST', {});
+      if (res && res.error) {
+        state.setAnswer('async_error', 'caught');
+      }
+    `;
+    service.execute(code);
+
+    await new Promise(r => setTimeout(r, 50));
+
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({
+      endpoint: '/api/error',
+      method: 'POST',
+      params: {}
+    });
+    expect(stateServiceMock.setAnswer).toHaveBeenCalledWith('async_error', 'caught');
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 
   it('should gracefully handle execution errors', () => {

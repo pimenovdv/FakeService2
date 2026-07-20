@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { StateService } from './state';
+import { ApiService } from './api';
 import Interpreter from 'js-interpreter';
 
 @Injectable({
@@ -7,6 +8,7 @@ import Interpreter from 'js-interpreter';
 })
 export class LogicService {
   private stateService = inject(StateService);
+  private apiService = inject(ApiService);
 
   execute(code: string, context?: any) {
     const initFunc = (interpreter: any, globalObject: any) => {
@@ -79,11 +81,41 @@ export class LogicService {
         'evaluateCondition',
         interpreter.createNativeFunction(evaluateConditionWrapper),
       );
+
+      const apiCallWrapper = (endpointUrl: any, method: any, params: any, callback: any) => {
+         const meta = {
+            endpoint: interpreter.pseudoToNative(endpointUrl),
+            method: interpreter.pseudoToNative(method) || 'GET',
+            params: interpreter.pseudoToNative(params) || {}
+         };
+
+         this.apiService.dynamicCall(meta).subscribe({
+           next: (data) => {
+             callback(interpreter.nativeToPseudo(data));
+             runInterpreter();
+           },
+           error: (err) => {
+             console.error('Logic async call failed', err);
+             callback(interpreter.nativeToPseudo({ error: err.message }));
+             runInterpreter();
+           }
+         });
+      };
+      interpreter.setProperty(globalObject, 'apiCall', interpreter.createAsyncFunction(apiCallWrapper));
+    };
+
+    let myInterpreter: any;
+    const runInterpreter = () => {
+      try {
+        myInterpreter.run();
+      } catch (e) {
+        console.error('Error executing logic step:', e);
+      }
     };
 
     try {
-      const myInterpreter = new Interpreter(code, initFunc);
-      myInterpreter.run();
+      myInterpreter = new Interpreter(code, initFunc);
+      runInterpreter();
     } catch (e) {
       console.error('Error executing logic:', e);
     }

@@ -178,6 +178,31 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_analytics_data",
+                    "description": "Retrieve mock analytics data. Allows filtering by start_date, end_date (YYYY-MM-DD) and metric (e.g. visitors, revenue, errors).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "start_date": {
+                                "type": "string",
+                                "description": "Start date in YYYY-MM-DD format"
+                            },
+                            "end_date": {
+                                "type": "string",
+                                "description": "End date in YYYY-MM-DD format"
+                            },
+                            "metric": {
+                                "type": "string",
+                                "description": "Metric to retrieve, defaults to visitors"
+                            }
+                        },
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_system_health",
                     "description": "Retrieve the current health status of the backend system and its connected services.",
                     "parameters": {
@@ -1006,6 +1031,42 @@ class ChatSession:
                                 tool_content = json.dumps(res.json())
                             else:
                                 tool_content = json.dumps({"error": f"Failed to fetch services, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "get_analytics_data":
+                    args = json.loads(tool_call.function.arguments)
+                    start_date = args.get("start_date")
+                    end_date = args.get("end_date")
+                    metric = args.get("metric")
+
+                    if self.agent_client:
+                        query_params = []
+                        if start_date:
+                            query_params.append(f"start_date={start_date}")
+                        if end_date:
+                            query_params.append(f"end_date={end_date}")
+                        if metric:
+                            query_params.append(f"metric={metric}")
+
+                        url = "/api/analytics"
+                        if query_params:
+                            url += "?" + "&".join(query_params)
+
+                        try:
+                            res = await self.agent_client.get(url)
+                            if res.status_code == 200:
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to fetch analytics, status code {res.status_code}"})
                         except Exception as e:
                             tool_content = json.dumps({"error": str(e)})
                     else:

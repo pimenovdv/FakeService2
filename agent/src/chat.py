@@ -30,6 +30,23 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_webhook",
+                    "description": "Retrieve stored webhook payloads for a given webhook_id.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "webhook_id": {
+                                "type": "string",
+                                "description": "The ID of the webhook to retrieve."
+                            }
+                        },
+                        "required": ["webhook_id"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_current_datetime",
                     "description": "Get the current date and time.",
                     "parameters": {
@@ -842,6 +859,29 @@ class ChatSession:
                                 tool_content = res.text
                             else:
                                 tool_content = json.dumps({"error": f"Failed to fetch data, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "get_webhook":
+                    args = json.loads(tool_call.function.arguments)
+                    webhook_id = args.get("webhook_id")
+
+                    if self.agent_client:
+                        url = f"/api/webhooks/{webhook_id}"
+                        try:
+                            res = await self.agent_client.get(url)
+                            if res.status_code == 200:
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to fetch webhook, status code {res.status_code}"})
                         except Exception as e:
                             tool_content = json.dumps({"error": str(e)})
                     else:

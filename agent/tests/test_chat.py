@@ -1474,6 +1474,47 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(tool_msg["role"], "tool")
         self.assertIn("revenue", tool_msg["content"])
 
+    async def test_get_webhook(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get = AsyncMock()
+
+        mock_response_get = MagicMock()
+        mock_response_get.status_code = 200
+        mock_response_get.json.return_value = {"webhook_id": "test_id", "payloads": [{"event": "test"}]}
+        mock_agent_client.get.return_value = mock_response_get
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_webhook_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_webhook"
+        mock_tool_call.function.arguments = json.dumps({"webhook_id": "test_id"})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "The webhook data."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("Get webhook data.")
+
+        self.assertEqual(response, "The webhook data.")
+        mock_agent_client.get.assert_called_with("/api/webhooks/test_id")
+        self.assertEqual(len(session.messages), 5) # System, User, Assistant(tool), Tool, Assistant
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertIn("test_id", tool_msg["content"])
+
 class TestChatSessionPersistence(unittest.TestCase):
     def test_save_and_load_state(self):
         import tempfile

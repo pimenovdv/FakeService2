@@ -2,17 +2,12 @@
 
 This document outlines the step-by-step development process for the FastAPI-based mock backend.
 
-## Completed Phases (1-28)
-- **Core to Phase 28:** Implemented core features, dynamic endpoints, file uploads/downloads, background tasks, authentication, WebSocket/SSE, RBAC, GraphQL, advanced cross-field validation, rate limiting, health monitoring, webhooks, key-value cache, mock email outbox, and mock feature flags.
+## Completed Phases (1-30)
+- **Core to Phase 30:** Implemented core features, dynamic endpoints, file uploads/downloads, background tasks, authentication, WebSocket/SSE, RBAC, GraphQL, advanced cross-field validation, rate limiting, health monitoring, webhooks, key-value cache, mock email outbox, mock feature flags, dynamic JSON logic injection, and document extraction mock endpoint.
 
 ## New Features
 
-## Phase 29: Dynamic JSON Logic Injection
-- [x] **Dynamic JSON Logic Injection**
-  - **Goal:** Enable the backend to serve JSON structures that contain embedded JavaScript logic or complex rules that dictate frontend behavior.
-  - **Details:** Update the backend data models and mock screen data structures to allow strings or objects that represent executable frontend logic, ensuring the frontend has the information it needs to build complex dynamic objects.
-
-## Phase 30: Document Extraction Mock
-- [x] **Document Extraction Mock Endpoint**
-  - **Goal:** Mock an endpoint that simulates document parsing and data extraction.
-  - **Details:** Allow uploading a file and return a structured JSON response simulating extracted fields (e.g., from an ID card or an invoice).
+## Phase 31: Mock Analytics Data Endpoint
+- [x] **Mock Analytics Data Endpoint**
+  - **Goal:** Mock an endpoint that returns simulated analytics and time-series data.
+  - **Details:** Add a `GET /api/analytics` endpoint that supports optional query parameters (e.g., `start_date`, `end_date`, `metric`) and returns structured JSON time-series data suitable for charting in the frontend.

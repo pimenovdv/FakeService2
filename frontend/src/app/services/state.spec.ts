@@ -108,6 +108,42 @@ describe('StateService', () => {
     service.setValidation('q2', true);
     expect(service.isFormValid()).toBe(true);
   });
+  describe('evaluateCrossValidations', () => {
+    it('should return empty array if no rules provided', () => {
+      expect(service.evaluateCrossValidations(undefined)).toEqual([]);
+      expect(service.evaluateCrossValidations([])).toEqual([]);
+    });
+
+    it('should evaluate match rule correctly', () => {
+      const rule = { type: 'match', fields: ['p1', 'p2'], message: 'Mismatch' } as any;
+      service.setAnswer('p1', 'abc');
+      service.setAnswer('p2', 'abc');
+      expect(service.evaluateCrossValidations([rule])).toEqual([]);
+
+      service.setAnswer('p2', 'def');
+      expect(service.evaluateCrossValidations([rule])).toEqual(['Mismatch']);
+    });
+
+    it('should evaluate required_if rule correctly', () => {
+      const rule = {
+        type: 'required_if',
+        condition_field: 'has_pet',
+        condition_value: 'yes',
+        target_field: 'pet_name',
+        message: 'Pet name required'
+      } as any;
+
+      service.setAnswer('has_pet', 'no');
+      expect(service.evaluateCrossValidations([rule])).toEqual([]);
+
+      service.setAnswer('has_pet', 'yes');
+      expect(service.evaluateCrossValidations([rule])).toEqual(['Pet name required']);
+
+      service.setAnswer('pet_name', 'Fluffy');
+      expect(service.evaluateCrossValidations([rule])).toEqual([]);
+    });
+  });
+
   describe('evaluateCondition', () => {
     it('should return false if condition is undefined', () => {
       expect(service.evaluateCondition(undefined)).toBe(false);

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
-import { Screen, Condition, ComponentDef } from '../models/screen.model';
+import { Screen, Condition, ComponentDef, CrossValidationRule } from '../models/screen.model';
 
 @Injectable({
   providedIn: 'root',
@@ -110,5 +110,38 @@ export class StateService {
       default:
         return false;
     }
+  }
+
+  evaluateCrossValidations(rules: CrossValidationRule[] | undefined): string[] {
+    if (!rules || rules.length === 0) {
+      return [];
+    }
+    const errors: string[] = [];
+    const answers = this.answersSubject.value;
+
+    for (const rule of rules) {
+      if (rule.type === 'match') {
+        if (rule.fields && rule.fields.length > 1) {
+          const firstValue = answers[rule.fields[0]];
+          for (let i = 1; i < rule.fields.length; i++) {
+            if (answers[rule.fields[i]] !== firstValue) {
+              errors.push(rule.message);
+              break;
+            }
+          }
+        }
+      } else if (rule.type === 'required_if') {
+        if (rule.condition_field && rule.target_field) {
+          const conditionValue = answers[rule.condition_field];
+          if (conditionValue === rule.condition_value) {
+            const targetValue = answers[rule.target_field];
+            if (targetValue === null || targetValue === undefined || targetValue === '') {
+              errors.push(rule.message);
+            }
+          }
+        }
+      }
+    }
+    return errors;
   }
 }

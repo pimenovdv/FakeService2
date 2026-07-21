@@ -60,7 +60,7 @@ describe('MultiselectControlComponent', () => {
     fixture.componentRef.setInput('def', def);
     fixture.detectChanges();
 
-    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith(def.restMetadata);
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({...def.restMetadata, params: {}});
     expect(component.options).toEqual(mockData);
     expect(component.loadingOptions).toBe(false);
   });
@@ -100,5 +100,44 @@ describe('MultiselectControlComponent', () => {
     component.validate();
     expect(component.isValid).toBe(true);
     expect(component.errors.length).toBe(0);
+  });
+
+  it('should reload dynamic options on dependency change', () => {
+    const mockData1 = [{ id: 'test1', name: 'Option 1' }];
+    const mockData2 = [{ id: 'test2', name: 'Option 2' }];
+    apiServiceMock.dynamicCall.mockReturnValueOnce(of(mockData1)).mockReturnValueOnce(of(mockData2));
+
+    const stateService = (component as any).stateService;
+    stateService.setAnswer('country', 'US');
+
+    const def: ComponentDef = {
+      id: 'multi_dynamic_deps',
+      type: 'multiselect',
+      label: 'Dynamic Multi with Deps',
+      restMetadata: { endpoint: '/api/cities', method: 'GET', params: { base: 'value' } },
+      dependsOn: ['country']
+    };
+
+    fixture.componentRef.setInput('def', def);
+    fixture.detectChanges();
+
+    // Initial load checks if API is called with mapped dependency answers
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({
+      endpoint: '/api/cities',
+      method: 'GET',
+      params: { base: 'value', country: 'US' }
+    });
+    expect(component.options).toEqual(mockData1);
+
+    // Simulate dependency change
+    stateService.setAnswer('country', 'CA');
+
+    // Second API call should occur with new dependency values
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({
+      endpoint: '/api/cities',
+      method: 'GET',
+      params: { base: 'value', country: 'CA' }
+    });
+    expect(component.options).toEqual(mockData2);
   });
 });

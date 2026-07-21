@@ -108,6 +108,30 @@ def test_screen_parser_file_upload():
     assert field["attributes"]["accept"] == "image/*, .pdf"
     assert field["attributes"]["multiple"] == ""  # bs4 might return "" for boolean attributes with no value
 
+def test_screen_parser_cross_validations():
+    html = '''
+    <div id="cross-validations-data">
+    [
+        {"type": "match", "fields": ["p1", "p2"], "message": "Passwords do not match"},
+        {"type": "required_if", "condition_field": "has_pet", "condition_value": "yes", "target_field": "pet_name", "message": "Pet name required"}
+    ]
+    </div>
+    '''
+    parser = ScreenParser(html)
+    result = parser.parse()
+
+    assert "cross_validations" in result
+    assert len(result["cross_validations"]) == 2
+    assert result["cross_validations"][0]["type"] == "match"
+    assert result["cross_validations"][0]["fields"] == ["p1", "p2"]
+    assert result["cross_validations"][0]["message"] == "Passwords do not match"
+
+    assert result["cross_validations"][1]["type"] == "required_if"
+    assert result["cross_validations"][1]["condition_field"] == "has_pet"
+    assert result["cross_validations"][1]["condition_value"] == "yes"
+    assert result["cross_validations"][1]["target_field"] == "pet_name"
+    assert result["cross_validations"][1]["message"] == "Pet name required"
+
 def test_screen_parser_scripts():
     html = '''
     <script src="test.js"></script>

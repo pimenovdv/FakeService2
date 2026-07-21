@@ -352,6 +352,14 @@ class ChatSession:
                                     "type": "object",
                                     "additionalProperties": True
                                 }
+                            },
+                            "cross_validations": {
+                                "type": "array",
+                                "description": "The cross-field validation rules extracted from the screen.",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": True
+                                }
                             }
                         },
                         "required": ["answers", "fields"]
@@ -607,8 +615,29 @@ class ChatSession:
                     args = json.loads(tool_call.function.arguments)
                     answers = args.get("answers", {})
                     fields = args.get("fields", [])
+                    cross_validations = args.get("cross_validations", [])
 
                     errors = []
+
+                    # Evaluate cross-field validations
+                    for cv in cross_validations:
+                        cv_type = cv.get("type")
+                        if cv_type == "match":
+                            cv_fields = cv.get("fields", [])
+                            if len(cv_fields) > 1:
+                                first_val = answers.get(cv_fields[0])
+                                for cv_field in cv_fields[1:]:
+                                    if answers.get(cv_field) != first_val:
+                                        errors.append({"field": cv_field, "error": cv.get("message", "Fields do not match")})
+                        elif cv_type == "required_if":
+                            condition_field = cv.get("condition_field")
+                            condition_value = cv.get("condition_value")
+                            target_field = cv.get("target_field")
+                            if answers.get(condition_field) == condition_value:
+                                target_val = answers.get(target_field)
+                                if target_val is None or target_val == "":
+                                    errors.append({"field": target_field, "error": cv.get("message", "Field is required")})
+
                     for field in fields:
                         field_id = field.get("id") or field.get("name")
                         if not field_id:

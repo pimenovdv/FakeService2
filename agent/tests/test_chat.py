@@ -1214,6 +1214,61 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
 
 
 
+    async def test_validate_form_cross_validations(self):
+        mock_client = AsyncMock()
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_validate_cv"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "validate_form"
+
+        args = {
+            "answers": {
+                "p1": "abc",
+                "p2": "def",
+                "has_pet": "yes",
+                "pet_name": ""
+            },
+            "fields": [],
+            "cross_validations": [
+                {"type": "match", "fields": ["p1", "p2"], "message": "Passwords do not match"},
+                {"type": "required_if", "condition_field": "has_pet", "condition_value": "yes", "target_field": "pet_name", "message": "Pet name required"}
+            ]
+        }
+        mock_tool_call.function.arguments = json.dumps(args)
+
+        mock_response = MagicMock()
+        mock_response.choices = [MagicMock()]
+        mock_response.choices[0].message.content = None
+        mock_response.choices[0].message.tool_calls = [mock_tool_call]
+
+        # Second call to terminate
+        mock_response2 = MagicMock()
+        mock_response2.choices = [MagicMock()]
+        mock_response2.choices[0].message.content = "Done"
+        mock_response2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response, mock_response2]
+
+        session = ChatSession("System Prompt", client=mock_client)
+
+        await session.process_user_input("validate cv")
+
+        tool_msg = next((m for m in session.messages if m.get("role") == "tool" and m.get("tool_call_id") == "call_validate_cv"), None)
+        self.assertIsNotNone(tool_msg)
+
+        tool_content = json.loads(tool_msg["content"])
+        self.assertFalse(tool_content["valid"])
+        errors = tool_content["errors"]
+        self.assertEqual(len(errors), 2)
+
+        match_err = next(e for e in errors if e["field"] == "p2")
+        self.assertEqual(match_err["error"], "Passwords do not match")
+
+        req_err = next(e for e in errors if e["field"] == "pet_name")
+        self.assertEqual(req_err["error"], "Pet name required")
+
+
     async def test_validate_form(self):
         mock_client = MagicMock()
         mock_agent_client = MagicMock()

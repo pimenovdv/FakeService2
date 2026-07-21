@@ -1,4 +1,5 @@
 import logging
+import json
 from bs4 import BeautifulSoup
 from typing import Dict, Any, List
 
@@ -23,8 +24,18 @@ class ScreenParser:
                 "fields": [],
                 "buttons": [],
                 "dialogs": [],
-                "scripts": []
+                "scripts": [],
+                "cross_validations": []
             }
+
+            # Extract cross validations
+            cv_div = self.soup.find('div', id='cross-validations-data')
+            if cv_div and cv_div.string:
+                try:
+                    result["cross_validations"] = json.loads(cv_div.string)
+                except json.JSONDecodeError as e:
+                    logger.error(f"ScreenParser failed to decode crossValidations JSON: {e}")
+                cv_div.extract()
 
             # Extract scripts
             for script in self.soup.find_all('script'):

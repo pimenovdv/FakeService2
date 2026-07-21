@@ -352,6 +352,14 @@ class ChatSession:
                                     "type": "object",
                                     "additionalProperties": True
                                 }
+                            },
+                            "cross_validations": {
+                                "type": "array",
+                                "description": "The cross-validation rules to evaluate.",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": True
+                                }
                             }
                         },
                         "required": ["answers", "fields"]
@@ -661,6 +669,27 @@ class ChatSession:
                                         errors.append({"field": field_id, "error": f"max ({attrs['max']})"})
                                 except ValueError:
                                     pass
+
+                    cross_validations = args.get("cross_validations", [])
+                    for rule in cross_validations:
+                        rule_type = rule.get("type")
+                        if rule_type == "match":
+                            rule_fields = rule.get("fields", [])
+                            if len(rule_fields) > 1:
+                                first_val = answers.get(rule_fields[0])
+                                for i in range(1, len(rule_fields)):
+                                    if answers.get(rule_fields[i]) != first_val:
+                                        errors.append({"error": rule.get("message", "match failed")})
+                                        break
+                        elif rule_type == "required_if":
+                            cond_field = rule.get("condition_field")
+                            target_field = rule.get("target_field")
+                            if cond_field and target_field:
+                                cond_val = answers.get(cond_field)
+                                if cond_val == rule.get("condition_value"):
+                                    target_val = answers.get(target_field)
+                                    if target_val is None or target_val == "":
+                                        errors.append({"field": target_field, "error": rule.get("message", "required_if failed")})
 
                     result = {
                         "valid": len(errors) == 0,

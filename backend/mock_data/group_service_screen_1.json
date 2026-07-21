@@ -1,0 +1,35 @@
+{
+  "id": "screen_1",
+  "header": "Group Test Screen",
+  "content": "Please fill in the grouped details.",
+  "components": [
+    {
+      "id": "personal-info-group",
+      "type": "group",
+      "label": "Personal Information",
+      "components": [
+        {
+          "id": "first-name",
+          "type": "text",
+          "label": "First Name",
+          "validations": [
+            { "type": "required", "message": "First name is required" }
+          ]
+        },
+        {
+          "id": "subscribe",
+          "type": "checkbox",
+          "label": "Subscribe to newsletter"
+        }
+      ]
+    }
+  ],
+  "buttons": [
+    {
+      "id": "submit-btn",
+      "label": "Submit",
+      "action": "submit",
+      "color": "primary"
+    }
+  ]
+}

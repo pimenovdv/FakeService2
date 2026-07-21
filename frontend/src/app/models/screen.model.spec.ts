@@ -34,6 +34,32 @@ describe('Screen Models', () => {
     expect(button.color).toBe('primary');
   });
 
+  it('should be able to create a ComponentDef object with type group and nested components', () => {
+    const groupComponent: ComponentDef = {
+      id: 'personal-info-group',
+      type: 'group',
+      label: 'Personal Information',
+      components: [
+        {
+          id: 'first-name',
+          type: 'text',
+          label: 'First Name'
+        },
+        {
+          id: 'last-name',
+          type: 'text',
+          label: 'Last Name'
+        }
+      ]
+    };
+
+    expect(groupComponent.id).toBe('personal-info-group');
+    expect(groupComponent.type).toBe('group');
+    expect(groupComponent.components?.length).toBe(2);
+    expect(groupComponent.components?.[0].id).toBe('first-name');
+    expect(groupComponent.components?.[1].id).toBe('last-name');
+  });
+
   it('should be able to create a Screen object', () => {
     const screen: Screen = {
       id: 'screen-1',

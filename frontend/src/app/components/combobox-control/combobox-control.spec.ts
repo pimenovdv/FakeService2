@@ -3,7 +3,7 @@ import { ComboboxControlComponent } from './combobox-control';
 import { ApiService } from '../../services/api';
 import { of, throwError } from 'rxjs';
 import { ComponentDef } from '../../models/screen.model';
-import { vi } from 'vitest';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 describe('ComboboxControlComponent', () => {
   let component: ComboboxControlComponent;
@@ -59,7 +59,7 @@ describe('ComboboxControlComponent', () => {
 
     fixture.detectChanges();
 
-    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith(component.def.restMetadata);
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({...component.def.restMetadata, params: {}});
     expect(component.options).toEqual([{ id: 'test', name: 'Test Option' }]);
     expect(component.loadingOptions).toBe(false);
   });
@@ -80,5 +80,44 @@ describe('ComboboxControlComponent', () => {
     expect(component.optionsError).toBe('Failed to load options');
     expect(component.loadingOptions).toBe(false);
     expect(component.options).toEqual([]);
+  });
+
+  it('should reload dynamic options on dependency change', () => {
+    const mockData1 = [{ id: 'test1', name: 'Option 1' }];
+    const mockData2 = [{ id: 'test2', name: 'Option 2' }];
+    apiServiceMock.dynamicCall.mockReturnValueOnce(of(mockData1)).mockReturnValueOnce(of(mockData2));
+
+    // Set up mock answers for dependencies
+    const stateService = (component as any).stateService;
+    stateService.setAnswer('country', 'US');
+
+    component.def = {
+      id: 'combo_dynamic_deps',
+      type: 'combobox',
+      label: 'Dynamic Combo with Deps',
+      restMetadata: { endpoint: '/api/cities', method: 'GET', params: { base: 'value' } },
+      dependsOn: ['country']
+    } as ComponentDef;
+
+    fixture.detectChanges();
+
+    // Initial load checks if API is called with mapped dependency answers
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({
+      endpoint: '/api/cities',
+      method: 'GET',
+      params: { base: 'value', country: 'US' }
+    });
+    expect(component.options).toEqual(mockData1);
+
+    // Simulate dependency change
+    stateService.setAnswer('country', 'CA');
+
+    // Second API call should occur with new dependency values
+    expect(apiServiceMock.dynamicCall).toHaveBeenCalledWith({
+      endpoint: '/api/cities',
+      method: 'GET',
+      params: { base: 'value', country: 'CA' }
+    });
+    expect(component.options).toEqual(mockData2);
   });
 });

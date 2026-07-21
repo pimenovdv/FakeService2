@@ -25,6 +25,18 @@ export class ComboboxControlComponent extends BaseControl implements OnInit, OnD
     } else if (this.def.restMetadata) {
       this.loadDynamicOptions();
     }
+
+    if (this.def.dependsOn && this.def.dependsOn.length > 0) {
+      this.sub.add(
+        this.stateService.answerChanges$.subscribe(change => {
+          if (this.def.dependsOn?.includes(change.componentId)) {
+             if (this.def.restMetadata) {
+                this.loadDynamicOptions();
+             }
+          }
+        })
+      );
+    }
   }
 
   private loadDynamicOptions() {
@@ -33,7 +45,20 @@ export class ComboboxControlComponent extends BaseControl implements OnInit, OnD
     this.loadingOptions = true;
     this.optionsError = null;
 
-    this.apiService.dynamicCall(this.def.restMetadata).subscribe({
+    // Map dependent answers to params if they are defined
+    let params = { ...this.def.restMetadata.params };
+    if (this.def.dependsOn) {
+      const allAnswers = this.stateService.getAllAnswers();
+      this.def.dependsOn.forEach(depId => {
+        if (allAnswers[depId] !== undefined) {
+          params[depId] = allAnswers[depId];
+        }
+      });
+    }
+
+    const modifiedMetadata = { ...this.def.restMetadata, params };
+
+    this.apiService.dynamicCall(modifiedMetadata).subscribe({
       next: (data: any[]) => {
         this.options = data;
         this.loadingOptions = false;

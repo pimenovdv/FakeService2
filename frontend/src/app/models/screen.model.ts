@@ -1,4 +1,4 @@
-export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea' | 'file' | 'number' | 'password' | 'slider' | 'color' | 'time' | 'toggle' | 'rating' | 'stepper' | 'currency' | 'tags' | 'email' | 'phone' | 'url' | 'month' | 'search' | 'week' | 'datetime' | 'multiselect' | 'autocomplete' | 'button_group' | 'captcha' | 'progress' | 'markdown';
+export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea' | 'file' | 'number' | 'password' | 'slider' | 'color' | 'time' | 'toggle' | 'rating' | 'stepper' | 'currency' | 'tags' | 'email' | 'phone' | 'url' | 'month' | 'search' | 'week' | 'datetime' | 'multiselect' | 'autocomplete' | 'button_group' | 'captcha' | 'progress' | 'markdown' | 'group';
 
 export interface ValidationRule {
   type: 'required' | 'regex' | 'min' | 'max' | 'minLength' | 'maxLength';
@@ -34,6 +34,7 @@ export interface ComponentDef {
   multiple?: boolean; // For file uploads
   currencySymbol?: string;
   dependsOn?: string[]; // IDs of components this depends on
+  components?: ComponentDef[]; // For grouped components
 }
 
 export interface ButtonDef {

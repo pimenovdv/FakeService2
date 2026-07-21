@@ -43,6 +43,10 @@ export class StateService {
     this.answerChanges$.next({ componentId, value });
   }
 
+  restoreAnswers(savedAnswers: Record<string, any>) {
+    this.answersSubject.next(savedAnswers);
+  }
+
   updateComponentDef(componentId: string, updates: Partial<ComponentDef>) {
     const currentDefs = this.componentDefsSubject.value;
     const newDefs = currentDefs.map((def) => {

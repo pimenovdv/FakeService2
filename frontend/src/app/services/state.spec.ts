@@ -40,6 +40,11 @@ describe('StateService', () => {
     expect(service.getAllAnswers()).toEqual({ q1: 'value1', q2: 42 });
   });
 
+  it('should restore answers', () => {
+    service.restoreAnswers({ q1: 'val1', q2: 'val2' });
+    expect(service.getAllAnswers()).toEqual({ q1: 'val1', q2: 'val2' });
+  });
+
   it('should reset answers when setting a new screen', () => {
     const dummyScreen: Screen = {
       id: 'screen2',

@@ -20,6 +20,7 @@ describe('Player', () => {
   let answerChangesSubject: Subject<{componentId: string, value: any}>;
 
   beforeEach(async () => {
+    localStorage.clear();
     currentScreenSubject = new BehaviorSubject<Screen | null>(null);
     componentDefsSubject = new BehaviorSubject<ComponentDef[]>([]);
     answerChangesSubject = new Subject();
@@ -42,7 +43,8 @@ describe('Player', () => {
       getAllAnswers: vi.fn().mockReturnValue({ field1: 'value' }),
       submitAttempted$: of(false),
       setValidation: vi.fn(),
-      evaluateCrossValidations: vi.fn().mockReturnValue([])
+      evaluateCrossValidations: vi.fn().mockReturnValue([]),
+      restoreAnswers: vi.fn()
     };
 
     mockLogicService = {
@@ -81,6 +83,35 @@ describe('Player', () => {
     expect(mockStateService.setScreen).toHaveBeenCalledWith({ id: 'test-screen' });
     expect(component.loading).toBeFalsy();
     expect(component.error).toBeNull();
+  });
+
+  it('should restore answers from localStorage on load', () => {
+    localStorage.setItem('autosave_test-service_test-screen', JSON.stringify({ q1: 'savedValue' }));
+    mockApiService.start.mockReturnValue(of({ id: 'test-screen' }));
+
+    component.ngOnInit();
+
+    expect(mockStateService.restoreAnswers).toHaveBeenCalledWith({ q1: 'savedValue' });
+  });
+
+  it('should write answers to localStorage on change', () => {
+    component.ngOnInit();
+
+    mockStateService.getScreen.mockReturnValue({ id: 'test-screen' });
+    mockStateService.getAllAnswers.mockReturnValue({ q1: 'newVal' });
+
+    answerChangesSubject.next({ componentId: 'q1', value: 'newVal' });
+
+    expect(localStorage.getItem('autosave_test-service_test-screen')).toEqual(JSON.stringify({ q1: 'newVal' }));
+  });
+
+  it('should clear localStorage on successful next step', () => {
+    localStorage.setItem('autosave_test-service_test-screen', 'somedata');
+    mockStateService.isFormValid.mockReturnValue(true);
+
+    component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+
+    expect(localStorage.getItem('autosave_test-service_test-screen')).toBeNull();
   });
 
   it('should render screen header and content', async () => {

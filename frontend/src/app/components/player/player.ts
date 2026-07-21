@@ -30,11 +30,18 @@ export class Player implements OnInit, OnDestroy {
   ngOnInit() {
     this.answerSubscription = this.stateService.answerChanges$.subscribe(change => {
       const screen = this.stateService.getScreen();
-      if (screen?.scripts) {
-        const onChangeScripts = screen.scripts.filter(s => s.trigger === 'onChange' && s.targetComponentId === change.componentId);
-        onChangeScripts.forEach(script => {
-          this.logicService.execute(script.code, change);
-        });
+      if (screen) {
+        if (this.serviceId) {
+          const autoSaveKey = `autosave_${this.serviceId}_${screen.id}`;
+          localStorage.setItem(autoSaveKey, JSON.stringify(this.stateService.getAllAnswers()));
+        }
+
+        if (screen.scripts) {
+          const onChangeScripts = screen.scripts.filter(s => s.trigger === 'onChange' && s.targetComponentId === change.componentId);
+          onChangeScripts.forEach(script => {
+            this.logicService.execute(script.code, change);
+          });
+        }
       }
     });
 
@@ -62,6 +69,18 @@ export class Player implements OnInit, OnDestroy {
     this.apiService.start(serviceId).subscribe({
       next: (screen) => {
         this.stateService.setScreen(screen);
+
+        const autoSaveKey = `autosave_${serviceId}_${screen.id}`;
+        const savedAnswersStr = localStorage.getItem(autoSaveKey);
+        if (savedAnswersStr) {
+          try {
+            const savedAnswers = JSON.parse(savedAnswersStr);
+            this.stateService.restoreAnswers(savedAnswers);
+          } catch (e) {
+            console.error('Failed to parse autosave data', e);
+          }
+        }
+
         if (screen.scripts) {
           const onLoadScripts = screen.scripts.filter(s => s.trigger === 'onLoad');
           onLoadScripts.forEach(script => {
@@ -120,8 +139,28 @@ export class Player implements OnInit, OnDestroy {
 
       this.apiService.nextStep(this.serviceId, currentScreen.id, answers).subscribe({
         next: (response) => {
+          // Clear autosave for the current screen since it was successfully submitted
+          if (this.serviceId && currentScreen.id) {
+            localStorage.removeItem(`autosave_${this.serviceId}_${currentScreen.id}`);
+          }
+
           if (response && response.next_screen && response.next_screen.id) {
             this.stateService.setScreen(response.next_screen);
+
+            const nextScreen = response.next_screen;
+            if (this.serviceId) {
+              const autoSaveKey = `autosave_${this.serviceId}_${nextScreen.id}`;
+              const savedAnswersStr = localStorage.getItem(autoSaveKey);
+              if (savedAnswersStr) {
+                try {
+                  const savedAnswers = JSON.parse(savedAnswersStr);
+                  this.stateService.restoreAnswers(savedAnswers);
+                } catch (e) {
+                  console.error('Failed to parse autosave data', e);
+                }
+              }
+            }
+
             if (response.next_screen.scripts) {
               const onLoadScripts = response.next_screen.scripts.filter((s: any) => s.trigger === 'onLoad');
               onLoadScripts.forEach((script: any) => {

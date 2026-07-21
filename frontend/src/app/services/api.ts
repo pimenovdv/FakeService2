@@ -31,4 +31,10 @@ export class ApiService {
       return this.http.get<any>(url, { params: metadata.params || {} });
     }
   }
+
+  uploadFile(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.baseUrl}/api/upload`, formData);
+  }
 }

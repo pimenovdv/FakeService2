@@ -1257,6 +1257,80 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(errors["name"].startswith("minlength"))
         self.assertTrue(errors["age"].startswith("min"))
 
+    async def test_validate_form_cross_validations(self):
+        mock_client = MagicMock()
+        mock_agent_client = MagicMock()
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_validate"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "validate_form"
+        mock_tool_call.function.arguments = '{"answers": {"password": "abc", "confirm_password": "def", "has_pet": "yes", "pet_name": ""}, "fields": [], "cross_validations": [{"type": "match", "fields": ["password", "confirm_password"], "message": "Passwords do not match"}, {"type": "required_if", "condition_field": "has_pet", "condition_value": "yes", "target_field": "pet_name", "message": "Pet name is required"}]}'
+
+        mock_message1 = MagicMock()
+        mock_message1.content = None
+        mock_message1.tool_calls = [mock_tool_call]
+
+        mock_message2 = MagicMock()
+        mock_message2.content = "Validation complete"
+        mock_message2.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message1)]),
+            MagicMock(choices=[MagicMock(message=mock_message2)])
+        ])
+
+        response = await session.process_user_input("Validate my form")
+        self.assertEqual(response, "Validation complete")
+
+        result_json = session.messages[3]["content"]
+        import json
+        result = json.loads(result_json)
+
+        self.assertFalse(result["valid"])
+        self.assertEqual(len(result["errors"]), 2)
+
+        errors = [e.get("error") for e in result["errors"]]
+        self.assertIn("Passwords do not match", errors)
+        self.assertIn("Pet name is required", errors)
+
+    async def test_validate_form_cross_validations_valid(self):
+        mock_client = MagicMock()
+        mock_agent_client = MagicMock()
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_validate"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "validate_form"
+        mock_tool_call.function.arguments = '{"answers": {"password": "abc", "confirm_password": "abc", "has_pet": "yes", "pet_name": "Fido"}, "fields": [], "cross_validations": [{"type": "match", "fields": ["password", "confirm_password"], "message": "Passwords do not match"}, {"type": "required_if", "condition_field": "has_pet", "condition_value": "yes", "target_field": "pet_name", "message": "Pet name is required"}]}'
+
+        mock_message1 = MagicMock()
+        mock_message1.content = None
+        mock_message1.tool_calls = [mock_tool_call]
+
+        mock_message2 = MagicMock()
+        mock_message2.content = "Validation complete"
+        mock_message2.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message1)]),
+            MagicMock(choices=[MagicMock(message=mock_message2)])
+        ])
+
+        response = await session.process_user_input("Validate my form")
+        self.assertEqual(response, "Validation complete")
+
+        result_json = session.messages[3]["content"]
+        import json
+        result = json.loads(result_json)
+
+        self.assertTrue(result["valid"])
+        self.assertEqual(len(result["errors"]), 0)
+
 
 class TestChatLoop(unittest.IsolatedAsyncioTestCase):
     async def test_run_chat_loop_exit(self):

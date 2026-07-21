@@ -23,8 +23,19 @@ class ScreenParser:
                 "fields": [],
                 "buttons": [],
                 "dialogs": [],
-                "scripts": []
+                "scripts": [],
+                "crossValidations": []
             }
+
+            # Extract cross validations
+            cv_script = self.soup.find('div', id='cross-validations-data')
+            if cv_script and cv_script.string:
+                try:
+                    import json
+                    result["crossValidations"] = json.loads(cv_script.string.strip())
+                except Exception as e:
+                    logger.error(f"Failed to parse cross validations: {e}")
+                cv_script.extract()
 
             # Extract scripts
             for script in self.soup.find_all('script'):

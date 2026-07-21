@@ -49,6 +49,15 @@ export interface ScriptDef {
   code: string;
 }
 
+export interface CrossValidationRule {
+  type: 'match' | 'required_if';
+  fields?: string[]; // Used for 'match'
+  condition_field?: string; // Used for 'required_if'
+  condition_value?: any; // Used for 'required_if'
+  target_field?: string; // Used for 'required_if'
+  message: string;
+}
+
 export interface Screen {
   id: string;
   header: string;
@@ -56,4 +65,5 @@ export interface Screen {
   components: ComponentDef[];
   buttons: ButtonDef[];
   scripts?: ScriptDef[];
+  crossValidations?: CrossValidationRule[];
 }

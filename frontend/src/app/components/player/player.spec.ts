@@ -41,7 +41,8 @@ describe('Player', () => {
       isFormValid: vi.fn().mockReturnValue(true),
       getAllAnswers: vi.fn().mockReturnValue({ field1: 'value' }),
       submitAttempted$: of(false),
-      setValidation: vi.fn()
+      setValidation: vi.fn(),
+      evaluateCrossValidations: vi.fn().mockReturnValue([])
     };
 
     mockLogicService = {
@@ -145,6 +146,35 @@ describe('Player', () => {
       expect(mockStateService.setSubmitAttempted).toHaveBeenCalledWith(true);
       expect(component.validationError).toBeNull();
       expect(mockApiService.nextStep).toHaveBeenCalledWith('test-service', 'test-screen', { field1: 'value' });
+    });
+
+    it('should show validation error if cross-validations fail', () => {
+      mockStateService.isFormValid.mockReturnValue(true);
+      mockStateService.getScreen.mockReturnValue({
+        id: 'test-screen',
+        crossValidations: [{ type: 'match', fields: ['p1', 'p2'], message: 'Passwords do not match' }]
+      });
+      mockStateService.evaluateCrossValidations.mockReturnValue(['Passwords do not match']);
+
+      component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+
+      expect(mockStateService.setSubmitAttempted).toHaveBeenCalledWith(true);
+      expect(component.validationError).toBe('Passwords do not match');
+      expect(mockApiService.nextStep).not.toHaveBeenCalled();
+    });
+
+    it('should combine standard and cross-validation errors', () => {
+      mockStateService.isFormValid.mockReturnValue(false);
+      mockStateService.getScreen.mockReturnValue({
+        id: 'test-screen',
+        crossValidations: [{ type: 'match', fields: ['p1', 'p2'], message: 'Passwords do not match' }]
+      });
+      mockStateService.evaluateCrossValidations.mockReturnValue(['Passwords do not match']);
+
+      component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+
+      expect(component.validationError).toBe('Please correct the errors before proceeding. Passwords do not match');
+      expect(mockApiService.nextStep).not.toHaveBeenCalled();
     });
   });
 });

@@ -83,14 +83,33 @@ export class Player implements OnInit, OnDestroy {
     if (btn.action === 'next_step' || btn.action === 'submit') {
       this.stateService.setSubmitAttempted(true);
 
+      let hasErrors = false;
+      this.validationError = null;
+
       if (!this.stateService.isFormValid()) {
         this.validationError = 'Please correct the errors before proceeding.';
+        hasErrors = true;
+      }
+
+      const currentScreen = this.stateService.getScreen();
+      if (currentScreen?.crossValidations) {
+        const crossErrors = this.stateService.evaluateCrossValidations(currentScreen.crossValidations);
+        if (crossErrors.length > 0) {
+          const crossErrorStr = crossErrors.join('. ');
+          if (this.validationError) {
+             this.validationError += ' ' + crossErrorStr;
+          } else {
+             this.validationError = crossErrorStr;
+          }
+          hasErrors = true;
+        }
+      }
+
+      if (hasErrors) {
         return;
       }
 
-      this.validationError = null;
       this.loading = true;
-      const currentScreen = this.stateService.getScreen();
       if (!currentScreen || !this.serviceId) {
          this.error = 'No active screen or service ID';
          this.loading = false;

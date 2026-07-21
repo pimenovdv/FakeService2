@@ -1,0 +1,26 @@
+<div class="drafts-container p-6 max-w-4xl mx-auto">
+  <h1 class="text-2xl font-bold mb-6">Saved Drafts</h1>
+
+  <div *ngIf="drafts.length === 0" class="text-gray-500 italic">
+    No saved drafts found.
+  </div>
+
+  <div *ngIf="drafts.length > 0" class="grid gap-4">
+    <div *ngFor="let draft of drafts" class="draft-card bg-white shadow-md rounded-lg p-4 border border-gray-200 flex justify-between items-center">
+      <div>
+        <h2 class="text-xl font-semibold mb-1">{{ draft.screen.header || draft.serviceId }}</h2>
+        <div class="text-sm text-gray-600">Service ID: {{ draft.serviceId }}</div>
+        <div class="text-sm text-gray-500">Last updated: {{ draft.timestamp | date:'medium' }}</div>
+      </div>
+
+      <div class="flex gap-2">
+        <button class="resume-btn bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors" (click)="resumeDraft(draft)">
+          Resume
+        </button>
+        <button class="delete-btn bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded transition-colors" (click)="deleteDraft(draft)">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

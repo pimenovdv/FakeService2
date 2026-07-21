@@ -3,6 +3,7 @@ import { Player } from './player';
 import { ApiService } from '../../services/api';
 import { StateService } from '../../services/state';
 import { LogicService } from '../../services/logic';
+import { DraftService, Draft } from '../../services/draft';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Subject, of } from 'rxjs';
 import { Screen, ComponentDef } from '../../models/screen.model';
@@ -14,6 +15,7 @@ describe('Player', () => {
   let mockApiService: any;
   let mockStateService: any;
   let mockLogicService: any;
+  let mockDraftService: any;
   let mockActivatedRoute: any;
   let currentScreenSubject: BehaviorSubject<Screen | null>;
   let componentDefsSubject: BehaviorSubject<ComponentDef[]>;
@@ -44,15 +46,23 @@ describe('Player', () => {
       submitAttempted$: of(false),
       setValidation: vi.fn(),
       evaluateCrossValidations: vi.fn().mockReturnValue([]),
-      restoreAnswers: vi.fn()
+      restoreAnswers: vi.fn(),
+      clearState: vi.fn()
     };
 
     mockLogicService = {
       execute: vi.fn()
     };
 
+    mockDraftService = {
+      saveDraft: vi.fn(),
+      getDraft: vi.fn(),
+      deleteDraft: vi.fn()
+    };
+
     mockActivatedRoute = {
-      paramMap: of({ get: () => 'test-service' })
+      paramMap: of({ get: () => 'test-service' }),
+      snapshot: { queryParamMap: { get: vi.fn() } }
     };
 
     await TestBed.configureTestingModule({
@@ -61,6 +71,7 @@ describe('Player', () => {
         { provide: ApiService, useValue: mockApiService },
         { provide: StateService, useValue: mockStateService },
         { provide: LogicService, useValue: mockLogicService },
+        { provide: DraftService, useValue: mockDraftService },
         { provide: ActivatedRoute, useValue: mockActivatedRoute }
       ]
     }).compileComponents();
@@ -75,8 +86,26 @@ describe('Player', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should read service_id from route and call start', () => {
+  it('should read service_id from route and call start when not resuming', () => {
     expect(mockApiService.start).toHaveBeenCalledWith('test-service');
+  });
+
+  it('should resume draft if resume query param is present', () => {
+    const mockDraft: Draft = {
+      serviceId: 'test-service',
+      screen: { id: 'draft-screen', header: 'Draft', content: '', components: [], buttons: [] },
+      answers: { field1: 'draft-val' },
+      timestamp: 1000
+    };
+    mockDraftService.getDraft.mockReturnValue(mockDraft);
+    mockActivatedRoute.snapshot.queryParamMap.get.mockReturnValue('true');
+    mockApiService.start.mockClear();
+
+    component.ngOnInit();
+
+    expect(mockStateService.setScreen).toHaveBeenCalledWith(mockDraft.screen);
+    expect(mockStateService.restoreAnswers).toHaveBeenCalledWith(mockDraft.answers);
+    expect(mockApiService.start).not.toHaveBeenCalled(); // was called in beforeEach, but shouldn't be called again
   });
 
   it('should set screen in state service when start is successful', () => {
@@ -94,15 +123,28 @@ describe('Player', () => {
     expect(mockStateService.restoreAnswers).toHaveBeenCalledWith({ q1: 'savedValue' });
   });
 
-  it('should write answers to localStorage on change', () => {
+  it('should save draft and write answers to localStorage on change', () => {
     component.ngOnInit();
 
-    mockStateService.getScreen.mockReturnValue({ id: 'test-screen' });
+    const screen = { id: 'test-screen' };
+    mockStateService.getScreen.mockReturnValue(screen);
     mockStateService.getAllAnswers.mockReturnValue({ q1: 'newVal' });
 
     answerChangesSubject.next({ componentId: 'q1', value: 'newVal' });
 
     expect(localStorage.getItem('autosave_test-service_test-screen')).toEqual(JSON.stringify({ q1: 'newVal' }));
+    expect(mockDraftService.saveDraft).toHaveBeenCalledWith('test-service', screen, { q1: 'newVal' });
+  });
+
+  it('should delete draft on completion', () => {
+    mockStateService.isFormValid.mockReturnValue(true);
+    mockStateService.getScreen.mockReturnValue({ id: 'test-screen' });
+    mockApiService.nextStep.mockReturnValue(of({ completed: true }));
+
+    component.onButtonClick({ id: 'btn', label: 'Next', action: 'next_step' } as any);
+
+    expect(mockDraftService.deleteDraft).toHaveBeenCalledWith('test-service');
+    expect(mockStateService.clearState).toHaveBeenCalled();
   });
 
   it('should clear localStorage on successful next step', () => {

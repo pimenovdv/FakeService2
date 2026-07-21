@@ -6,6 +6,7 @@ import { DynamicFieldComponent } from '../dynamic-field/dynamic-field.component'
 import { ApiService } from '../../services/api';
 import { StateService } from '../../services/state';
 import { LogicService } from '../../services/logic';
+import { DraftService } from '../../services/draft';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -24,6 +25,7 @@ export class Player implements OnInit, OnDestroy {
   private apiService = inject(ApiService);
   public stateService = inject(StateService);
   private logicService = inject(LogicService);
+  private draftService = inject(DraftService);
   private cdr = inject(ChangeDetectorRef);
   private answerSubscription?: Subscription;
 
@@ -34,6 +36,7 @@ export class Player implements OnInit, OnDestroy {
         if (this.serviceId) {
           const autoSaveKey = `autosave_${this.serviceId}_${screen.id}`;
           localStorage.setItem(autoSaveKey, JSON.stringify(this.stateService.getAllAnswers()));
+          this.draftService.saveDraft(this.serviceId, screen, this.stateService.getAllAnswers());
         }
 
         if (screen.scripts) {
@@ -49,7 +52,12 @@ export class Player implements OnInit, OnDestroy {
       const serviceId = params.get('service_id');
       this.serviceId = serviceId;
       if (serviceId) {
-        this.loadScreen(serviceId);
+        const isResume = this.route.snapshot.queryParamMap.get('resume') === 'true';
+        if (isResume) {
+           this.resumeDraft(serviceId);
+        } else {
+           this.loadScreen(serviceId);
+        }
       } else {
         this.error = 'No service ID provided';
         this.loading = false;
@@ -63,12 +71,37 @@ export class Player implements OnInit, OnDestroy {
     }
   }
 
+  private resumeDraft(serviceId: string) {
+     this.loading = true;
+     this.error = null;
+     const draft = this.draftService.getDraft(serviceId);
+
+     if (draft) {
+       this.stateService.setScreen(draft.screen);
+       this.stateService.restoreAnswers(draft.answers);
+
+       if (draft.screen.scripts) {
+          const onLoadScripts = draft.screen.scripts.filter(s => s.trigger === 'onLoad');
+          onLoadScripts.forEach(script => {
+            this.logicService.execute(script.code);
+          });
+       }
+
+       this.loading = false;
+       this.cdr.detectChanges();
+     } else {
+       // Draft not found, fallback to loading the initial screen
+       this.loadScreen(serviceId);
+     }
+  }
+
   private loadScreen(serviceId: string) {
     this.loading = true;
     this.error = null;
     this.apiService.start(serviceId).subscribe({
       next: (screen) => {
         this.stateService.setScreen(screen);
+        this.draftService.saveDraft(serviceId, screen, {});
 
         const autoSaveKey = `autosave_${serviceId}_${screen.id}`;
         const savedAnswersStr = localStorage.getItem(autoSaveKey);
@@ -76,6 +109,7 @@ export class Player implements OnInit, OnDestroy {
           try {
             const savedAnswers = JSON.parse(savedAnswersStr);
             this.stateService.restoreAnswers(savedAnswers);
+            this.draftService.saveDraft(serviceId, screen, savedAnswers);
           } catch (e) {
             console.error('Failed to parse autosave data', e);
           }
@@ -144,8 +178,22 @@ export class Player implements OnInit, OnDestroy {
             localStorage.removeItem(`autosave_${this.serviceId}_${currentScreen.id}`);
           }
 
+          if (response && response.completed) {
+            if (this.serviceId) {
+               this.draftService.deleteDraft(this.serviceId);
+            }
+            this.stateService.clearState();
+            this.loading = false;
+            this.cdr.detectChanges();
+            return;
+          }
+
           if (response && response.next_screen && response.next_screen.id) {
             this.stateService.setScreen(response.next_screen);
+
+            if (this.serviceId) {
+              this.draftService.saveDraft(this.serviceId, response.next_screen, {});
+            }
 
             const nextScreen = response.next_screen;
             if (this.serviceId) {
@@ -155,6 +203,7 @@ export class Player implements OnInit, OnDestroy {
                 try {
                   const savedAnswers = JSON.parse(savedAnswersStr);
                   this.stateService.restoreAnswers(savedAnswers);
+                  this.draftService.saveDraft(this.serviceId, nextScreen, savedAnswers);
                 } catch (e) {
                   console.error('Failed to parse autosave data', e);
                 }

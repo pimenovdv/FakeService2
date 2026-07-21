@@ -177,3 +177,22 @@ def test_parse_malformed_html_graceful_fallback(monkeypatch):
     result = parser.parse()
 
     assert result == {"fields": [], "buttons": [], "error": "Failed to parse HTML"}
+
+    def test_parse_cross_validations(self):
+        html = '''
+        <html>
+            <body>
+                <div id="cross-validations-data" style="display: none;">
+                    [{"type": "match", "fields": ["p1", "p2"], "message": "Passwords do not match"}]
+                </div>
+                <input id="p1" type="text" />
+                <input id="p2" type="text" />
+            </body>
+        </html>
+        '''
+        parser = ScreenParser(html)
+        result = parser.parse()
+        self.assertIn("crossValidations", result)
+        self.assertEqual(len(result["crossValidations"]), 1)
+        self.assertEqual(result["crossValidations"][0]["type"], "match")
+        self.assertEqual(result["crossValidations"][0]["fields"], ["p1", "p2"])

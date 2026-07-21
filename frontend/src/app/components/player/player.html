@@ -8,6 +8,10 @@
 
 <div *ngIf="!loading && !error && (stateService.currentScreen$ | async) as screen">
 
+  <div *ngIf="screen.crossValidations" id="cross-validations-data" style="display: none;">
+    {{ screen.crossValidations | json }}
+  </div>
+
   <div class="screen-layout">
     <header class="screen-header">
       <h1>{{ screen.header }}</h1>

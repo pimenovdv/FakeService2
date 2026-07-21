@@ -355,7 +355,7 @@ class ChatSession:
                             },
                             "cross_validations": {
                                 "type": "array",
-                                "description": "The cross-field validation rules extracted from the screen.",
+                                "description": "The cross-validation rules to evaluate.",
                                 "items": {
                                     "type": "object",
                                     "additionalProperties": True

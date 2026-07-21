@@ -25,6 +25,7 @@ class ScreenParser:
                 "buttons": [],
                 "dialogs": [],
                 "scripts": [],
+
                 "cross_validations": []
             }
 
@@ -36,6 +37,7 @@ class ScreenParser:
                 except json.JSONDecodeError as e:
                     logger.error(f"ScreenParser failed to decode crossValidations JSON: {e}")
                 cv_div.extract()
+
 
             # Extract scripts
             for script in self.soup.find_all('script'):

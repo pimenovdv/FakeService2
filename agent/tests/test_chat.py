@@ -1784,6 +1784,128 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         self.assertIn("deleted", session.messages[11]["content"])
 
 
+
+    async def test_manage_features_get(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"new-ui": True, "beta-feature": False}
+        mock_agent_client.get.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_feat1"
+        mock_tool_call_1.function.name = "manage_features"
+        mock_tool_call_1.function.arguments = '{"action": "get"}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Features listed."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("List features")
+
+        self.assertEqual(response, "Features listed.")
+        mock_agent_client.get.assert_called_once_with("/api/features")
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[3]["tool_call_id"], "call_feat1")
+        self.assertEqual(json.loads(session.messages[3]["content"]), {"new-ui": True, "beta-feature": False})
+
+    async def test_manage_features_put(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"message": "Feature updated successfully"}
+        mock_agent_client.put.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_feat2"
+        mock_tool_call_1.function.name = "manage_features"
+        mock_tool_call_1.function.arguments = '{"action": "put", "feature_name": "new-ui", "enabled": true}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Feature updated."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("Enable new-ui")
+
+        self.assertEqual(response, "Feature updated.")
+        mock_agent_client.put.assert_called_once_with("/api/features/new-ui", json={"enabled": True})
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[3]["tool_call_id"], "call_feat2")
+        self.assertEqual(json.loads(session.messages[3]["content"]), {"message": "Feature updated successfully"})
+
+    async def test_manage_features_delete(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"message": "Feature deleted successfully"}
+        mock_agent_client.delete.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_feat3"
+        mock_tool_call_1.function.name = "manage_features"
+        mock_tool_call_1.function.arguments = '{"action": "delete", "feature_name": "new-ui"}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Feature deleted."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("Delete new-ui")
+
+        self.assertEqual(response, "Feature deleted.")
+        mock_agent_client.delete.assert_called_once_with("/api/features/new-ui")
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[3]["tool_call_id"], "call_feat3")
+        self.assertEqual(json.loads(session.messages[3]["content"]), {"message": "Feature deleted successfully"})
+
+
 class TestChatSessionPersistence(unittest.TestCase):
     def test_save_and_load_state(self):
         import tempfile

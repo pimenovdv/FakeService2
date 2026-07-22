@@ -72,6 +72,17 @@ class AgentClient:
             logger.error(f"HTTPError on POST {url}: {e}")
             raise
 
+    async def delete(self, url: str, **kwargs) -> httpx.Response:
+        """Perform a DELETE request."""
+        logger.debug(f"AgentClient DELETE request to {url}")
+        try:
+            response = await self.client.delete(url, **kwargs)
+            response.raise_for_status()
+            return response
+        except httpx.HTTPError as e:
+            logger.error(f"HTTPError on DELETE {url}: {e}")
+            raise
+
     async def close(self):
         """Close the underlying HTTP client."""
         await self.client.aclose()

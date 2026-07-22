@@ -30,6 +30,36 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "cache_interaction",
+                    "description": "Interact with the key-value cache (get, set, delete).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "set", "delete"],
+                                "description": "The cache action to perform."
+                            },
+                            "key": {
+                                "type": "string",
+                                "description": "The cache key."
+                            },
+                            "value": {
+                                "type": "string",
+                                "description": "The cache value (required for 'set')."
+                            },
+                            "ttl": {
+                                "type": "integer",
+                                "description": "Optional Time-To-Live in seconds (only for 'set')."
+                            }
+                        },
+                        "required": ["action", "key"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_webhook",
                     "description": "Retrieve stored webhook payloads for a given webhook_id.",
                     "parameters": {
@@ -908,6 +938,42 @@ class ChatSession:
                         "temperature": f"{temperature}°C",
                         "condition": weather_condition
                     })
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "cache_interaction":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+                    key = args.get("key")
+                    value = args.get("value")
+                    ttl = args.get("ttl")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                res = await self.agent_client.get(f"/api/cache/{key}")
+                                tool_content = json.dumps(res.json())
+                            elif action == "set":
+                                url = f"/api/cache/{key}"
+                                if ttl is not None:
+                                    url += f"?ttl={ttl}"
+                                res = await self.agent_client.post(url, content=value)
+                                tool_content = json.dumps(res.json())
+                            elif action == "delete":
+                                res = await self.agent_client.delete(f"/api/cache/{key}")
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            # Typically if it's a 404 from httpx we'd catch an HTTPStatusError and get JSON,
+                            # but for simplicity, we capture the exception
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
 
                     self.messages.append({
                         "role": "tool",

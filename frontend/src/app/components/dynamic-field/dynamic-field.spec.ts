@@ -3,6 +3,7 @@ import { DynamicFieldComponent } from './dynamic-field.component';
 import { ComponentDef } from '../../models/screen.model';
 import { StateService } from '../../services/state';
 import { BehaviorSubject } from 'rxjs';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { vi, expect, describe, it, beforeEach } from 'vitest';
 
 describe('DynamicFieldComponent', () => {
@@ -23,7 +24,7 @@ describe('DynamicFieldComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [DynamicFieldComponent],
+      imports: [DynamicFieldComponent, NoopAnimationsModule],
       providers: [
         { provide: StateService, useValue: mockStateService }
       ]

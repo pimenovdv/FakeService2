@@ -1,5 +1,6 @@
 import { Component, Input, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { Subscription } from 'rxjs';
 import { ComponentDef } from '../../models/screen.model';
 import { TextInputComponent } from '../text-input/text-input';
@@ -38,7 +39,18 @@ import { StateService } from '../../services/state';
   selector: 'app-dynamic-field',
   standalone: true,
   imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent, CaptchaControlComponent, ProgressControlComponent, MarkdownControlComponent],
-  templateUrl: './dynamic-field.component.html'
+  templateUrl: './dynamic-field.component.html',
+  animations: [
+    trigger('fadeSlideInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-10px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('300ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+      ])
+    ])
+  ]
 })
 export class DynamicFieldComponent implements OnInit, OnDestroy {
   @Input() componentDef!: ComponentDef;

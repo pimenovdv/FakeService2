@@ -1,4 +1,4 @@
-<div class="dynamic-field-container" [ngSwitch]="componentDef.type" *ngIf="!isHidden" [title]="componentDef.tooltip || null">
+<div class="dynamic-field-container" [@fadeSlideInOut] [ngSwitch]="componentDef.type" *ngIf="!isHidden" [title]="componentDef.tooltip || null">
   <app-text-input *ngSwitchCase="'text'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-text-input>
   <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-combobox-control>
   <app-checkbox-control *ngSwitchCase="'checkbox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-checkbox-control>

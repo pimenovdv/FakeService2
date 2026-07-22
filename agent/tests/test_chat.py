@@ -1558,6 +1558,90 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(tool_msg["role"], "tool")
         self.assertIn("light", tool_msg["content"])
 
+    async def test_manage_profile_get(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get = AsyncMock()
+
+        mock_response_get = MagicMock()
+        mock_response_get.status_code = 200
+        mock_response_get.json.return_value = {"id": "123", "username": "mockuser", "email": "mockuser@example.com"}
+        mock_agent_client.get.return_value = mock_response_get
+
+        mock_response_1 = MagicMock()
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_profile_1"
+        mock_tool_call_1.type = "function"
+        mock_tool_call_1.function.name = "manage_profile"
+        mock_tool_call_1.function.arguments = json.dumps({"action": "get"})
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+        mock_response_1.choices = [MagicMock(message=mock_message_1)]
+
+        mock_response_2 = MagicMock()
+        mock_message_2 = MagicMock()
+        mock_message_2.role = "assistant"
+        mock_message_2.content = "Here is the profile."
+        mock_message_2.tool_calls = None
+        mock_response_2.choices = [MagicMock(message=mock_message_2)]
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("Get my profile")
+
+        self.assertEqual(response, "Here is the profile.")
+        mock_agent_client.get.assert_called_with("/api/profile")
+
+        self.assertEqual(len(session.messages), 5)
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertIn("mockuser", tool_msg["content"])
+
+    async def test_manage_profile_put(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.put = AsyncMock()
+
+        mock_response_put = MagicMock()
+        mock_response_put.status_code = 200
+        mock_response_put.json.return_value = {"id": "123", "username": "newname", "email": "mockuser@example.com"}
+        mock_agent_client.put.return_value = mock_response_put
+
+        mock_response_1 = MagicMock()
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_profile_2"
+        mock_tool_call_1.type = "function"
+        mock_tool_call_1.function.name = "manage_profile"
+        mock_tool_call_1.function.arguments = json.dumps({"action": "put", "profile": {"username": "newname"}})
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+        mock_response_1.choices = [MagicMock(message=mock_message_1)]
+
+        mock_response_2 = MagicMock()
+        mock_message_2 = MagicMock()
+        mock_message_2.role = "assistant"
+        mock_message_2.content = "Profile updated."
+        mock_message_2.tool_calls = None
+        mock_response_2.choices = [MagicMock(message=mock_message_2)]
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("Update my username to newname")
+
+        self.assertEqual(response, "Profile updated.")
+        mock_agent_client.put.assert_called_with("/api/profile", json={"username": "newname"})
+
+        self.assertEqual(len(session.messages), 5)
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertIn("newname", tool_msg["content"])
+
     async def test_manage_settings_put(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

@@ -8,9 +8,16 @@
     [disabled]="def.disabled || false"
     (blur)="touched = true; validate()"
   ></textarea>
-  <div *ngIf="touched && !isValid" class="error-messages">
-    <div *ngFor="let error of errors" class="error-text">
-      {{ error }}
+  <div class="flex justify-between items-start mt-1">
+    <div class="error-messages flex-1">
+      <ng-container *ngIf="touched && !isValid">
+        <div *ngFor="let error of errors" class="error-text">
+          {{ error }}
+        </div>
+      </ng-container>
+    </div>
+    <div *ngIf="maxLengthRule !== null" class="character-count text-xs text-gray-500 ml-4 whitespace-nowrap">
+      {{ currentLength }} / {{ maxLengthRule }}
     </div>
   </div>
 </div>

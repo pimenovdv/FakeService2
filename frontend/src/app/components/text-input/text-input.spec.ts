@@ -53,4 +53,35 @@ describe('TextInputComponent', () => {
     const errorText = compiled.querySelector('.error-text');
     expect(errorText?.textContent?.trim()).toBe('Required field');
   });
+
+  it('should render character count when maxLength is set', () => {
+    component.def = {
+      ...component.def,
+      validations: [
+        { type: 'maxLength', value: 10 }
+      ]
+    };
+    component.value = 'hello';
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const charCount = compiled.querySelector('.character-count');
+
+    expect(charCount).toBeTruthy();
+    expect(charCount?.textContent?.trim()).toBe('5 / 10');
+  });
+
+  it('should not render character count when maxLength is not set', () => {
+    component.def = {
+      ...component.def,
+      validations: []
+    };
+    component.value = 'hello';
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const charCount = compiled.querySelector('.character-count');
+
+    expect(charCount).toBeNull();
+  });
 });

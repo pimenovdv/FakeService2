@@ -40,6 +40,23 @@ export abstract class BaseControl implements OnInit, OnDestroy {
     return this.errors.length === 0;
   }
 
+  get maxLengthRule(): number | null {
+    if (this.def && this.def.validations) {
+      const rule = this.def.validations.find(r => r.type === 'maxLength');
+      if (rule && rule.value !== undefined) {
+        return Number(rule.value);
+      }
+    }
+    return null;
+  }
+
+  get currentLength(): number {
+    if (this.value === null || this.value === undefined) {
+      return 0;
+    }
+    return this.value.toString().length;
+  }
+
   onValueChange(newValue: any) {
     this.value = newValue;
     this.touched = true;

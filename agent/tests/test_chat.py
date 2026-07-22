@@ -1515,6 +1515,105 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(tool_msg["role"], "tool")
         self.assertIn("test_id", tool_msg["content"])
 
+    async def test_cache_interaction(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get = AsyncMock()
+        mock_agent_client.post = AsyncMock()
+        mock_agent_client.delete = AsyncMock()
+
+        # Mock GET response
+        mock_response_get = MagicMock()
+        mock_response_get.status_code = 200
+        mock_response_get.json.return_value = {"key": "test_key", "value": "test_val"}
+        mock_agent_client.get.return_value = mock_response_get
+
+        # Mock POST response
+        mock_response_post = MagicMock()
+        mock_response_post.status_code = 200
+        mock_response_post.json.return_value = {"status": "success", "message": "Key 'test_key' set.", "ttl": 60}
+        mock_agent_client.post.return_value = mock_response_post
+
+        # Mock DELETE response
+        mock_response_delete = MagicMock()
+        mock_response_delete.status_code = 200
+        mock_response_delete.json.return_value = {"status": "success", "message": "Key 'test_key' deleted."}
+        mock_agent_client.delete.return_value = mock_response_delete
+
+        # Setup tool call for 'set'
+        mock_tool_call_set = MagicMock()
+        mock_tool_call_set.id = "call_cache_set"
+        mock_tool_call_set.type = "function"
+        mock_tool_call_set.function.name = "cache_interaction"
+        mock_tool_call_set.function.arguments = json.dumps({"action": "set", "key": "test_key", "value": "test_val", "ttl": 60})
+
+        # Setup tool call for 'get'
+        mock_tool_call_get = MagicMock()
+        mock_tool_call_get.id = "call_cache_get"
+        mock_tool_call_get.type = "function"
+        mock_tool_call_get.function.name = "cache_interaction"
+        mock_tool_call_get.function.arguments = json.dumps({"action": "get", "key": "test_key"})
+
+        # Setup tool call for 'delete'
+        mock_tool_call_delete = MagicMock()
+        mock_tool_call_delete.id = "call_cache_delete"
+        mock_tool_call_delete.type = "function"
+        mock_tool_call_delete.function.name = "cache_interaction"
+        mock_tool_call_delete.function.arguments = json.dumps({"action": "delete", "key": "test_key"})
+
+
+        def create_mock_assistant_response(tool_call, final_text):
+            mock_response_1 = MagicMock()
+            mock_response_1.choices = [MagicMock()]
+            mock_response_1.choices[0].message.content = None
+            mock_response_1.choices[0].message.tool_calls = [tool_call]
+            mock_response_1.choices[0].message.role = "assistant"
+
+            mock_response_2 = MagicMock()
+            mock_response_2.choices = [MagicMock()]
+            mock_response_2.choices[0].message.content = final_text
+            mock_response_2.choices[0].message.tool_calls = None
+            mock_response_2.choices[0].message.role = "assistant"
+            mock_response_2.choices[0].message.type = None
+
+            return [mock_response_1, mock_response_2]
+
+        mock_client.chat.completions.create.side_effect = (
+            create_mock_assistant_response(mock_tool_call_set, "Set cache.") +
+            create_mock_assistant_response(mock_tool_call_get, "Got cache.") +
+            create_mock_assistant_response(mock_tool_call_delete, "Deleted cache.")
+        )
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        # Test Set
+        response_set = await session.process_user_input("Set cache")
+        self.assertEqual(response_set, "Set cache.")
+        mock_agent_client.post.assert_called_with("/api/cache/test_key?ttl=60", content="test_val")
+
+        # Session message length will be 5
+        self.assertEqual(len(session.messages), 5)
+        self.assertIn("success", session.messages[3]["content"])
+
+        # Test Get
+        response_get = await session.process_user_input("Get cache")
+        self.assertEqual(response_get, "Got cache.")
+        mock_agent_client.get.assert_called_with("/api/cache/test_key")
+
+        # Session message length will be 9
+        self.assertEqual(len(session.messages), 9)
+        self.assertIn("test_val", session.messages[7]["content"])
+
+        # Test Delete
+        response_delete = await session.process_user_input("Delete cache")
+        self.assertEqual(response_delete, "Deleted cache.")
+        mock_agent_client.delete.assert_called_with("/api/cache/test_key")
+
+        # Session message length will be 13
+        self.assertEqual(len(session.messages), 13)
+        self.assertIn("deleted", session.messages[11]["content"])
+
+
 class TestChatSessionPersistence(unittest.TestCase):
     def test_save_and_load_state(self):
         import tempfile

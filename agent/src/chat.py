@@ -75,6 +75,32 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_features",
+                    "description": "Manage feature flags (get, put, delete).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "put", "delete"],
+                                "description": "The action to perform: 'get' to list all feature flags, 'put' to update a feature flag, 'delete' to remove a feature flag."
+                            },
+                            "feature_name": {
+                                "type": "string",
+                                "description": "The name of the feature flag to update or delete (required for 'put' and 'delete')."
+                            },
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "The state of the feature flag (only used when action is 'put')."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "cache_interaction",
                     "description": "Interact with the key-value cache (get, set, delete).",
                     "parameters": {
@@ -1299,6 +1325,52 @@ class ChatSession:
                                     tool_content = json.dumps(res.json())
                                 else:
                                     tool_content = json.dumps({"error": f"Failed to update settings, status code {res.status_code}"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_features":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                res = await self.agent_client.get("/api/features")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get features, status code {res.status_code}"})
+                            elif action == "put":
+                                feature_name = args.get("feature_name")
+                                enabled = args.get("enabled", False)
+                                if feature_name:
+                                    res = await self.agent_client.put(f"/api/features/{feature_name}", json={"enabled": enabled})
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to update feature, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "feature_name is required for put action"})
+                            elif action == "delete":
+                                feature_name = args.get("feature_name")
+                                if feature_name:
+                                    res = await self.agent_client.delete(f"/api/features/{feature_name}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to delete feature, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "feature_name is required for delete action"})
                             else:
                                 tool_content = json.dumps({"error": f"Invalid action: {action}"})
                         except Exception as e:

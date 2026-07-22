@@ -26,6 +26,8 @@ export interface ComponentDef {
   options?: any[]; // For static options in combobox/radio
   restMetadata?: RestMetadata; // For dynamic options fetching
   validations?: ValidationRule[];
+  tooltip?: string;
+  helpText?: string;
   hidden?: boolean;
   disabled?: boolean;
   showIf?: Condition;

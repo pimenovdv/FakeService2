@@ -1,4 +1,4 @@
-<div class="dynamic-field-container" [ngSwitch]="componentDef.type" *ngIf="!isHidden">
+<div class="dynamic-field-container" [ngSwitch]="componentDef.type" *ngIf="!isHidden" [title]="componentDef.tooltip || null">
   <app-text-input *ngSwitchCase="'text'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-text-input>
   <app-combobox-control *ngSwitchCase="'combobox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-combobox-control>
   <app-checkbox-control *ngSwitchCase="'checkbox'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-checkbox-control>
@@ -40,4 +40,6 @@
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})
   </div>
+
+  <div *ngIf="componentDef.helpText" class="help-text text-sm text-gray-500 mt-1">{{ componentDef.helpText }}</div>
 </div>

@@ -99,4 +99,23 @@ describe('DynamicFieldComponent', () => {
     expect(component.isDisabled).toBe(true);
     expect(component.componentDef.disabled).toBe(true); // check if passed down
   });
+
+  it('should set title attribute when tooltip is provided', () => {
+    component.componentDef = { id: 'field5', type: 'text', label: 'Tooltip Field', tooltip: 'This is a tooltip' } as ComponentDef;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const container = compiled.querySelector('.dynamic-field-container');
+    expect(container?.getAttribute('title')).toBe('This is a tooltip');
+  });
+
+  it('should render help text when provided', () => {
+    component.componentDef = { id: 'field6', type: 'text', label: 'Help Text Field', helpText: 'This is helpful text' } as ComponentDef;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const helpTextDiv = compiled.querySelector('.help-text');
+    expect(helpTextDiv).toBeTruthy();
+    expect(helpTextDiv?.textContent).toContain('This is helpful text');
+  });
 });

@@ -26,6 +26,8 @@ class ComponentDef(BaseModel):
     options: Optional[List[Any]] = None
     restMetadata: Optional[RestMetadata] = None
     validations: Optional[List[ValidationRule]] = None
+    tooltip: Optional[str] = None
+    helpText: Optional[str] = None
     hidden: Optional[bool] = False
     disabled: Optional[bool] = False
     accept: Optional[str] = None

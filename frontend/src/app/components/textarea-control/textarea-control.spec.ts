@@ -74,4 +74,35 @@ describe('TextareaControlComponent', () => {
     expect(component.isValid).toBeTruthy();
     expect(component.errors.length).toBe(0);
   });
+
+  it('should render character count when maxLength is set', () => {
+    component.def = {
+      ...component.def,
+      validations: [
+        { type: 'maxLength', value: 20 }
+      ]
+    };
+    component.value = 'test string';
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const charCount = compiled.querySelector('.character-count');
+
+    expect(charCount).toBeTruthy();
+    expect(charCount?.textContent?.trim()).toBe('11 / 20');
+  });
+
+  it('should not render character count when maxLength is not set', () => {
+    component.def = {
+      ...component.def,
+      validations: []
+    };
+    component.value = 'test string';
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const charCount = compiled.querySelector('.character-count');
+
+    expect(charCount).toBeNull();
+  });
 });

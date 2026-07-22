@@ -12,7 +12,7 @@
     {{ screen.crossValidations | json }}
   </div>
 
-  <div class="screen-layout">
+  <div class="screen-layout" [ngStyle]="getThemeStyles(screen.theme)">
     <header class="screen-header">
       <h1>{{ screen.header }}</h1>
     </header>
@@ -29,8 +29,9 @@
 
       <div class="flex justify-end gap-2 mt-4">
         <button *ngFor="let btn of screen.buttons"
+                [ngStyle]="{'background-color': (btn.color === 'primary' || !btn.color) && screen.theme?.primaryColor ? screen.theme?.primaryColor : ''}"
                 [ngClass]="{
-                  'bg-blue-500 hover:bg-blue-700': btn.color === 'primary' || !btn.color,
+                  'bg-blue-500 hover:bg-blue-700': (btn.color === 'primary' || !btn.color) && !screen.theme?.primaryColor,
                   'bg-gray-500 hover:bg-gray-700': btn.color === 'secondary',
                   'bg-red-500 hover:bg-red-700': btn.color === 'warn'
                 }"

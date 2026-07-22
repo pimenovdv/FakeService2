@@ -47,6 +47,12 @@ class ScriptDef(BaseModel):
     targetComponentId: Optional[str] = None
     code: str
 
+class ThemeDef(BaseModel):
+    primaryColor: Optional[str] = None
+    backgroundColor: Optional[str] = None
+    textColor: Optional[str] = None
+    fontFamily: Optional[str] = None
+
 class ScreenDef(BaseModel):
     id: str
     header: str
@@ -55,3 +61,4 @@ class ScreenDef(BaseModel):
     buttons: List[ButtonDef]
     crossValidations: Optional[List[CrossValidationRule]] = None
     scripts: Optional[List[ScriptDef]] = None
+    theme: Optional[ThemeDef] = None

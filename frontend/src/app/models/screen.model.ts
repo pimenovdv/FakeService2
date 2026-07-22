@@ -52,6 +52,13 @@ export interface ScriptDef {
   code: string;
 }
 
+export interface Theme {
+  primaryColor?: string;
+  backgroundColor?: string;
+  textColor?: string;
+  fontFamily?: string;
+}
+
 export interface CrossValidationRule {
   type: 'match' | 'required_if';
   fields?: string[]; // Used for 'match'
@@ -69,4 +76,5 @@ export interface Screen {
   buttons: ButtonDef[];
   scripts?: ScriptDef[];
   crossValidations?: CrossValidationRule[];
+  theme?: Theme;
 }

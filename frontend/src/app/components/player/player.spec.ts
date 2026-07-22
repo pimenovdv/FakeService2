@@ -250,4 +250,25 @@ describe('Player', () => {
       expect(mockApiService.nextStep).not.toHaveBeenCalled();
     });
   });
+
+  it('should return correct theme styles from getThemeStyles', () => {
+    const theme = {
+      primaryColor: '#ff0000',
+      backgroundColor: '#f0f0f0',
+      textColor: '#333333',
+      fontFamily: 'Arial, sans-serif'
+    };
+    const styles = component.getThemeStyles(theme);
+    expect(styles).toEqual({
+      'background-color': '#f0f0f0',
+      'color': '#333333',
+      'font-family': 'Arial, sans-serif',
+      '--theme-primary': '#ff0000'
+    });
+  });
+
+  it('should return empty object from getThemeStyles when theme is not provided', () => {
+    const styles = component.getThemeStyles();
+    expect(styles).toEqual({});
+  });
 });

@@ -30,6 +30,29 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_profile",
+                    "description": "Manage user profile (get or put).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "put"],
+                                "description": "The action to perform: 'get' to fetch profile, 'put' to update."
+                            },
+                            "profile": {
+                                "type": "object",
+                                "description": "The profile data to update (only used when action is 'put').",
+                                "additionalProperties": True
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_settings",
                     "description": "Manage application settings (get or put).",
                     "parameters": {
@@ -1214,6 +1237,38 @@ class ChatSession:
                                 tool_content = json.dumps(res.json())
                             else:
                                 tool_content = json.dumps({"error": f"Failed to fetch health, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_profile":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                res = await self.agent_client.get("/api/profile")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get profile, status code {res.status_code}"})
+                            elif action == "put":
+                                profile_data = args.get("profile", {})
+                                res = await self.agent_client.put("/api/profile", json=profile_data)
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to update profile, status code {res.status_code}"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
                         except Exception as e:
                             tool_content = json.dumps({"error": str(e)})
                     else:

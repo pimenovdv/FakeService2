@@ -196,3 +196,26 @@ def test_dynamic_logic_injection():
     assert script["trigger"] == "onChange"
     assert script["targetComponentId"] == "trigger_input"
     assert script["code"] == "console.log('Value changed');"
+
+def test_screen_theme():
+    from models.screen import ScreenDef
+
+    mock_data = {
+        "id": "screen_theme_test",
+        "header": "Theme Test",
+        "content": "Content",
+        "components": [],
+        "buttons": [],
+        "theme": {
+            "primaryColor": "#ff0000",
+            "backgroundColor": "#f0f0f0",
+            "textColor": "#333333",
+            "fontFamily": "Arial"
+        }
+    }
+
+    screen = ScreenDef(**mock_data)
+    assert screen.theme.primaryColor == "#ff0000"
+    assert screen.theme.backgroundColor == "#f0f0f0"
+    assert screen.theme.textColor == "#333333"
+    assert screen.theme.fontFamily == "Arial"

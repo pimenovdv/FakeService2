@@ -132,6 +132,16 @@ export class Player implements OnInit, OnDestroy {
       }
     });
   }
+  getThemeStyles(theme?: any) {
+    if (!theme) return {};
+    return {
+      'background-color': theme.backgroundColor || '',
+      'color': theme.textColor || '',
+      'font-family': theme.fontFamily || '',
+      '--theme-primary': theme.primaryColor || ''
+    };
+  }
+
   onButtonClick(btn: ButtonDef) {
     if (btn.action === 'next_step' || btn.action === 'submit') {
       this.stateService.setSubmitAttempted(true);

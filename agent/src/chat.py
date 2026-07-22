@@ -30,6 +30,28 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_settings",
+                    "description": "Manage application settings (get or put).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "put"],
+                                "description": "The action to perform: 'get' to fetch settings, 'put' to update settings."
+                            },
+                            "settings": {
+                                "type": "object",
+                                "description": "The settings to update (only used when action is 'put'). Possible fields: theme, notifications_enabled, language, timezone."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "cache_interaction",
                     "description": "Interact with the key-value cache (get, set, delete).",
                     "parameters": {
@@ -1192,6 +1214,38 @@ class ChatSession:
                                 tool_content = json.dumps(res.json())
                             else:
                                 tool_content = json.dumps({"error": f"Failed to fetch health, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_settings":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                res = await self.agent_client.get("/api/settings")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get settings, status code {res.status_code}"})
+                            elif action == "put":
+                                settings_data = args.get("settings", {})
+                                res = await self.agent_client.put("/api/settings", json=settings_data)
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to update settings, status code {res.status_code}"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
                         except Exception as e:
                             tool_content = json.dumps({"error": str(e)})
                     else:

@@ -1515,6 +1515,92 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(tool_msg["role"], "tool")
         self.assertIn("test_id", tool_msg["content"])
 
+    async def test_manage_settings_get(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get = AsyncMock()
+
+        mock_response_get = MagicMock()
+        mock_response_get.status_code = 200
+        mock_response_get.json.return_value = {"theme": "light", "notifications_enabled": True}
+        mock_agent_client.get.return_value = mock_response_get
+
+        # Mock LLM calls:
+        mock_response_1 = MagicMock()
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_1"
+        mock_tool_call_1.type = "function"
+        mock_tool_call_1.function.name = "manage_settings"
+        mock_tool_call_1.function.arguments = json.dumps({"action": "get"})
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+        mock_response_1.choices = [MagicMock(message=mock_message_1)]
+
+        mock_response_2 = MagicMock()
+        mock_message_2 = MagicMock()
+        mock_message_2.role = "assistant"
+        mock_message_2.content = "Settings fetched."
+        mock_message_2.tool_calls = None
+        mock_response_2.choices = [MagicMock(message=mock_message_2)]
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("Get settings")
+
+        self.assertEqual(response, "Settings fetched.")
+        mock_agent_client.get.assert_called_with("/api/settings")
+
+        self.assertEqual(len(session.messages), 5)
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertIn("light", tool_msg["content"])
+
+    async def test_manage_settings_put(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.put = AsyncMock()
+
+        mock_response_put = MagicMock()
+        mock_response_put.status_code = 200
+        mock_response_put.json.return_value = {"theme": "dark", "notifications_enabled": False}
+        mock_agent_client.put.return_value = mock_response_put
+
+        # Mock LLM calls:
+        mock_response_1 = MagicMock()
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_2"
+        mock_tool_call_1.type = "function"
+        mock_tool_call_1.function.name = "manage_settings"
+        mock_tool_call_1.function.arguments = json.dumps({"action": "put", "settings": {"theme": "dark", "notifications_enabled": False}})
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+        mock_response_1.choices = [MagicMock(message=mock_message_1)]
+
+        mock_response_2 = MagicMock()
+        mock_message_2 = MagicMock()
+        mock_message_2.role = "assistant"
+        mock_message_2.content = "Settings updated."
+        mock_message_2.tool_calls = None
+        mock_response_2.choices = [MagicMock(message=mock_message_2)]
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("Update settings")
+
+        self.assertEqual(response, "Settings updated.")
+        mock_agent_client.put.assert_called_with("/api/settings", json={"theme": "dark", "notifications_enabled": False})
+
+        self.assertEqual(len(session.messages), 5)
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertIn("dark", tool_msg["content"])
+
     async def test_cache_interaction(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

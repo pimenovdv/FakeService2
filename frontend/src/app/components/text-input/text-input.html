@@ -8,6 +8,7 @@
       (ngModelChange)="onValueChange($event)"
       [placeholder]="def.placeholder || ''"
       [disabled]="def.disabled || false"
+      [appAutofocus]="def.autofocus"
       (blur)="touched = true; validate()"
       class="w-full"
     />

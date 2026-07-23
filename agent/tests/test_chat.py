@@ -1433,6 +1433,47 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "I encountered an error processing your request.")
         self.assertFalse(session.form_submitted)
 
+    async def test_get_audit_logs(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get = AsyncMock()
+
+        mock_response_get = MagicMock()
+        mock_response_get.status_code = 200
+        mock_response_get.json.return_value = {"items": [{"id": "1", "action": "login"}], "total": 1, "skip": 0, "limit": 10}
+        mock_agent_client.get.return_value = mock_response_get
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_audit_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_audit_logs"
+        mock_tool_call.function.arguments = json.dumps({"skip": 0, "limit": 10, "user_id": "user1", "action": "login"})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Here are the logs."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.type = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        response = await session.process_user_input("Get audit logs.")
+
+        self.assertEqual(response, "Here are the logs.")
+        mock_agent_client.get.assert_called_with("/api/audit-logs?skip=0&limit=10&user_id=user1&action=login")
+        self.assertEqual(len(session.messages), 5)
+        tool_msg = session.messages[3]
+        self.assertEqual(tool_msg["role"], "tool")
+        self.assertIn("login", tool_msg["content"])
+
     async def test_get_analytics_data(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

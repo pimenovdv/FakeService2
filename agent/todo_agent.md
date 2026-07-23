@@ -4,10 +4,9 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Completed Phases (1-41)
-- **Phases 1-41:** Core agent loop, SSR parsing, tools, state management, JS execution, mock implementations for auth, analytics, webhooks, cache, settings, profile, feature flags, and notifications.
+## Completed Phases (1-43)
+- **Phases 1-43:** Core agent loop, SSR parsing, tools, state management, JS execution, mock implementations for auth, analytics, webhooks, cache, settings, profile, feature flags, notifications, comments, and audit logs.
 
 ## Planned Features
 
-- [x] **Phase 42:** Add functionality to manage mock comments via the `/api/comments` endpoint (GET to retrieve, POST to create, DELETE to remove comments).
-- [ ] **Phase 43:** Add functionality to manage audit logs via the `/api/audit-logs` endpoint (GET to retrieve audit logs).
+- [ ] **Phase 44:** Add functionality to upload files via the `/api/upload` endpoint using the Python agent.

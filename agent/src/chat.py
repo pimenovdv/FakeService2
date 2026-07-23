@@ -30,6 +30,40 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_comments",
+                    "description": "Manage user comments (get, create, delete).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "create", "delete"],
+                                "description": "The action to perform: 'get' to list comments, 'create' to add a comment, 'delete' to remove a comment."
+                            },
+                            "entity_id": {
+                                "type": "string",
+                                "description": "The ID of the entity to manage comments for (required for 'get' and 'create')."
+                            },
+                            "comment_id": {
+                                "type": "string",
+                                "description": "The ID of the comment to delete (required for 'delete')."
+                            },
+                            "user_id": {
+                                "type": "string",
+                                "description": "The ID of the user creating the comment (required for 'create')."
+                            },
+                            "text": {
+                                "type": "string",
+                                "description": "The content of the comment (required for 'create')."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_profile",
                     "description": "Manage user profile (get or put).",
                     "parameters": {
@@ -1355,6 +1389,57 @@ class ChatSession:
                                     tool_content = json.dumps(res.json())
                                 else:
                                     tool_content = json.dumps({"error": f"Failed to update settings, status code {res.status_code}"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_comments":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                entity_id = args.get("entity_id")
+                                if entity_id:
+                                    res = await self.agent_client.get(f"/api/comments/{entity_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to get comments, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "entity_id is required for get action"})
+                            elif action == "create":
+                                entity_id = args.get("entity_id")
+                                user_id = args.get("user_id")
+                                text = args.get("text")
+                                if entity_id and user_id and text:
+                                    res = await self.agent_client.post(f"/api/comments/{entity_id}", json={"user_id": user_id, "text": text})
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to create comment, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "entity_id, user_id, and text are required for create action"})
+                            elif action == "delete":
+                                comment_id = args.get("comment_id")
+                                if comment_id:
+                                    res = await self.agent_client.delete(f"/api/comments/{comment_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to delete comment, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "comment_id is required for delete action"})
                             else:
                                 tool_content = json.dumps({"error": f"Invalid action: {action}"})
                         except Exception as e:

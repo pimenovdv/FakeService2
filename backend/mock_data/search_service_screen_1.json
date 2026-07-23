@@ -8,6 +8,7 @@
       "type": "search",
       "label": "Search for items",
       "placeholder": "Enter search query...",
+      "clearable": true,
       "validations": [
         { "type": "required", "message": "Search query is required." }
       ]

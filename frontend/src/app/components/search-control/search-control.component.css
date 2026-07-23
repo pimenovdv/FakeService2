@@ -19,12 +19,33 @@
   margin-left: 0.25rem;
 }
 
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .control-input {
+  width: 100%;
   padding: 0.5rem;
   border: 1px solid #d1d5db;
   border-radius: 0.375rem;
   font-size: 1rem;
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.clear-button {
+  position: absolute;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: #6c757d;
+}
+
+.clear-button:hover {
+  color: #343a40;
 }
 
 .control-input:focus {

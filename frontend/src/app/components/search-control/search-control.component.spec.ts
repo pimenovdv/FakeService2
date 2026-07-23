@@ -46,4 +46,50 @@ describe('SearchControlComponent', () => {
     const asterisk = fixture.nativeElement.querySelector('.required-asterisk');
     expect(asterisk).toBeTruthy();
   });
+
+  it('should not render clear button when clearable is false', () => {
+    const def: ComponentDef = { id: 's1', type: 'search', label: 'Search Query', clearable: false };
+    fixture.componentRef.setInput('def', def);
+    component.value = 'search text';
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    expect(clearBtn).toBeNull();
+  });
+
+  it('should render clear button when clearable is true and value exists', () => {
+    const def: ComponentDef = { id: 's1', type: 'search', label: 'Search Query', clearable: true };
+    fixture.componentRef.setInput('def', def);
+    component.value = 'search text';
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    expect(clearBtn).toBeTruthy();
+  });
+
+  it('should not render clear button when clearable is true but value is empty', () => {
+    const def: ComponentDef = { id: 's1', type: 'search', label: 'Search Query', clearable: true };
+    fixture.componentRef.setInput('def', def);
+    component.value = '';
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    expect(clearBtn).toBeNull();
+  });
+
+  it('should clear value when clear button is clicked', () => {
+    const def: ComponentDef = { id: 's1', type: 'search', label: 'Search Query', clearable: true };
+    fixture.componentRef.setInput('def', def);
+    component.value = 'search text';
+    fixture.detectChanges();
+
+    let emittedValue: any;
+    component.valueChange.subscribe(val => emittedValue = val);
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    clearBtn.click();
+
+    expect(emittedValue).toBe('');
+    expect(component.value).toBe('');
+  });
 });

@@ -9,5 +9,5 @@ This document outlines the step-by-step development process for the Python agent
 
 ## Planned Features
 
-- [ ] **Phase 42:** Add functionality to manage mock comments via the `/api/comments` endpoint (GET to retrieve, POST to create, DELETE to remove comments).
+- [x] **Phase 42:** Add functionality to manage mock comments via the `/api/comments` endpoint (GET to retrieve, POST to create, DELETE to remove comments).
 - [ ] **Phase 43:** Add functionality to manage audit logs via the `/api/audit-logs` endpoint (GET to retrieve audit logs).

@@ -2028,3 +2028,109 @@ class TestChatSessionNotifications(unittest.IsolatedAsyncioTestCase):
         response = await session.process_user_input("Mark notification n1 as read")
         self.assertEqual(response, "Notification marked read.")
         mock_agent_client.put.assert_called_with("/api/notifications/n1/read")
+
+class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
+    async def test_manage_comments_get(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [{"id": "c1", "user_id": "u1", "text": "Hello"}]
+        mock_agent_client.get.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_com1"
+        mock_tool_call_1.function.name = "manage_comments"
+        mock_tool_call_1.function.arguments = '{"action": "get", "entity_id": "e1"}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Comments retrieved."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("Get comments for e1")
+        self.assertEqual(response, "Comments retrieved.")
+        mock_agent_client.get.assert_called_with("/api/comments/e1")
+
+    async def test_manage_comments_create(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"id": "c2", "user_id": "u1", "text": "New"}
+        mock_agent_client.post.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_com2"
+        mock_tool_call_1.function.name = "manage_comments"
+        mock_tool_call_1.function.arguments = '{"action": "create", "entity_id": "e1", "user_id": "u1", "text": "New"}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Comment created."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("Create comment")
+        self.assertEqual(response, "Comment created.")
+        mock_agent_client.post.assert_called_with("/api/comments/e1", json={"user_id": "u1", "text": "New"})
+
+    async def test_manage_comments_delete(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"status": "success"}
+        mock_agent_client.delete.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_com3"
+        mock_tool_call_1.function.name = "manage_comments"
+        mock_tool_call_1.function.arguments = '{"action": "delete", "comment_id": "c1"}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Comment deleted."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("Delete comment c1")
+        self.assertEqual(response, "Comment deleted.")
+        mock_agent_client.delete.assert_called_with("/api/comments/c1")

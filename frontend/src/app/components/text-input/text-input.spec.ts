@@ -84,4 +84,47 @@ describe('TextInputComponent', () => {
 
     expect(charCount).toBeNull();
   });
+
+  it('should not render clear button when clearable is false', () => {
+    component.def = { ...component.def, clearable: false };
+    component.value = 'hello';
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const clearBtn = compiled.querySelector('.clear-button');
+    expect(clearBtn).toBeNull();
+  });
+
+  it('should render clear button when clearable is true and value exists', () => {
+    component.def = { ...component.def, clearable: true };
+    component.value = 'hello';
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const clearBtn = compiled.querySelector('.clear-button');
+    expect(clearBtn).toBeTruthy();
+  });
+
+  it('should not render clear button when clearable is true but value is empty', () => {
+    component.def = { ...component.def, clearable: true };
+    component.value = '';
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const clearBtn = compiled.querySelector('.clear-button');
+    expect(clearBtn).toBeNull();
+  });
+
+  it('should clear value when clear button is clicked', () => {
+    component.def = { ...component.def, clearable: true };
+    component.value = 'hello';
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const clearBtn = compiled.querySelector('.clear-button') as HTMLButtonElement;
+
+    let emittedValue: any;
+    component.valueChange.subscribe(val => emittedValue = val);
+
+    clearBtn.click();
+
+    expect(emittedValue).toBe('');
+    expect(component.value).toBe('');
+  });
 });

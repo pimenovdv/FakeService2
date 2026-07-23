@@ -30,6 +30,7 @@ export interface ComponentDef {
   helpText?: string;
   hidden?: boolean;
   disabled?: boolean;
+  clearable?: boolean;
   showIf?: Condition;
   disableIf?: Condition;
   accept?: string; // For file uploads

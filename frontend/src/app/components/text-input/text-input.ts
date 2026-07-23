@@ -19,4 +19,7 @@ export class TextInputComponent extends BaseControl implements OnInit, OnDestroy
     super.ngOnDestroy();
   }
 
+  clearValue() {
+    this.onValueChange('');
+  }
 }

@@ -30,6 +30,7 @@ class ComponentDef(BaseModel):
     helpText: Optional[str] = None
     hidden: Optional[bool] = False
     disabled: Optional[bool] = False
+    clearable: Optional[bool] = None
     accept: Optional[str] = None
     multiple: Optional[bool] = False
     currencySymbol: Optional[str] = None

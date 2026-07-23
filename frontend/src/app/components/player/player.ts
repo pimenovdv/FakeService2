@@ -143,6 +143,10 @@ export class Player implements OnInit, OnDestroy {
   }
 
   onButtonClick(btn: ButtonDef) {
+    if (btn.confirmMessage && !window.confirm(btn.confirmMessage)) {
+      return;
+    }
+
     if (btn.action === 'next_step' || btn.action === 'submit') {
       this.stateService.setSubmitAttempted(true);
 

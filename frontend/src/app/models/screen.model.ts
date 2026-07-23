@@ -30,6 +30,7 @@ export interface ComponentDef {
   helpText?: string;
   hidden?: boolean;
   disabled?: boolean;
+  readonly?: boolean;
   clearable?: boolean;
   autofocus?: boolean;
   showIf?: Condition;
@@ -46,6 +47,7 @@ export interface ButtonDef {
   label: string;
   action: 'next_step' | 'cancel' | 'submit';
   color?: 'primary' | 'secondary' | 'warn';
+  confirmMessage?: string;
 }
 
 export interface ScriptDef {

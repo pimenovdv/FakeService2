@@ -4,9 +4,10 @@ This document outlines the step-by-step development process for the Python agent
 
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
-## Completed Phases (1-43)
-- **Phases 1-43:** Core agent loop, SSR parsing, tools, state management, JS execution, mock implementations for auth, analytics, webhooks, cache, settings, profile, feature flags, notifications, comments, and audit logs.
+## Completed Phases (1-45)
+- **Phases 1-44:** Core functionality including agent loop, SSR parsing, tools, state management, JS execution, and mock implementations for auth, analytics, webhooks, cache, settings, profile, feature flags, notifications, comments, audit logs, and file uploads.
+- **Phase 45:** Add functionality to perform system searches via the `/api/search` endpoint using the Python agent.
 
 ## Planned Features
 
-- [ ] **Phase 44:** Add functionality to upload files via the `/api/upload` endpoint using the Python agent.
+- [ ] **Phase 46:** Add functionality to get weather for a city via the `/api/weather` endpoint using the Python agent.

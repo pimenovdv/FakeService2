@@ -891,6 +891,47 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[4]["content"], "Today is a good day.")
 
 
+
+    async def test_process_user_input_search_system(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_http_response = MagicMock()
+        mock_http_response.status_code = 200
+        mock_http_response.json.return_value = [{"id": 1, "title": "John Doe", "description": "Engineer", "type": "user"}]
+        mock_agent_client.get.return_value = mock_http_response
+
+        # First response is a tool call
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+
+        tool_call = MagicMock()
+        tool_call.id = "call_search_123"
+        tool_call.type = "function"
+        tool_call.function.name = "search_system"
+        tool_call.function.arguments = json.dumps({"query": "John"})
+        mock_response_1.choices[0].message.tool_calls = [tool_call]
+
+        # Second response is the final conversational reply
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Found John Doe."
+        mock_response_2.choices[0].message.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        response = await session.process_user_input("Search for John")
+
+        self.assertEqual(response, "Found John Doe.")
+
+        mock_agent_client.get.assert_called_once_with("/api/search?q=John")
+
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertEqual(session.messages[3]["tool_call_id"], "call_search_123")
+        self.assertEqual(json.loads(session.messages[3]["content"]), [{"id": 1, "title": "John Doe", "description": "Engineer", "type": "user"}])
     async def test_process_user_input_upload_file_success(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

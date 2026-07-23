@@ -30,6 +30,34 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "get_audit_logs",
+                    "description": "Retrieve mock audit logs. Allows pagination via 'skip' and 'limit', and filtering by 'user_id' and 'action'.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "skip": {
+                                "type": "integer",
+                                "description": "Pagination offset."
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "description": "Pagination limit."
+                            },
+                            "user_id": {
+                                "type": "string",
+                                "description": "Filter by user ID."
+                            },
+                            "action": {
+                                "type": "string",
+                                "description": "Filter by action type (e.g. login, create_user)."
+                            }
+                        }
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_comments",
                     "description": "Manage user comments (get, create, delete).",
                     "parameters": {
@@ -1395,6 +1423,45 @@ class ChatSession:
                             tool_content = json.dumps({"error": str(e)})
                     else:
                         tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "get_audit_logs":
+                    args = json.loads(tool_call.function.arguments)
+                    skip = args.get("skip")
+                    limit = args.get("limit")
+                    user_id = args.get("user_id")
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        query_params = []
+                        if skip is not None:
+                            query_params.append(f"skip={skip}")
+                        if limit is not None:
+                            query_params.append(f"limit={limit}")
+                        if user_id:
+                            query_params.append(f"user_id={user_id}")
+                        if action:
+                            query_params.append(f"action={action}")
+
+                        url = "/api/audit-logs"
+                        if query_params:
+                            url += "?" + "&".join(query_params)
+
+                        try:
+                            res = await self.agent_client.get(url)
+                            if res.status_code == 200:
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to get audit logs, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": f"HTTP request failed: {str(e)}"})
+                    else:
+                        tool_content = json.dumps({"error": "No agent_client available"})
 
                     self.messages.append({
                         "role": "tool",

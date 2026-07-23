@@ -112,6 +112,13 @@ describe('TextInputComponent', () => {
     expect(clearBtn).toBeNull();
   });
 
+  it('should apply readonly attribute if def.readonly is true', () => {
+    component.def = { id: 'test', type: 'text', label: 'Test Label', readonly: true } as ComponentDef;
+    fixture.detectChanges();
+    const input = fixture.nativeElement.querySelector('input');
+    expect(input.hasAttribute('readonly')).toBeTruthy();
+  });
+
   it('should clear value when clear button is clicked', () => {
     component.def = { ...component.def, clearable: true };
     component.value = 'hello';

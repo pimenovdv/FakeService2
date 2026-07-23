@@ -30,6 +30,7 @@ class ComponentDef(BaseModel):
     helpText: Optional[str] = None
     hidden: Optional[bool] = False
     disabled: Optional[bool] = False
+    readonly: Optional[bool] = False
     clearable: Optional[bool] = None
     accept: Optional[str] = None
     multiple: Optional[bool] = False
@@ -42,6 +43,7 @@ class ButtonDef(BaseModel):
     label: str
     action: Literal['next_step', 'previous_step', 'cancel', 'submit']
     color: Optional[Literal['primary', 'secondary', 'warn']] = None
+    confirmMessage: Optional[str] = None
 
 class ScriptDef(BaseModel):
     trigger: Literal['onLoad', 'onChange']

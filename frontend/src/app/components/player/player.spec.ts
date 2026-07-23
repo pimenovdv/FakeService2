@@ -6,7 +6,7 @@ import { LogicService } from '../../services/logic';
 import { DraftService, Draft } from '../../services/draft';
 import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, Subject, of } from 'rxjs';
-import { Screen, ComponentDef } from '../../models/screen.model';
+import { Screen, ComponentDef, ButtonDef } from '../../models/screen.model';
 import { vi, expect, describe, it, beforeEach } from 'vitest';
 
 describe('Player', () => {
@@ -80,6 +80,52 @@ describe('Player', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     await fixture.whenStable();
+  });
+
+  it('should show confirmation dialog and abort if cancelled', () => {
+    mockStateService.getScreen.mockReturnValue({
+      id: 'screen1',
+      header: 'Screen 1',
+      content: 'Content',
+      components: [],
+      buttons: [{ id: 'submit', label: 'Submit', action: 'submit', confirmMessage: 'Are you sure?' }]
+    } as Screen);
+    mockStateService.isFormValid.mockReturnValue(true);
+    mockStateService.getAllAnswers.mockReturnValue({});
+
+    const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => false);
+
+    component.onButtonClick({ id: 'submit', label: 'Submit', action: 'submit', confirmMessage: 'Are you sure?' } as ButtonDef);
+
+    expect(confirmSpy).toHaveBeenCalledWith('Are you sure?');
+    expect(mockStateService.setSubmitAttempted).not.toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
+  });
+
+  it('should show confirmation dialog and proceed if confirmed', () => {
+    mockStateService.getScreen.mockReturnValue({
+      id: 'screen1',
+      header: 'Screen 1',
+      content: 'Content',
+      components: [],
+      buttons: [{ id: 'submit', label: 'Submit', action: 'submit', confirmMessage: 'Are you sure?' }]
+    } as Screen);
+    mockStateService.isFormValid.mockReturnValue(true);
+    mockStateService.getAllAnswers.mockReturnValue({});
+    mockStateService.evaluateCrossValidations.mockReturnValue([]);
+    mockApiService.nextStep.mockReturnValue(of({ completed: true }));
+
+    const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
+    component['serviceId'] = '123';
+
+    component.onButtonClick({ id: 'submit', label: 'Submit', action: 'submit', confirmMessage: 'Are you sure?' } as ButtonDef);
+
+    expect(confirmSpy).toHaveBeenCalledWith('Are you sure?');
+    expect(mockStateService.setSubmitAttempted).toHaveBeenCalled();
+
+    confirmSpy.mockRestore();
   });
 
   it('should create', () => {

@@ -71,8 +71,8 @@ export abstract class BaseControl implements OnInit, OnDestroy {
       return;
     }
 
-    if (this.def.disabled || this.def.hidden) {
-      return; // Disabled or hidden components are always valid
+    if (this.def.disabled || this.def.hidden || this.def.readonly) {
+      return; // Disabled, hidden, or readonly components are always valid
     }
 
     for (const rule of this.def.validations) {

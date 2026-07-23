@@ -53,6 +53,36 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_notifications",
+                    "description": "Manage user notifications (get, mark_read).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "mark_read"],
+                                "description": "The action to perform: 'get' to list notifications, 'mark_read' to mark a notification as read."
+                            },
+                            "user_id": {
+                                "type": "string",
+                                "description": "The user ID to filter notifications by (optional for 'get')."
+                            },
+                            "unread_only": {
+                                "type": "boolean",
+                                "description": "Filter to show only unread notifications (optional for 'get')."
+                            },
+                            "notification_id": {
+                                "type": "string",
+                                "description": "The ID of the notification to mark as read (required for 'mark_read')."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_settings",
                     "description": "Manage application settings (get or put).",
                     "parameters": {
@@ -1325,6 +1355,49 @@ class ChatSession:
                                     tool_content = json.dumps(res.json())
                                 else:
                                     tool_content = json.dumps({"error": f"Failed to update settings, status code {res.status_code}"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_notifications":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                params = {}
+                                user_id = args.get("user_id")
+                                unread_only = args.get("unread_only")
+                                if user_id is not None:
+                                    params["user_id"] = user_id
+                                if unread_only is not None:
+                                    params["unread_only"] = str(unread_only).lower()
+
+                                res = await self.agent_client.get("/api/notifications", params=params)
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get notifications, status code {res.status_code}"})
+                            elif action == "mark_read":
+                                notification_id = args.get("notification_id")
+                                if notification_id:
+                                    res = await self.agent_client.put(f"/api/notifications/{notification_id}/read")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to mark notification as read, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "notification_id is required for mark_read action"})
                             else:
                                 tool_content = json.dumps({"error": f"Invalid action: {action}"})
                         except Exception as e:

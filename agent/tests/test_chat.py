@@ -1956,3 +1956,75 @@ class TestChatSessionPersistence(unittest.TestCase):
         finally:
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
+
+
+class TestChatSessionNotifications(unittest.IsolatedAsyncioTestCase):
+    async def test_manage_notifications_get(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = [{"id": "n1", "user_id": "u1", "is_read": False}]
+        mock_agent_client.get.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_notif1"
+        mock_tool_call_1.function.name = "manage_notifications"
+        mock_tool_call_1.function.arguments = '{"action": "get", "user_id": "u1", "unread_only": true}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Notifications retrieved."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("Get my notifications")
+        self.assertEqual(response, "Notifications retrieved.")
+        mock_agent_client.get.assert_called_with("/api/notifications", params={"user_id": "u1", "unread_only": "true"})
+
+    async def test_manage_notifications_mark_read(self):
+        mock_client = MagicMock()
+        mock_agent_client = AsyncMock()
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"id": "n1", "user_id": "u1", "is_read": True}
+        mock_agent_client.put.return_value = mock_response
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call_1 = MagicMock()
+        mock_tool_call_1.id = "call_notif2"
+        mock_tool_call_1.function.name = "manage_notifications"
+        mock_tool_call_1.function.arguments = '{"action": "mark_read", "notification_id": "n1"}'
+
+        mock_message_1 = MagicMock()
+        mock_message_1.role = "assistant"
+        mock_message_1.content = None
+        mock_message_1.tool_calls = [mock_tool_call_1]
+
+        mock_message_final = MagicMock()
+        mock_message_final.role = "assistant"
+        mock_message_final.content = "Notification marked read."
+        mock_message_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_message_1)]),
+            MagicMock(choices=[MagicMock(message=mock_message_final)])
+        ])
+
+        response = await session.process_user_input("Mark notification n1 as read")
+        self.assertEqual(response, "Notification marked read.")
+        mock_agent_client.put.assert_called_with("/api/notifications/n1/read")

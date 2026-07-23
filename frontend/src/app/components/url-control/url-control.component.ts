@@ -25,4 +25,8 @@ export class UrlControlComponent extends BaseControl {
   onModelChange(newValue: any): void {
     this.onValueChange(newValue);
   }
+
+  clearValue() {
+    this.onValueChange('');
+  }
 }

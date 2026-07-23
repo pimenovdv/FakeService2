@@ -32,3 +32,27 @@
     flex-direction: column;
   }
 }
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+  }
+
+  .clear-button {
+    position: absolute;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: #6c757d;
+
+    &:hover {
+      color: #343a40;
+    }
+  }
+}

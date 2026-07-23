@@ -51,4 +51,37 @@ describe('UrlControlComponent', () => {
 
     expect(changeSpy).toHaveBeenCalledWith('https://example.com');
   });
+
+  it('should not render clear button when clearable is false', () => {
+    fixture.componentRef.setInput('def', { ...mockDef, clearable: false });
+    component.value = 'https://example.com';
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    expect(clearBtn).toBeNull();
+  });
+
+  it('should render clear button when clearable is true and value exists', () => {
+    fixture.componentRef.setInput('def', { ...mockDef, clearable: true });
+    component.value = 'https://example.com';
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    expect(clearBtn).toBeTruthy();
+  });
+
+  it('should clear value when clear button is clicked', () => {
+    fixture.componentRef.setInput('def', { ...mockDef, clearable: true });
+    component.value = 'https://example.com';
+    fixture.detectChanges();
+
+    let emittedValue: any;
+    component.valueChange.subscribe(val => emittedValue = val);
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button') as HTMLButtonElement;
+    clearBtn.click();
+
+    expect(emittedValue).toBe('');
+    expect(component.value).toBe('');
+  });
 });

@@ -24,4 +24,8 @@ export class PasswordControlComponent extends BaseControl implements OnInit, OnD
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
+
+  clearValue() {
+    this.onValueChange('');
+  }
 }

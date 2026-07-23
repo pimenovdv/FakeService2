@@ -3,7 +3,7 @@
     {{ def.label }}
     <span *ngIf="isRequired" class="required-asterisk">*</span>
   </label>
-  <div class="input-wrapper">
+  <div class="input-wrapper relative flex items-center">
     <input
       type="url"
       [id]="def.id"
@@ -12,10 +12,13 @@
       [placeholder]="def.placeholder || ''"
       [disabled]="def.disabled === true"
       [ngModelOptions]="{standalone: true}"
-      class="control-input"
+      class="control-input w-full"
       [class.has-error]="errors.length > 0 && touched"
       (blur)="touched = true"
     />
+    <button *ngIf="def.clearable && value" type="button" class="clear-button absolute right-2 text-gray-500 hover:text-gray-700" (click)="clearValue()" aria-label="Clear value">
+      &times;
+    </button>
   </div>
   <div *ngIf="errors.length > 0 && touched" class="error-messages">
     <span *ngFor="let err of errors" class="error-text">{{ err }}</span>

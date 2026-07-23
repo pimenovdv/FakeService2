@@ -68,4 +68,37 @@ describe('PhoneControlComponent', () => {
     const inputElement = fixture.debugElement.query(By.css('input')).nativeElement;
     expect(inputElement.disabled).toBe(true);
   });
+
+  it('should not render clear button when clearable is false', () => {
+    fixture.componentRef.setInput('def', { ...component.def, clearable: false });
+    component.value = '+1234567890';
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    expect(clearBtn).toBeNull();
+  });
+
+  it('should render clear button when clearable is true and value exists', () => {
+    fixture.componentRef.setInput('def', { ...component.def, clearable: true });
+    component.value = '+1234567890';
+    fixture.detectChanges();
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button');
+    expect(clearBtn).toBeTruthy();
+  });
+
+  it('should clear value when clear button is clicked', () => {
+    fixture.componentRef.setInput('def', { ...component.def, clearable: true });
+    component.value = '+1234567890';
+    fixture.detectChanges();
+
+    let emittedValue: any;
+    component.valueChange.subscribe(val => emittedValue = val);
+
+    const clearBtn = fixture.nativeElement.querySelector('.clear-button') as HTMLButtonElement;
+    clearBtn.click();
+
+    expect(emittedValue).toBe('');
+    expect(component.value).toBe('');
+  });
 });

@@ -22,4 +22,8 @@ export class EmailControlComponent extends BaseControl implements OnInit, OnDest
   override ngOnDestroy() {
     super.ngOnDestroy();
   }
+
+  clearValue() {
+    this.onValueChange('');
+  }
 }

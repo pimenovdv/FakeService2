@@ -7,6 +7,7 @@
     (ngModelChange)="onValueChange($event)"
     [placeholder]="def.placeholder || ''"
     [disabled]="def.disabled === true"
+    [appAutofocus]="def.autofocus"
     (blur)="touched = true; validate()"
   />
   <div *ngIf="touched && !isValid" class="error-messages">

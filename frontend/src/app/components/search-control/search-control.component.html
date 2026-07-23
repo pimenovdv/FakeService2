@@ -12,6 +12,7 @@
       (blur)="validate()"
       [placeholder]="def.placeholder || ''"
       [disabled]="def.disabled === true"
+      [appAutofocus]="def.autofocus"
       class="control-input"
       [class.invalid]="errors.length > 0 && touched"
       [ngModelOptions]="{standalone: true}"

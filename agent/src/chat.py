@@ -526,6 +526,23 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "search_system",
+                    "description": "Search the system for users, pages, or documents using a query string.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "The search query string."
+                            }
+                        },
+                        "required": ["query"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "upload_file",
                     "description": "Upload a local file to a given URL.",
                     "parameters": {
@@ -1624,6 +1641,29 @@ class ChatSession:
                                     tool_content = res.text
                             else:
                                 tool_content = json.dumps({"error": f"Failed to download file, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "search_system":
+                    args = json.loads(tool_call.function.arguments)
+                    query = args.get("query")
+
+                    if self.agent_client:
+                        try:
+                            # Use query params for the search
+                            res = await self.agent_client.get(f"/api/search?q={query}")
+                            if res.status_code == 200:
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to perform search, status code {res.status_code}"})
                         except Exception as e:
                             tool_content = json.dumps({"error": str(e)})
                     else:

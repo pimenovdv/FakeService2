@@ -30,6 +30,36 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_subscriptions",
+                    "description": "Manage mock user subscriptions (create, get, cancel).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["create", "get", "cancel"],
+                                "description": "The action to perform: 'create' to create a subscription, 'get' to fetch, 'cancel' to cancel."
+                            },
+                            "subscription_id": {
+                                "type": "string",
+                                "description": "The ID of the subscription (required for get and cancel)."
+                            },
+                            "plan_id": {
+                                "type": "string",
+                                "description": "The ID of the subscription plan (required for create)."
+                            },
+                            "user_id": {
+                                "type": "string",
+                                "description": "The ID of the user subscribing (required for create)."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "get_audit_logs",
                     "description": "Retrieve mock audit logs. Allows pagination via 'skip' and 'limit', and filtering by 'user_id' and 'action'.",
                     "parameters": {
@@ -1482,6 +1512,56 @@ class ChatSession:
                                 tool_content = json.dumps({"error": f"Failed to get audit logs, status code {res.status_code}"})
                         except Exception as e:
                             tool_content = json.dumps({"error": f"HTTP request failed: {str(e)}"})
+                    else:
+                        tool_content = json.dumps({"error": "No agent_client available"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_subscriptions":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "create":
+                                plan_id = args.get("plan_id")
+                                user_id = args.get("user_id")
+                                if plan_id and user_id:
+                                    res = await self.agent_client.post("/api/subscriptions", json={"plan_id": plan_id, "user_id": user_id})
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to create subscription, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "plan_id and user_id are required for create action"})
+                            elif action == "get":
+                                subscription_id = args.get("subscription_id")
+                                if subscription_id:
+                                    res = await self.agent_client.get(f"/api/subscriptions/{subscription_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to get subscription, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "subscription_id is required for get action"})
+                            elif action == "cancel":
+                                subscription_id = args.get("subscription_id")
+                                if subscription_id:
+                                    res = await self.agent_client.delete(f"/api/subscriptions/{subscription_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to cancel subscription, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "subscription_id is required for cancel action"})
+                            else:
+                                tool_content = json.dumps({"error": f"Unknown action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
                     else:
                         tool_content = json.dumps({"error": "No agent_client available"})
 

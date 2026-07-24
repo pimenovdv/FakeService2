@@ -2229,6 +2229,143 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "Comment deleted.")
         mock_agent_client.delete.assert_called_with("/api/comments/c1")
 
+    async def test_manage_events_list(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: [{"id": "evt_1", "title": "Test Event"}]
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_evt_list"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_events"
+        mock_tool_call.function.arguments = json.dumps({"action": "list"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Events listed."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        await session.process_user_input("List events")
+        mock_agent_client.get.assert_called_with("/api/events")
+
+    async def test_manage_events_create(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=201,
+            json=lambda: {"id": "evt_2", "title": "New Event"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_evt_create"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_events"
+        mock_tool_call.function.arguments = json.dumps({"action": "create", "title": "New Event", "start_time": "2024-01-01T10:00:00Z", "end_time": "2024-01-01T11:00:00Z"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Event created."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        await session.process_user_input("Create event")
+        mock_agent_client.post.assert_called_with("/api/events", json={"title": "New Event", "start_time": "2024-01-01T10:00:00Z", "end_time": "2024-01-01T11:00:00Z"})
+
+    async def test_manage_payments_process(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"payment_id": "pay_1", "status": "success"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_pay_process"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_payments"
+        mock_tool_call.function.arguments = json.dumps({"action": "process", "amount": 100, "currency": "USD", "payment_method": "credit_card"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Payment processed."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        await session.process_user_input("Process payment")
+        mock_agent_client.post.assert_called_with("/api/payments", json={"amount": 100, "currency": "USD", "payment_method": "credit_card"})
+
+    async def test_manage_payments_get_status(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"payment_id": "pay_1", "status": "success"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_pay_get"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_payments"
+        mock_tool_call.function.arguments = json.dumps({"action": "get_status", "payment_id": "pay_1"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Payment status fetched."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        await session.process_user_input("Get payment status")
+        mock_agent_client.get.assert_called_with("/api/payments/pay_1")
+
+
     async def test_manage_subscriptions_create(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

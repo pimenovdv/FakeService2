@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseControl } from '../base-control/base-control';
 import { AutofocusDirective } from '../../directives/autofocus.directive';
+import { MaskDirective } from '../../directives/mask.directive';
 
 @Component({
   selector: 'app-text-input',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutofocusDirective],
+  imports: [CommonModule, FormsModule, AutofocusDirective, MaskDirective],
   templateUrl: './text-input.html',
   styleUrls: ['./text-input.scss']
 })

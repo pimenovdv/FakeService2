@@ -8,6 +8,7 @@
     [placeholder]="def.placeholder || ''"
     [disabled]="def.disabled === true"
     [ngModelOptions]="{standalone: true}"
+    [appMask]="def.mask"
     (blur)="touched = true; validate()"
   />
   <div class="error-message" *ngIf="errors.length > 0 && touched">

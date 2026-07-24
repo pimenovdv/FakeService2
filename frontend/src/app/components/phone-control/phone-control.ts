@@ -2,11 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BaseControl } from '../base-control/base-control';
+import { MaskDirective } from '../../directives/mask.directive';
 
 @Component({
   selector: 'app-phone-control',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, MaskDirective],
   templateUrl: './phone-control.html',
   styleUrls: ['./phone-control.scss']
 })

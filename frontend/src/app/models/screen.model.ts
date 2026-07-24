@@ -33,6 +33,7 @@ export interface ComponentDef {
   readonly?: boolean;
   clearable?: boolean;
   autofocus?: boolean;
+  mask?: string;
   showIf?: Condition;
   disableIf?: Condition;
   accept?: string; // For file uploads

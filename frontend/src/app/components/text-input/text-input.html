@@ -10,6 +10,7 @@
       [disabled]="def.disabled || false"
       [readonly]="def.readonly === true"
       [appAutofocus]="def.autofocus"
+      [appMask]="def.mask"
       (blur)="touched = true; validate()"
       class="w-full"
     />

@@ -1,0 +1,17 @@
+<<<<<<< HEAD
+    <div *ngFor="let progress of uploadProgresses | keyvalue" class="w-full">
+      <div class="flex justify-between text-sm text-gray-600 mb-1">
+        <span class="truncate pr-2">{{ progress.key }}</span>
+        <span>{{ progress.value }}%</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="bg-blue-600 h-2 rounded-full transition-all duration-300" [style.width.%]="progress.value"></div>
+=======
+    <div *ngFor="let item of uploadProgress | keyvalue" class="text-sm">
+      <div class="flex justify-between mb-1">
+        <span class="text-gray-700 truncate">{{ item.key }}</span>
+        <span class="text-gray-500">{{ item.value }}%</span>
+      </div>
+      <div class="w-full bg-gray-200 rounded-full h-2">
+        <div class="bg-blue-600 h-2 rounded-full" [style.width.%]="item.value"></div>
+>>>>>>> origin/main

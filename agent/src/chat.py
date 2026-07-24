@@ -30,6 +30,82 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_events",
+                    "description": "Manage mock calendar events (list, create).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["list", "create"],
+                                "description": "The action to perform: 'list' to get all events, 'create' to create a new event."
+                            },
+                            "title": {
+                                "type": "string",
+                                "description": "The title of the event (required for create)."
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "The description of the event."
+                            },
+                            "start_time": {
+                                "type": "string",
+                                "description": "The start time of the event in ISO format (required for create)."
+                            },
+                            "end_time": {
+                                "type": "string",
+                                "description": "The end time of the event in ISO format (required for create)."
+                            },
+                            "location": {
+                                "type": "string",
+                                "description": "The location of the event."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "manage_payments",
+                    "description": "Manage mock payments (process, get_status).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["process", "get_status"],
+                                "description": "The action to perform: 'process' to create a payment, 'get_status' to fetch the status."
+                            },
+                            "payment_id": {
+                                "type": "string",
+                                "description": "The ID of the payment (required for get_status)."
+                            },
+                            "amount": {
+                                "type": "number",
+                                "description": "The amount to pay (required for process)."
+                            },
+                            "currency": {
+                                "type": "string",
+                                "description": "The currency of the payment (required for process)."
+                            },
+                            "payment_method": {
+                                "type": "string",
+                                "description": "The payment method (required for process)."
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "The description of the payment."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_subscriptions",
                     "description": "Manage mock user subscriptions (create, get, cancel).",
                     "parameters": {
@@ -1514,6 +1590,82 @@ class ChatSession:
                             tool_content = json.dumps({"error": f"HTTP request failed: {str(e)}"})
                     else:
                         tool_content = json.dumps({"error": "No agent_client available"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_events":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "list":
+                                res = await self.agent_client.get("/api/events")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to list events, status code {res.status_code}"})
+                            elif action == "create":
+                                payload = {k: v for k, v in args.items() if k in ["title", "description", "start_time", "end_time", "location"] and v is not None}
+                                if "title" in payload and "start_time" in payload and "end_time" in payload:
+                                    res = await self.agent_client.post("/api/events", json=payload)
+                                    if res.status_code == 201:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to create event, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "title, start_time, and end_time are required to create an event"})
+                            else:
+                                tool_content = json.dumps({"error": "Unknown action"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "agent_client not initialized"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_payments":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "process":
+                                payload = {k: v for k, v in args.items() if k in ["amount", "currency", "payment_method", "description"] and v is not None}
+                                if "amount" in payload and "currency" in payload and "payment_method" in payload:
+                                    res = await self.agent_client.post("/api/payments", json=payload)
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to process payment, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "amount, currency, and payment_method are required to process a payment"})
+                            elif action == "get_status":
+                                payment_id = args.get("payment_id")
+                                if payment_id:
+                                    res = await self.agent_client.get(f"/api/payments/{payment_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    elif res.status_code == 404:
+                                        tool_content = json.dumps({"error": "Payment not found"})
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to get payment status, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "payment_id is required to get payment status"})
+                            else:
+                                tool_content = json.dumps({"error": "Unknown action"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "agent_client not initialized"})
 
                     self.messages.append({
                         "role": "tool",

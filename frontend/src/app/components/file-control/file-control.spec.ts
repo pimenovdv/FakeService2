@@ -5,6 +5,7 @@ import { ApiService } from '../../services/api';
 import { ComponentDef } from '../../models/screen.model';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
+import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 describe('FileControlComponent', () => {
   let component: FileControlComponent;
@@ -68,7 +69,10 @@ describe('FileControlComponent', () => {
     const inputElement = fixture.nativeElement.querySelector('input[type="file"]');
 
     apiServiceSpy.uploadFile.mockImplementation((file: File) => {
-        return of({ file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name });
+        return of(
+          { type: HttpEventType.UploadProgress, loaded: 50, total: 100 },
+          new HttpResponse({ body: { file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name } })
+        );
     });
 
     Object.defineProperty(inputElement, 'files', {
@@ -81,6 +85,8 @@ describe('FileControlComponent', () => {
     expect(component.value.length).toBe(2);
     expect(component.value[0].filename).toBe('file1.txt');
     expect(component.value[1].filename).toBe('file2.txt');
+    expect(component.uploadProgress['file1.txt']).toBe(50);
+    expect(component.uploadProgress['file2.txt']).toBe(50);
   });
 
   it('should handle file selection for single file', () => {
@@ -90,7 +96,10 @@ describe('FileControlComponent', () => {
     const inputElement = fixture.nativeElement.querySelector('input[type="file"]');
 
     apiServiceSpy.uploadFile.mockImplementation((file: File) => {
-        return of({ file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name });
+        return of(
+          { type: HttpEventType.UploadProgress, loaded: 100, total: 100 },
+          new HttpResponse({ body: { file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name } })
+        );
     });
 
     Object.defineProperty(inputElement, 'files', {
@@ -101,6 +110,7 @@ describe('FileControlComponent', () => {
 
     expect(apiServiceSpy.uploadFile).toHaveBeenCalledTimes(1);
     expect(component.value.filename).toBe('file1.txt');
+    expect(component.uploadProgress['file1.txt']).toBe(100);
   });
 
   it('should handle upload error for single file', () => {
@@ -127,7 +137,7 @@ describe('FileControlComponent', () => {
 
     apiServiceSpy.uploadFile.mockImplementation((file: File) => {
         if (file.name === 'file1.txt') {
-            return of({ file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name });
+            return of(new HttpResponse({ body: { file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name } }));
         } else {
             return throwError(() => new Error('Upload failed'));
         }

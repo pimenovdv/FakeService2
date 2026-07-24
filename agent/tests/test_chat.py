@@ -6,12 +6,23 @@ from src.chat import ChatSession, run_chat_loop
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
     async def test_get_weather(self):
         mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {
+                "city": "London",
+                "temperature": 15.0,
+                "condition": "Rainy",
+                "humidity": 80,
+                "wind_speed": 12.5
+            }
+        )
 
         mock_tool_call = MagicMock()
         mock_tool_call.id = "call_weather_123"
         mock_tool_call.type = "function"
         mock_tool_call.function.name = "get_weather"
-        mock_tool_call.function.arguments = json.dumps({"location": "London"})
+        mock_tool_call.function.arguments = json.dumps({"city": "London"})
 
         mock_response_1 = MagicMock()
         mock_response_1.choices = [MagicMock()]
@@ -21,27 +32,28 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
 
         mock_response_2 = MagicMock()
         mock_response_2.choices = [MagicMock()]
-        mock_response_2.choices[0].message.content = "The weather in London is Sunny and 25°C."
+        mock_response_2.choices[0].message.content = "The weather in London is Rainy and 15.0°C."
         mock_response_2.choices[0].message.tool_calls = None
         mock_response_2.choices[0].message.role = "assistant"
         mock_response_2.choices[0].message.type = None
 
         mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
 
-        session = ChatSession("System Prompt", client=mock_client)
+        session = ChatSession("System Prompt", client=mock_client, agent_client=mock_agent_client)
 
         response = await session.process_user_input("What is the weather in London?")
 
-        self.assertEqual(response, "The weather in London is Sunny and 25°C.")
+        self.assertEqual(response, "The weather in London is Rainy and 15.0°C.")
         self.assertEqual(mock_client.chat.completions.create.call_count, 2)
+        mock_agent_client.get.assert_called_once_with("/api/weather?city=London")
 
         # Check tool execution
         tool_msg = next((m for m in session.messages if m.get("role") == "tool"), None)
         self.assertIsNotNone(tool_msg)
         tool_content = json.loads(tool_msg["content"])
-        self.assertEqual(tool_content["location"], "London")
-        self.assertIn("temperature", tool_content)
-        self.assertIn("condition", tool_content)
+        self.assertEqual(tool_content["city"], "London")
+        self.assertEqual(tool_content["temperature"], 15.0)
+        self.assertEqual(tool_content["condition"], "Rainy")
 
     async def test_get_current_datetime(self):
         mock_client = AsyncMock()
@@ -1221,7 +1233,7 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         mock_tool_call_2.type = "function"
         mock_tool_call_2.function.name = "get_weather"
         mock_tool_call_2.function.arguments = json.dumps({
-            "location": "Madrid"
+            "city": "Madrid"
         })
         mock_msg_2.tool_calls = [mock_tool_call_2]
         mock_response_2.choices = [MagicMock(message=mock_msg_2)]

@@ -372,16 +372,16 @@ class ChatSession:
                 "type": "function",
                 "function": {
                     "name": "get_weather",
-                    "description": "Get the current mock weather for a given location.",
+                    "description": "Get the current mock weather for a given city.",
                     "parameters": {
                         "type": "object",
                         "properties": {
-                            "location": {
+                            "city": {
                                 "type": "string",
-                                "description": "The location to get the weather for."
+                                "description": "The city to get the weather for."
                             }
                         },
-                        "required": ["location"]
+                        "required": ["city"]
                     }
                 }
             },
@@ -1107,17 +1107,22 @@ class ChatSession:
 
                 elif tool_call.function.name == "get_weather":
                     args = json.loads(tool_call.function.arguments)
-                    location = args.get("location", "Unknown Location")
+                    city = args.get("city")
 
-                    conditions = ["Sunny", "Cloudy", "Rainy", "Snowy", "Windy"]
-                    weather_condition = random.choice(conditions)
-                    temperature = random.randint(-10, 35)
-
-                    tool_content = json.dumps({
-                        "location": location,
-                        "temperature": f"{temperature}°C",
-                        "condition": weather_condition
-                    })
+                    if self.agent_client:
+                        try:
+                            import urllib.parse
+                            encoded_city = urllib.parse.quote(city) if city else ""
+                            url = f"/api/weather?city={encoded_city}"
+                            res = await self.agent_client.get(url)
+                            if res.status_code == 200:
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Failed to get weather, status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": f"HTTP request failed: {str(e)}"})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
 
                     self.messages.append({
                         "role": "tool",

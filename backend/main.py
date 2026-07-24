@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import time
 from fastapi.responses import JSONResponse
-from routers import screens, data, upload, auth, crud, tasks, download, health, websocket, stream, graphql, webhooks, cache, email, features, extract, analytics, audit_logs, notifications, comments, profile, settings, search, translation, weather
+from routers import screens, data, upload, auth, crud, tasks, download, health, websocket, stream, graphql, webhooks, cache, email, features, extract, analytics, audit_logs, notifications, comments, profile, settings, search, translation, weather, events
 
 app = FastAPI()
 
@@ -96,3 +96,4 @@ app.include_router(settings.router)
 app.include_router(search.router)
 app.include_router(translation.router)
 app.include_router(weather.router)
+app.include_router(events.router)

@@ -2228,3 +2228,108 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         response = await session.process_user_input("Delete comment c1")
         self.assertEqual(response, "Comment deleted.")
         mock_agent_client.delete.assert_called_with("/api/comments/c1")
+
+    async def test_manage_subscriptions_create(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"subscription_id": "sub_1", "status": "active"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_sub_create"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_subscriptions"
+        mock_tool_call.function.arguments = json.dumps({"action": "create", "plan_id": "plan_A", "user_id": "user_1"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Subscription created."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Create subscription")
+        self.assertEqual(response, "Subscription created.")
+        mock_agent_client.post.assert_called_with("/api/subscriptions", json={"plan_id": "plan_A", "user_id": "user_1"})
+
+    async def test_manage_subscriptions_get(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"subscription_id": "sub_1", "status": "active"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_sub_get"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_subscriptions"
+        mock_tool_call.function.arguments = json.dumps({"action": "get", "subscription_id": "sub_1"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Subscription found."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Get subscription")
+        self.assertEqual(response, "Subscription found.")
+        mock_agent_client.get.assert_called_with("/api/subscriptions/sub_1")
+
+    async def test_manage_subscriptions_cancel(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.delete.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"detail": "Subscription canceled successfully", "subscription_id": "sub_1"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_sub_cancel"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_subscriptions"
+        mock_tool_call.function.arguments = json.dumps({"action": "cancel", "subscription_id": "sub_1"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Subscription canceled."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Cancel subscription")
+        self.assertEqual(response, "Subscription canceled.")
+        mock_agent_client.delete.assert_called_with("/api/subscriptions/sub_1")

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { BaseControl } from '../base-control/base-control';
 import { ApiService } from '../../services/api';
 import { forkJoin, Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map, filter } from 'rxjs/operators';
+import { HttpEvent, HttpEventType, HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-file-control',
@@ -14,6 +15,7 @@ import { catchError } from 'rxjs/operators';
 export class FileControlComponent extends BaseControl implements OnInit, OnDestroy {
   isUploading = false;
   uploadError: string | null = null;
+  uploadProgress: Record<string, number> = {};
   private apiService = inject(ApiService);
 
   override ngOnInit() {
@@ -32,11 +34,24 @@ export class FileControlComponent extends BaseControl implements OnInit, OnDestr
       this.isUploading = true;
       const filesArray = Array.from(input.files);
 
+      this.uploadProgress = {};
+      filesArray.forEach(f => this.uploadProgress[f.name] = 0);
+
       if (this.def.multiple) {
         const uploadRequests = filesArray.map(file =>
           this.apiService.uploadFile(file).pipe(
+            map((event: HttpEvent<any>) => {
+              if (event.type === HttpEventType.UploadProgress) {
+                if (event.total) {
+                  this.uploadProgress[file.name] = Math.round(100 * event.loaded / event.total);
+                }
+              }
+              return event;
+            }),
+            filter((event: HttpEvent<any>) => event.type === HttpEventType.Response),
+            map((event: any) => (event as HttpResponse<any>).body),
             catchError(err => {
-              console.error('File upload failed', err);
+              console.error(`File upload failed for ${file.name}`, err);
               return of(null); // Return null for failed uploads to handle them gracefully
             })
           )
@@ -62,9 +77,15 @@ export class FileControlComponent extends BaseControl implements OnInit, OnDestr
         const file = filesArray[0];
         this.sub.add(
           this.apiService.uploadFile(file).subscribe({
-            next: (response) => {
-              this.isUploading = false;
-              this.onValueChange(response);
+            next: (event: HttpEvent<any>) => {
+              if (event.type === HttpEventType.UploadProgress) {
+                if (event.total) {
+                  this.uploadProgress[file.name] = Math.round(100 * event.loaded / event.total);
+                }
+              } else if (event.type === HttpEventType.Response) {
+                this.isUploading = false;
+                this.onValueChange((event as HttpResponse<any>).body);
+              }
             },
             error: (err) => {
               console.error('File upload failed', err);
@@ -76,6 +97,7 @@ export class FileControlComponent extends BaseControl implements OnInit, OnDestr
         );
       }
     } else {
+      this.uploadProgress = {};
       this.onValueChange(null);
     }
   }

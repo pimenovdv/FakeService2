@@ -5,6 +5,7 @@ import { ApiService } from '../../services/api';
 import { ComponentDef } from '../../models/screen.model';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { of, throwError } from 'rxjs';
+import { HttpEventType, HttpResponse } from '@angular/common/http';
 
 describe('FileControlComponent', () => {
   let component: FileControlComponent;
@@ -68,7 +69,7 @@ describe('FileControlComponent', () => {
     const inputElement = fixture.nativeElement.querySelector('input[type="file"]');
 
     apiServiceSpy.uploadFile.mockImplementation((file: File) => {
-        return of({ file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name });
+        return of(new HttpResponse({ body: { file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name } }));
     });
 
     Object.defineProperty(inputElement, 'files', {
@@ -90,7 +91,7 @@ describe('FileControlComponent', () => {
     const inputElement = fixture.nativeElement.querySelector('input[type="file"]');
 
     apiServiceSpy.uploadFile.mockImplementation((file: File) => {
-        return of({ file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name });
+        return of(new HttpResponse({ body: { file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name } }));
     });
 
     Object.defineProperty(inputElement, 'files', {
@@ -127,7 +128,7 @@ describe('FileControlComponent', () => {
 
     apiServiceSpy.uploadFile.mockImplementation((file: File) => {
         if (file.name === 'file1.txt') {
-            return of({ file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name });
+            return of(new HttpResponse({ body: { file_id: `id_${file.name}`, url: `/mock-uploads/id_${file.name}/${file.name}`, filename: file.name } }));
         } else {
             return throwError(() => new Error('Upload failed'));
         }

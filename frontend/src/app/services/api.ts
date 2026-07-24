@@ -35,6 +35,9 @@ export class ApiService {
   uploadFile(file: File): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<any>(`${this.baseUrl}/api/upload`, formData);
+    return this.http.post<any>(`${this.baseUrl}/api/upload`, formData, {
+      reportProgress: true,
+      observe: 'events'
+    });
   }
 }

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { BaseControl } from '../base-control/base-control';
 import { ApiService } from '../../services/api';
 import { forkJoin, Observable, of } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, map, filter } from 'rxjs/operators';
+import { HttpEventType, HttpResponse, HttpEvent } from '@angular/common/http';
 
 @Component({
   selector: 'app-file-control',
@@ -14,6 +15,7 @@ import { catchError } from 'rxjs/operators';
 export class FileControlComponent extends BaseControl implements OnInit, OnDestroy {
   isUploading = false;
   uploadError: string | null = null;
+  uploadProgresses: { [key: string]: number } = {};
   private apiService = inject(ApiService);
 
   override ngOnInit() {
@@ -27,20 +29,32 @@ export class FileControlComponent extends BaseControl implements OnInit, OnDestr
   onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.uploadError = null;
+    this.uploadProgresses = {};
 
     if (input.files && input.files.length > 0) {
       this.isUploading = true;
       const filesArray = Array.from(input.files);
 
       if (this.def.multiple) {
-        const uploadRequests = filesArray.map(file =>
-          this.apiService.uploadFile(file).pipe(
+        const uploadRequests = filesArray.map(file => {
+          this.uploadProgresses[file.name] = 0;
+          return this.apiService.uploadFile(file).pipe(
+            map((event: HttpEvent<any>) => {
+              if (event.type === HttpEventType.UploadProgress && event.total) {
+                this.uploadProgresses[file.name] = Math.round(100 * event.loaded / event.total);
+                return null;
+              } else if (event.type === HttpEventType.Response) {
+                return event.body;
+              }
+              return null;
+            }),
+            filter((res): res is any => res !== null),
             catchError(err => {
-              console.error('File upload failed', err);
+              console.error(`File upload failed for ${file.name}`, err);
               return of(null); // Return null for failed uploads to handle them gracefully
             })
-          )
-        );
+          );
+        });
 
         this.sub.add(
           forkJoin(uploadRequests).subscribe(responses => {
@@ -60,11 +74,16 @@ export class FileControlComponent extends BaseControl implements OnInit, OnDestr
         );
       } else {
         const file = filesArray[0];
+        this.uploadProgresses[file.name] = 0;
         this.sub.add(
           this.apiService.uploadFile(file).subscribe({
-            next: (response) => {
-              this.isUploading = false;
-              this.onValueChange(response);
+            next: (event: HttpEvent<any>) => {
+              if (event.type === HttpEventType.UploadProgress && event.total) {
+                this.uploadProgresses[file.name] = Math.round(100 * event.loaded / event.total);
+              } else if (event.type === HttpEventType.Response) {
+                this.isUploading = false;
+                this.onValueChange(event.body);
+              }
             },
             error: (err) => {
               console.error('File upload failed', err);

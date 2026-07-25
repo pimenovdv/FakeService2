@@ -2585,6 +2585,133 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "Ticket updated.")
         mock_agent_client.patch.assert_called_with("/api/tickets/ticket_3", json={"status": "closed"})
 
+    async def test_manage_devices_get(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: [{"id": "dev_1", "name": "Device 1", "type": "desktop"}]
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_devices_get"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_devices"
+        mock_tool_call.function.arguments = json.dumps({"action": "get"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Devices listed."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ]
+
+        response = await session.process_user_input("list devices")
+        self.assertEqual(response, "Devices listed.")
+
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        tool_content = json.loads(session.messages[3]["content"])
+        self.assertEqual(tool_content[0]["name"], "Device 1")
+        mock_agent_client.get.assert_called_with("/api/devices")
+
+    async def test_manage_devices_create(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"id": "dev_2", "name": "Device 2", "type": "mobile"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_devices_create"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_devices"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "create",
+            "name": "Device 2",
+            "type": "mobile",
+            "os_version": "iOS 16"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Device registered."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ]
+
+        response = await session.process_user_input("register device")
+        self.assertEqual(response, "Device registered.")
+
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertIn("Device registered", session.messages[3]["content"])
+        mock_agent_client.post.assert_called_with("/api/devices", json={"name": "Device 2", "type": "mobile", "os_version": "iOS 16"})
+
+    async def test_manage_devices_delete(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.delete.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"status": "deleted"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_devices_delete"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_devices"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "delete",
+            "device_id": "dev_3"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Device removed."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create.side_effect = [
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ]
+
+        response = await session.process_user_input("remove device")
+        self.assertEqual(response, "Device removed.")
+
+        self.assertEqual(len(session.messages), 5)
+        self.assertEqual(session.messages[3]["role"], "tool")
+        self.assertIn("Device deleted", session.messages[3]["content"])
+        mock_agent_client.delete.assert_called_with("/api/devices/dev_3")
+
+
     async def test_manage_user_tasks_get(self):
         mock_client = AsyncMock()
         mock_agent_client = AsyncMock()

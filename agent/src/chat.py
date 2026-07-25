@@ -30,6 +30,40 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_devices",
+                    "description": "Manage devices (list, register, delete).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "create", "delete"],
+                                "description": "The action to perform: 'get' to list all devices, 'create' to register a device, 'delete' to remove a device."
+                            },
+                            "device_id": {
+                                "type": "string",
+                                "description": "The ID of the device (required for delete)."
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Name of the device (required for create)."
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "Type of the device (required for create)."
+                            },
+                            "os_version": {
+                                "type": "string",
+                                "description": "OS version of the device."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_user_tasks",
                     "description": "Manage user tasks (list, create, update, delete).",
                     "parameters": {
@@ -1662,6 +1696,52 @@ class ChatSession:
                             tool_content = json.dumps({"error": f"HTTP request failed: {str(e)}"})
                     else:
                         tool_content = json.dumps({"error": "No agent_client available"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_devices":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                res = await self.agent_client.get("/api/devices")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = f"Failed to list devices: {res.text}"
+                            elif action == "create":
+                                payload = {}
+                                if "name" in args:
+                                    payload["name"] = args["name"]
+                                if "type" in args:
+                                    payload["type"] = args["type"]
+                                if "os_version" in args:
+                                    payload["os_version"] = args["os_version"]
+                                res = await self.agent_client.post("/api/devices", json=payload)
+                                if res.status_code == 200:
+                                    tool_content = f"Device registered: {res.json()}"
+                                else:
+                                    tool_content = f"Failed to register device: {res.text}"
+                            elif action == "delete":
+                                device_id = args.get("device_id")
+                                if device_id:
+                                    res = await self.agent_client.delete(f"/api/devices/{device_id}")
+                                    if res.status_code == 200:
+                                        tool_content = f"Device deleted: {res.json()}"
+                                    else:
+                                        tool_content = f"Failed to delete device: {res.text}"
+                                else:
+                                    tool_content = "device_id is required to delete a device."
+                        except Exception as e:
+                            tool_content = f"Error managing devices: {str(e)}"
+                    else:
+                        tool_content = "Agent client not available."
 
                     self.messages.append({
                         "role": "tool",

@@ -30,6 +30,27 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_email",
+                    "description": "Manage emails (send, get_outbox, clear_outbox).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "description": "The action to perform: 'send' to send an email, 'get_outbox' to get the email outbox, 'clear_outbox' to clear the outbox."
+                            },
+                            "payload": {
+                                "type": "object",
+                                "description": "The payload for creating/sending an email. Required for 'send' action. Must contain 'to', 'subject', and 'body'."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_devices",
                     "description": "Manage devices (list, register, delete).",
                     "parameters": {
@@ -1696,6 +1717,44 @@ class ChatSession:
                             tool_content = json.dumps({"error": f"HTTP request failed: {str(e)}"})
                     else:
                         tool_content = json.dumps({"error": "No agent_client available"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_email":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+                    payload = args.get("payload", {})
+
+                    if self.agent_client:
+                        try:
+                            if action == "send":
+                                res = await self.agent_client.post("/api/email/send", json=payload)
+                                if res.status_code in (200, 201):
+                                    tool_content = f"Email sent successfully: {res.text}"
+                                else:
+                                    tool_content = f"Failed to send email: {res.text}"
+                            elif action == "get_outbox":
+                                res = await self.agent_client.get("/api/email/outbox")
+                                if res.status_code == 200:
+                                    tool_content = f"Email outbox: {res.text}"
+                                else:
+                                    tool_content = f"Failed to get email outbox: {res.text}"
+                            elif action == "clear_outbox":
+                                res = await self.agent_client.delete("/api/email/outbox")
+                                if res.status_code in (200, 204):
+                                    tool_content = "Email outbox cleared successfully."
+                                else:
+                                    tool_content = f"Failed to clear email outbox: {res.text}"
+                            else:
+                                tool_content = f"Unknown manage_email action: {action}"
+                        except Exception as e:
+                            tool_content = f"Error managing email: {e}"
+                    else:
+                        tool_content = "No API client available to manage emails."
 
                     self.messages.append({
                         "role": "tool",

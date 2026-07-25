@@ -2863,3 +2863,121 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         response = await session.process_user_input("Delete user task")
         self.assertEqual(response, "User task deleted.")
         mock_agent_client.delete.assert_called_with("/api/user-tasks/task_4")
+
+    async def test_manage_email_send(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=201,
+            text='{"id": "msg_1", "to": "test@example.com", "subject": "Hello", "body": "World", "sent_at": "2023-10-27T10:00:00Z"}'
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_email_send"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_email"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "send",
+            "payload": {
+                "to": "test@example.com",
+                "subject": "Hello",
+                "body": "World"
+            }
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Email sent."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Send email")
+        self.assertEqual(response, "Email sent.")
+        mock_agent_client.post.assert_called_with("/api/email/send", json={"to": "test@example.com", "subject": "Hello", "body": "World"})
+        self.assertIn("Email sent successfully", session.messages[3]["content"])
+
+    async def test_manage_email_get_outbox(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            text='[{"id": "msg_1", "to": "test@example.com", "subject": "Hello", "body": "World", "sent_at": "2023-10-27T10:00:00Z"}]'
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_email_get_outbox"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_email"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "get_outbox"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Email outbox retrieved."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Get email outbox")
+        self.assertEqual(response, "Email outbox retrieved.")
+        mock_agent_client.get.assert_called_with("/api/email/outbox")
+        self.assertIn("Email outbox:", session.messages[3]["content"])
+
+    async def test_manage_email_clear_outbox(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.delete.return_value = MagicMock(
+            status_code=204
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_email_clear_outbox"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_email"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "clear_outbox"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Email outbox cleared."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Clear email outbox")
+        self.assertEqual(response, "Email outbox cleared.")
+        mock_agent_client.delete.assert_called_with("/api/email/outbox")
+        self.assertIn("Email outbox cleared successfully.", session.messages[3]["content"])

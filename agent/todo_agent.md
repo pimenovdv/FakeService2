@@ -9,4 +9,4 @@ This document outlines the step-by-step development process for the Python agent
 
 ## Planned Features
 - [x] **Phase 51:** Implement user tasks management endpoints (`/api/user-tasks`) support in the Python agent to list, create, update, and delete mock user tasks.
-- [ ] **Phase 52:** Implement devices management endpoints (`/api/devices`) support in the Python agent to list, register, and delete mock devices.
+- [x] **Phase 52:** Implement devices management endpoints (`/api/devices`) support in the Python agent to list, register, and delete mock devices.

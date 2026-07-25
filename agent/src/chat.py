@@ -30,6 +30,44 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_tickets",
+                    "description": "Manage support tickets (list, create, update).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "create", "update"],
+                                "description": "The action to perform: 'get' to list all tickets, 'create' to create a ticket, 'update' to update a ticket's status."
+                            },
+                            "ticket_id": {
+                                "type": "string",
+                                "description": "The ID of the ticket to update (required for update)."
+                            },
+                            "subject": {
+                                "type": "string",
+                                "description": "Subject of the ticket (required for create)."
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Description of the issue (required for create)."
+                            },
+                            "user_id": {
+                                "type": "string",
+                                "description": "ID of the user creating the ticket (required for create)."
+                            },
+                            "status": {
+                                "type": "string",
+                                "description": "New status for the ticket (required for update)."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_events",
                     "description": "Manage mock calendar events (list, create).",
                     "parameters": {
@@ -1590,6 +1628,54 @@ class ChatSession:
                             tool_content = json.dumps({"error": f"HTTP request failed: {str(e)}"})
                     else:
                         tool_content = json.dumps({"error": "No agent_client available"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_tickets":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                res = await self.agent_client.get("/api/tickets")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get tickets, status code {res.status_code}"})
+                            elif action == "create":
+                                subject = args.get("subject")
+                                description = args.get("description")
+                                user_id = args.get("user_id")
+                                if subject and description and user_id:
+                                    res = await self.agent_client.post("/api/tickets", json={"subject": subject, "description": description, "user_id": user_id})
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to create ticket, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "subject, description, and user_id are required for create action"})
+                            elif action == "update":
+                                ticket_id = args.get("ticket_id")
+                                status = args.get("status")
+                                if ticket_id and status:
+                                    res = await self.agent_client.patch(f"/api/tickets/{ticket_id}", json={"status": status})
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to update ticket, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "ticket_id and status are required for update action"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
 
                     self.messages.append({
                         "role": "tool",

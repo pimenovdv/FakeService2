@@ -2470,3 +2470,117 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         response = await session.process_user_input("Cancel subscription")
         self.assertEqual(response, "Subscription canceled.")
         mock_agent_client.delete.assert_called_with("/api/subscriptions/sub_1")
+
+    async def test_manage_tickets_get(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: [{"ticket_id": "ticket_1", "subject": "Issue 1"}]
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_tickets_get"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_tickets"
+        mock_tool_call.function.arguments = json.dumps({"action": "get"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Tickets listed."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Get tickets")
+        self.assertEqual(response, "Tickets listed.")
+        mock_agent_client.get.assert_called_with("/api/tickets")
+
+    async def test_manage_tickets_create(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"ticket_id": "ticket_2", "subject": "Issue 2"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_tickets_create"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_tickets"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "create",
+            "subject": "Issue 2",
+            "description": "It is broken",
+            "user_id": "user_1"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Ticket created."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Create ticket")
+        self.assertEqual(response, "Ticket created.")
+        mock_agent_client.post.assert_called_with("/api/tickets", json={"subject": "Issue 2", "description": "It is broken", "user_id": "user_1"})
+
+    async def test_manage_tickets_update(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.patch.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"ticket_id": "ticket_3", "status": "closed"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_tickets_update"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_tickets"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "update",
+            "ticket_id": "ticket_3",
+            "status": "closed"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Ticket updated."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Update ticket")
+        self.assertEqual(response, "Ticket updated.")
+        mock_agent_client.patch.assert_called_with("/api/tickets/ticket_3", json={"status": "closed"})

@@ -34,12 +34,13 @@ import { CaptchaControlComponent } from '../captcha-control/captcha-control.comp
 import { ProgressControlComponent } from '../progress-control/progress-control';
 import { MarkdownControlComponent } from '../markdown-control/markdown-control.component';
 import { DataTableControlComponent } from '../data-table-control/data-table-control.component';
+import { RichTextControl } from '../rich-text-control/rich-text-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent, CaptchaControlComponent, ProgressControlComponent, MarkdownControlComponent, DataTableControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent, CaptchaControlComponent, ProgressControlComponent, MarkdownControlComponent, DataTableControlComponent, RichTextControl],
   templateUrl: './dynamic-field.component.html',
   animations: [
     trigger('fadeSlideInOut', [

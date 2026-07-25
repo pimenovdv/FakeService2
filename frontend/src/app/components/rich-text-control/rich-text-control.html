@@ -1,0 +1,21 @@
+<div class="rich-text-control-container">
+  <label *ngIf="def.label" [for]="def.id" class="control-label">{{ def.label }}</label>
+  <quill-editor
+    [id]="def.id"
+    [ngModel]="value"
+    (ngModelChange)="onValueChange($event)"
+    [placeholder]="def.placeholder || ''"
+    [readOnly]="def.disabled || false"
+    (onBlur)="touched = true; validate()"
+  ></quill-editor>
+
+  <div class="flex justify-between items-start mt-1">
+    <div class="error-messages flex-1">
+      <ng-container *ngIf="touched && !isValid">
+        <div *ngFor="let error of errors" class="error-text">
+          {{ error }}
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>

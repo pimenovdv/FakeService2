@@ -26,6 +26,43 @@ export class FileControlComponent extends BaseControl implements OnInit, OnDestr
     super.ngOnDestroy();
   }
 
+  draggedIndex: number | null = null;
+
+  onDragStart(event: DragEvent, index: number) {
+    this.draggedIndex = index;
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      // Set some data to make Firefox allow the drag
+      event.dataTransfer.setData('text/plain', index.toString());
+    }
+  }
+
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onDrop(event: DragEvent, dropIndex: number) {
+    event.preventDefault();
+    if (this.draggedIndex !== null && this.draggedIndex !== dropIndex) {
+      const newValue = [...(this.value || [])];
+      const movedItem = newValue.splice(this.draggedIndex, 1)[0];
+      newValue.splice(dropIndex, 0, movedItem);
+      this.onValueChange(newValue);
+    }
+    this.draggedIndex = null;
+  }
+
+  removeFile(index: number) {
+    if (this.value && Array.isArray(this.value)) {
+      const newValue = [...this.value];
+      newValue.splice(index, 1);
+      this.onValueChange(newValue.length > 0 ? newValue : null);
+    }
+  }
+
   onFileChange(event: Event) {
     const input = event.target as HTMLInputElement;
     this.uploadError = null;
@@ -69,7 +106,8 @@ export class FileControlComponent extends BaseControl implements OnInit, OnDestr
                 if (successfulUploads.length < filesArray.length) {
                    this.uploadError = `Only ${successfulUploads.length} out of ${filesArray.length} files uploaded successfully.`;
                 }
-                this.onValueChange(successfulUploads);
+                const currentFiles = (this.def.multiple && Array.isArray(this.value)) ? this.value : [];
+                this.onValueChange(this.def.multiple ? [...currentFiles, ...successfulUploads] : successfulUploads);
             }
           })
         );

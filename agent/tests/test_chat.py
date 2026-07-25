@@ -2584,3 +2584,155 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         response = await session.process_user_input("Update ticket")
         self.assertEqual(response, "Ticket updated.")
         mock_agent_client.patch.assert_called_with("/api/tickets/ticket_3", json={"status": "closed"})
+
+    async def test_manage_user_tasks_get(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: [{"id": "task_1", "title": "Task 1", "completed": False}]
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_user_tasks_get"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_user_tasks"
+        mock_tool_call.function.arguments = json.dumps({"action": "get", "completed": False})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "User tasks listed."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Get user tasks")
+        self.assertEqual(response, "User tasks listed.")
+        mock_agent_client.get.assert_called_with("/api/user-tasks", params={"completed": "false"})
+
+    async def test_manage_user_tasks_create(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"id": "task_2", "title": "Task 2"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_user_tasks_create"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_user_tasks"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "create",
+            "title": "Task 2",
+            "description": "My task",
+            "completed": True
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "User task created."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Create user task")
+        self.assertEqual(response, "User task created.")
+        mock_agent_client.post.assert_called_with("/api/user-tasks", json={"title": "Task 2", "description": "My task", "completed": True})
+
+    async def test_manage_user_tasks_update(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.patch.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"id": "task_3", "completed": True}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_user_tasks_update"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_user_tasks"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "update",
+            "task_id": "task_3",
+            "completed": True
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "User task updated."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Update user task")
+        self.assertEqual(response, "User task updated.")
+        mock_agent_client.patch.assert_called_with("/api/user-tasks/task_3", json={"completed": True})
+
+    async def test_manage_user_tasks_delete(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.delete.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"status": "deleted"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_user_tasks_delete"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_user_tasks"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "delete",
+            "task_id": "task_4"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "User task deleted."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Delete user task")
+        self.assertEqual(response, "User task deleted.")
+        mock_agent_client.delete.assert_called_with("/api/user-tasks/task_4")

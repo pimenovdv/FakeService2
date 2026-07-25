@@ -65,6 +65,52 @@ describe('StepperControlComponent', () => {
     expect(decrementSpy).toHaveBeenCalledWith(4);
   });
 
+  it('should increment value by step', async () => {
+    const defWithStep = { ...baseDef, validations: [{ type: 'step' as any, value: 5 }] };
+    fixture.componentRef.setInput('def', defWithStep);
+    fixture.componentRef.setInput('value', 0);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const incrementSpy = vi.spyOn(component.valueChange, 'emit');
+
+    const incrementBtn = fixture.nativeElement.querySelector('.increment-btn');
+    incrementBtn.click();
+    fixture.detectChanges();
+
+    expect(incrementSpy).toHaveBeenCalledWith(5);
+  });
+
+  it('should decrement value by step', async () => {
+    const defWithStep = { ...baseDef, validations: [{ type: 'step' as any, value: 3 }] };
+    fixture.componentRef.setInput('def', defWithStep);
+    fixture.componentRef.setInput('value', 10);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const decrementSpy = vi.spyOn(component.valueChange, 'emit');
+
+    const decrementBtn = fixture.nativeElement.querySelector('.decrement-btn');
+    decrementBtn.click();
+    fixture.detectChanges();
+
+    expect(decrementSpy).toHaveBeenCalledWith(9);
+  });
+
+  it('should snap to closest valid step on increment when not on step', async () => {
+    const defWithStep = { ...baseDef, validations: [{ type: 'step' as any, value: 5 }, { type: 'min' as any, value: 2 }] };
+    fixture.componentRef.setInput('def', defWithStep);
+    fixture.componentRef.setInput('value', 4); // steps are 2, 7, 12, etc.
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const incrementSpy = vi.spyOn(component.valueChange, 'emit');
+    component.increment();
+    fixture.detectChanges();
+
+    expect(incrementSpy).toHaveBeenCalledWith(7);
+  });
+
   it('should respect min validation on decrement', async () => {
     const defWithMin = { ...baseDef, validations: [{ type: 'min' as any, value: 0 }] };
     fixture.componentRef.setInput('def', defWithMin);

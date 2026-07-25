@@ -30,6 +30,40 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_user_tasks",
+                    "description": "Manage user tasks (list, create, update, delete).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "create", "update", "delete"],
+                                "description": "The action to perform: 'get' to list all user tasks, 'create' to create a task, 'update' to update a task, 'delete' to delete a task."
+                            },
+                            "task_id": {
+                                "type": "string",
+                                "description": "The ID of the task (required for update and delete)."
+                            },
+                            "title": {
+                                "type": "string",
+                                "description": "Title of the task (required for create)."
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "Description of the task."
+                            },
+                            "completed": {
+                                "type": "boolean",
+                                "description": "Completion status of the task."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_tickets",
                     "description": "Manage support tickets (list, create, update).",
                     "parameters": {
@@ -1634,6 +1668,68 @@ class ChatSession:
                         "tool_call_id": tool_call.id,
                         "content": tool_content
                     })
+
+                elif tool_call.function.name == "manage_user_tasks":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                params = {}
+                                if "completed" in args:
+                                    params["completed"] = "true" if args["completed"] else "false"
+                                res = await self.agent_client.get("/api/user-tasks", params=params)
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = f"Failed to list user tasks: {res.text}"
+                            elif action == "create":
+                                payload = {}
+                                if "title" in args:
+                                    payload["title"] = args["title"]
+                                if "description" in args:
+                                    payload["description"] = args["description"]
+                                if "completed" in args:
+                                    payload["completed"] = args["completed"]
+                                res = await self.agent_client.post("/api/user-tasks", json=payload)
+                                if res.status_code == 200:
+                                    tool_content = f"Task created: {res.json()}"
+                                else:
+                                    tool_content = f"Failed to create user task: {res.text}"
+                            elif action == "update":
+                                task_id = args.get("task_id")
+                                if task_id:
+                                    payload = {}
+                                    if "title" in args:
+                                        payload["title"] = args["title"]
+                                    if "description" in args:
+                                        payload["description"] = args["description"]
+                                    if "completed" in args:
+                                        payload["completed"] = args["completed"]
+                                    res = await self.agent_client.patch(f"/api/user-tasks/{task_id}", json=payload)
+                                    if res.status_code == 200:
+                                        tool_content = f"Task updated: {res.json()}"
+                                    else:
+                                        tool_content = f"Failed to update task: {res.text}"
+                                else:
+                                    tool_content = "task_id is required to update a user task."
+                            elif action == "delete":
+                                task_id = args.get("task_id")
+                                if task_id:
+                                    res = await self.agent_client.delete(f"/api/user-tasks/{task_id}")
+                                    if res.status_code == 200:
+                                        tool_content = f"Task deleted: {res.json()}"
+                                    else:
+                                        tool_content = f"Failed to delete task: {res.text}"
+                                else:
+                                    tool_content = "task_id is required to delete a user task."
+                            else:
+                                tool_content = f"Unknown action: {action}"
+                        except Exception as e:
+                            tool_content = f"Error managing user tasks: {e}"
+                    else:
+                        tool_content = "Agent client not configured."
 
                 elif tool_call.function.name == "manage_tickets":
                     args = json.loads(tool_call.function.arguments)

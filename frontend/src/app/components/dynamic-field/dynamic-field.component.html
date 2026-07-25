@@ -29,6 +29,7 @@
   <app-captcha-control *ngSwitchCase="'captcha'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-captcha-control>
   <app-progress-control *ngSwitchCase="'progress'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-progress-control>
   <app-markdown-control *ngSwitchCase="'markdown'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-markdown-control>
+  <app-data-table-control *ngSwitchCase="'data_table'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-data-table-control>
 
   <fieldset *ngSwitchCase="'group'" class="border border-gray-300 p-4 rounded-md mb-4" [id]="componentDef.id">
     <legend *ngIf="componentDef.label" class="text-sm font-semibold text-gray-700 px-2">{{ componentDef.label }}</legend>

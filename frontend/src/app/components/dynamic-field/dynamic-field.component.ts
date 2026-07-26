@@ -36,12 +36,13 @@ import { MarkdownControlComponent } from '../markdown-control/markdown-control.c
 import { DataTableControlComponent } from '../data-table-control/data-table-control.component';
 import { RichTextControl } from '../rich-text-control/rich-text-control';
 import { SignaturePadControlComponent } from '../signature-pad-control/signature-pad-control';
+import { BarcodeScannerControlComponent } from '../barcode-scanner-control/barcode-scanner-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent, CaptchaControlComponent, ProgressControlComponent, MarkdownControlComponent, DataTableControlComponent, RichTextControl, SignaturePadControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent, CaptchaControlComponent, ProgressControlComponent, MarkdownControlComponent, DataTableControlComponent, RichTextControl, SignaturePadControlComponent, BarcodeScannerControlComponent],
   templateUrl: './dynamic-field.component.html',
   animations: [
     trigger('fadeSlideInOut', [

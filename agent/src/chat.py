@@ -51,6 +51,59 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_orders",
+                    "description": "Manage orders. Action can be 'create' (requires items, customer_id), 'list', or 'get' (requires order_id).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {"type": "string"},
+                            "items": {"type": "array", "items": {"type": "object"}},
+                            "customer_id": {"type": "string"},
+                            "order_id": {"type": "string"}
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "manage_invoices",
+                    "description": "Manage invoices. Action can be 'create' (requires items, customer_id), 'list', 'get' (requires invoice_id), or 'pay' (requires invoice_id).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {"type": "string"},
+                            "items": {"type": "array", "items": {"type": "object"}},
+                            "customer_id": {"type": "string"},
+                            "invoice_id": {"type": "string"}
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "manage_products",
+                    "description": "Manage products. Action can be 'create' (requires name, price, stock; optional description), 'list', 'get' (requires product_id), 'update' (requires product_id, plus optional fields), or 'delete' (requires product_id).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {"type": "string"},
+                            "product_id": {"type": "string"},
+                            "name": {"type": "string"},
+                            "description": {"type": "string"},
+                            "price": {"type": "number"},
+                            "stock": {"type": "integer"}
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_devices",
                     "description": "Manage devices (list, register, delete).",
                     "parameters": {
@@ -1755,6 +1808,184 @@ class ChatSession:
                             tool_content = f"Error managing email: {e}"
                     else:
                         tool_content = "No API client available to manage emails."
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_orders":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "list":
+                                res = await self.agent_client.get("/api/orders")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get orders, status code {res.status_code}"})
+                            elif action == "get":
+                                order_id = args.get("order_id")
+                                if order_id:
+                                    res = await self.agent_client.get(f"/api/orders/{order_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to get order, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "order_id is required for get action"})
+                            elif action == "create":
+                                items = args.get("items")
+                                customer_id = args.get("customer_id")
+                                if items and customer_id:
+                                    res = await self.agent_client.post("/api/orders", json={"items": items, "customer_id": customer_id})
+                                    if res.status_code in (200, 201):
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to create order, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "items and customer_id are required for create action"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No API client available"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_invoices":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "list":
+                                res = await self.agent_client.get("/api/invoices")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get invoices, status code {res.status_code}"})
+                            elif action == "get":
+                                invoice_id = args.get("invoice_id")
+                                if invoice_id:
+                                    res = await self.agent_client.get(f"/api/invoices/{invoice_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to get invoice, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "invoice_id is required for get action"})
+                            elif action == "create":
+                                items = args.get("items")
+                                customer_id = args.get("customer_id")
+                                if items and customer_id:
+                                    res = await self.agent_client.post("/api/invoices", json={"items": items, "customer_id": customer_id})
+                                    if res.status_code in (200, 201):
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to create invoice, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "items and customer_id are required for create action"})
+                            elif action == "pay":
+                                invoice_id = args.get("invoice_id")
+                                if invoice_id:
+                                    res = await self.agent_client.patch(f"/api/invoices/{invoice_id}/pay")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to pay invoice, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "invoice_id is required for pay action"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No API client available"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_products":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "list":
+                                res = await self.agent_client.get("/api/products")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get products, status code {res.status_code}"})
+                            elif action == "get":
+                                product_id = args.get("product_id")
+                                if product_id:
+                                    res = await self.agent_client.get(f"/api/products/{product_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to get product, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "product_id is required for get action"})
+                            elif action == "create":
+                                name = args.get("name")
+                                price = args.get("price")
+                                stock = args.get("stock")
+                                description = args.get("description")
+                                if name is not None and price is not None and stock is not None:
+                                    payload = {"name": name, "price": price, "stock": stock}
+                                    if description is not None:
+                                        payload["description"] = description
+                                    res = await self.agent_client.post("/api/products", json=payload)
+                                    if res.status_code in (200, 201):
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to create product, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "name, price, and stock are required for create action"})
+                            elif action == "update":
+                                product_id = args.get("product_id")
+                                if product_id:
+                                    payload = {}
+                                    if "name" in args: payload["name"] = args["name"]
+                                    if "description" in args: payload["description"] = args["description"]
+                                    if "price" in args: payload["price"] = args["price"]
+                                    if "stock" in args: payload["stock"] = args["stock"]
+                                    res = await self.agent_client.put(f"/api/products/{product_id}", json=payload)
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to update product, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "product_id is required for update action"})
+                            elif action == "delete":
+                                product_id = args.get("product_id")
+                                if product_id:
+                                    res = await self.agent_client.delete(f"/api/products/{product_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to delete product, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "product_id is required for delete action"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No API client available"})
 
                     self.messages.append({
                         "role": "tool",

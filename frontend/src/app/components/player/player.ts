@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonDef } from '../../models/screen.model';
 import { CommonModule } from '@angular/common';
@@ -29,7 +29,11 @@ export class Player implements OnInit, OnDestroy {
   private logicService = inject(LogicService);
   private draftService = inject(DraftService);
   private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
   private answerSubscription?: Subscription;
+
+  isVoiceNavActive = false;
+  private recognition: any;
 
   ngOnInit() {
     this.answerSubscription = this.stateService.answerChanges$.subscribe(change => {
@@ -70,6 +74,83 @@ export class Player implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.answerSubscription) {
       this.answerSubscription.unsubscribe();
+    }
+    this.stopVoiceNav();
+  }
+
+  toggleVoiceNav() {
+    if (this.isVoiceNavActive) {
+      this.stopVoiceNav();
+    } else {
+      this.startVoiceNav();
+    }
+  }
+
+  private startVoiceNav() {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      this.recognition = new SpeechRecognition();
+      this.recognition.continuous = true;
+      this.recognition.interimResults = false;
+
+      this.recognition.onstart = () => {
+        this.ngZone.run(() => {
+          this.isVoiceNavActive = true;
+          this.cdr.detectChanges();
+        });
+      };
+
+      this.recognition.onresult = (event: any) => {
+        const transcript = event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
+        this.ngZone.run(() => {
+          this.handleVoiceCommand(transcript);
+        });
+      };
+
+      this.recognition.onerror = (event: any) => {
+        console.error('Speech recognition error', event.error);
+        this.ngZone.run(() => {
+          this.stopVoiceNav();
+        });
+      };
+
+      this.recognition.onend = () => {
+        this.ngZone.run(() => {
+          if (this.isVoiceNavActive) {
+            // Restart if it unexpectedly ended but we still want it active
+            try {
+              this.recognition.start();
+            } catch (e) {
+              this.stopVoiceNav();
+            }
+          }
+        });
+      };
+
+      this.recognition.start();
+    } else {
+      console.warn('Speech Recognition API not supported in this browser.');
+    }
+  }
+
+  private stopVoiceNav() {
+    this.isVoiceNavActive = false;
+    if (this.recognition) {
+      this.recognition.stop();
+      this.recognition = null;
+    }
+    this.cdr.detectChanges();
+  }
+
+  private handleVoiceCommand(transcript: string) {
+    const screen = this.stateService.getScreen();
+    if (!screen || !screen.buttons) return;
+
+    for (const btn of screen.buttons) {
+      if (transcript.includes(btn.label.toLowerCase())) {
+        this.onButtonClick(btn);
+        break; // Only trigger one button
+      }
     }
   }
 

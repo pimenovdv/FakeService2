@@ -1,0 +1,47 @@
+<div class="control-container" [id]="def.id">
+  <label *ngIf="def.label" [for]="def.id" class="block text-sm font-medium text-gray-700 mb-1">{{ def.label }}</label>
+
+  <div class="flex flex-col gap-2">
+    <div class="flex items-center gap-2">
+        <input
+            type="text"
+            [id]="def.id"
+            [ngModel]="value"
+            (ngModelChange)="onValueChange($event)"
+            [placeholder]="def.placeholder || ''"
+            [disabled]="def.disabled || def.readonly || isScanning"
+            class="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm disabled:bg-gray-100 disabled:text-gray-500"
+            [ngClass]="{'border-red-300': errors.length > 0 && touched}"
+        >
+
+        <button type="button"
+                *ngIf="!isScanning"
+                (click)="startScan()"
+                [disabled]="!hasCameras || def.disabled || def.readonly"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed">
+            Start Scan
+        </button>
+        <button type="button"
+                *ngIf="isScanning"
+                (click)="stopScan()"
+                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+            Stop Scan
+        </button>
+    </div>
+
+    <div *ngIf="isScanning" class="scanner-container mt-2">
+        <video #videoElement class="scanner-video" autoplay playsinline></video>
+        <div class="scanner-overlay"></div>
+    </div>
+
+    <div *ngIf="scannerError" class="text-sm text-red-600 mt-1">
+        {{ scannerError }}
+    </div>
+  </div>
+
+  <div *ngIf="errors.length > 0 && touched" class="mt-1 text-sm text-red-600">
+    <ng-container *ngFor="let err of errors">
+      <div>{{ err }}</div>
+    </ng-container>
+  </div>
+</div>

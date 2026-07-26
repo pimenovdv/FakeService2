@@ -30,6 +30,58 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_crud_resources",
+                    "description": "Manage generic CRUD resources. Action can be 'list', 'get', 'create', 'update', or 'delete'.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["list", "get", "create", "update", "delete"],
+                                "description": "The action to perform."
+                            },
+                            "resource_name": {
+                                "type": "string",
+                                "description": "The name of the resource (e.g. 'users', 'posts'). Required for all actions."
+                            },
+                            "item_id": {
+                                "type": "string",
+                                "description": "The ID of the item. Required for 'get', 'update', and 'delete'."
+                            },
+                            "item_data": {
+                                "type": "object",
+                                "description": "The data for the item. Required for 'create' and 'update'."
+                            }
+                        },
+                        "required": ["action", "resource_name"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "manage_background_tasks",
+                    "description": "Manage background tasks. Action can be 'start' or 'get_status' (requires task_id).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["start", "get_status"],
+                                "description": "The action to perform."
+                            },
+                            "task_id": {
+                                "type": "string",
+                                "description": "The ID of the task to get status for (required for get_status)."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_email",
                     "description": "Manage emails (send, get_outbox, clear_outbox).",
                     "parameters": {
@@ -1148,6 +1200,85 @@ class ChatSession:
                         "content": json.dumps({"status": "success", "message": "Form submitted successfully."})
                     })
 
+
+                elif tool_call.function.name == "manage_background_tasks":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+                    if action == "start":
+                        try:
+                            resp = await self.agent_client.post("/api/tasks")
+                            mock_task_res = resp.json()
+                            tool_result = json.dumps(mock_task_res)
+                        except Exception as e:
+                            tool_result = json.dumps({"error": str(e)})
+                    elif action == "get_status":
+                        task_id = args.get("task_id")
+                        if not task_id:
+                            tool_result = json.dumps({"error": "task_id required for get_status action"})
+                        else:
+                            try:
+                                resp = await self.agent_client.get(f"/api/tasks/{task_id}")
+                                mock_status_res = resp.json()
+                                tool_result = json.dumps(mock_status_res)
+                            except Exception as e:
+                                tool_result = json.dumps({"error": str(e)})
+                    else:
+                        tool_result = json.dumps({"error": "Invalid action"})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_result
+                    })
+
+                elif tool_call.function.name == "manage_crud_resources":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+                    resource_name = args.get("resource_name")
+                    item_id = args.get("item_id")
+                    item_data = args.get("item_data", {})
+
+                    if not resource_name:
+                        tool_result = json.dumps({"error": "resource_name is required"})
+                    else:
+                        base_url = f"/api/resource/{resource_name}"
+                        try:
+                            if action == "list":
+                                resp = await self.agent_client.get(base_url)
+                                tool_result = json.dumps(resp.json())
+                            elif action == "get":
+                                if not item_id:
+                                    tool_result = json.dumps({"error": "item_id required for get"})
+                                else:
+                                    resp = await self.agent_client.get(f"{base_url}/{item_id}")
+                                    tool_result = json.dumps(resp.json())
+                            elif action == "create":
+                                resp = await self.agent_client.post(base_url, json=item_data)
+                                tool_result = json.dumps(resp.json())
+                            elif action == "update":
+                                if not item_id:
+                                    tool_result = json.dumps({"error": "item_id required for update"})
+                                else:
+                                    resp = await self.agent_client.put(f"{base_url}/{item_id}", json=item_data)
+                                    tool_result = json.dumps(resp.json())
+                            elif action == "delete":
+                                if not item_id:
+                                    tool_result = json.dumps({"error": "item_id required for delete"})
+                                else:
+                                    resp = await self.agent_client.delete(f"{base_url}/{item_id}")
+                                    tool_result = json.dumps({"status": "success", "message": f"Deleted item {item_id}"})
+                            else:
+                                tool_result = json.dumps({"error": f"Invalid action {action}"})
+                        except Exception as e:
+                            tool_result = json.dumps({"error": str(e)})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_result
+                    })
 
                 elif tool_call.function.name == "validate_form":
                     args = json.loads(tool_call.function.arguments)

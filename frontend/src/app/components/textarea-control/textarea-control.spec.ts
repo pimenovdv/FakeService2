@@ -7,6 +7,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 describe('TextareaControlComponent', () => {
   let component: TextareaControlComponent;
   let fixture: ComponentFixture<TextareaControlComponent>;
+  let mockSpeechRecognition: any;
 
   const mockDef: ComponentDef = {
     id: 'testTextarea',
@@ -20,6 +21,21 @@ describe('TextareaControlComponent', () => {
   };
 
   beforeEach(async () => {
+    mockSpeechRecognition = function() {
+      return {
+        start: vi.fn(),
+        stop: vi.fn(),
+        onstart: null,
+        onresult: null,
+        onerror: null,
+        onend: null,
+      };
+    };
+
+    if (typeof window !== 'undefined') {
+      (window as any).SpeechRecognition = mockSpeechRecognition;
+    }
+
     await TestBed.configureTestingModule({
       imports: [TextareaControlComponent]
     }).compileComponents();
@@ -104,5 +120,62 @@ describe('TextareaControlComponent', () => {
     const charCount = compiled.querySelector('.character-count');
 
     expect(charCount).toBeNull();
+  });
+
+  describe('Dictation (Web Speech API)', () => {
+    it('should initialize SpeechRecognition if enableDictation is true', () => {
+      const spy = vi.spyOn(window as any, 'SpeechRecognition');
+      component.def = { ...component.def, enableDictation: true };
+      component.ngOnInit();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should not initialize SpeechRecognition if enableDictation is false', () => {
+      const spy = vi.spyOn(window as any, 'SpeechRecognition');
+      spy.mockClear();
+      component.def = { ...component.def, enableDictation: false };
+      component.ngOnInit();
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('should toggle dictation on and off', () => {
+      component.def = { ...component.def, enableDictation: true };
+      component.ngOnInit();
+
+      const recognitionInstance = (component as any)['recognition'];
+
+      component.toggleDictation();
+      expect(recognitionInstance.start).toHaveBeenCalled();
+
+      component.isDictating = true; // simulate start
+      component.toggleDictation();
+      expect(recognitionInstance.stop).toHaveBeenCalled();
+    });
+
+    it('should append transcript to current value on result', () => {
+      component.def = { ...component.def, enableDictation: true };
+      component.ngOnInit();
+
+      const recognitionInstance = (component as any)['recognition'];
+      let emittedValue: any;
+      component.valueChange.subscribe(val => emittedValue = val);
+
+      component.value = 'Test';
+
+      recognitionInstance.onresult({
+        results: [[{ transcript: 'ing 123' }]]
+      });
+
+      expect(emittedValue).toBe('Test ing 123');
+      expect(component.value).toBe('Test ing 123');
+    });
+
+    it('should render dictation button when enableDictation is true', () => {
+      component.def = { ...component.def, enableDictation: true };
+      fixture.detectChanges();
+      const compiled = fixture.nativeElement as HTMLElement;
+      const dictationBtn = compiled.querySelector('.dictation-button');
+      expect(dictationBtn).toBeTruthy();
+    });
   });
 });

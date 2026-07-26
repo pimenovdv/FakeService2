@@ -39,6 +39,7 @@ export interface ComponentDef {
   accept?: string; // For file uploads
   multiple?: boolean; // For file uploads
   currencySymbol?: string;
+  enableDictation?: boolean;
   dependsOn?: string[]; // IDs of components this depends on
   components?: ComponentDef[]; // For grouped components
 }

@@ -30,6 +30,27 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "extract_document",
+                    "description": "Upload a local file (e.g. ID card or invoice) for document extraction.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "filepath": {
+                                "type": "string",
+                                "description": "The local path to the file to upload and extract data from."
+                            },
+                            "document_type": {
+                                "type": "string",
+                                "description": "Optional type of the document (e.g., 'id_card', 'invoice')."
+                            }
+                        },
+                        "required": ["filepath"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_crud_resources",
                     "description": "Manage generic CRUD resources. Action can be 'list', 'get', 'create', 'update', or 'delete'.",
                     "parameters": {
@@ -2552,6 +2573,44 @@ class ChatSession:
                                     tool_content = json.dumps({"error": "feature_name is required for delete action"})
                             else:
                                 tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "extract_document":
+                    args = json.loads(tool_call.function.arguments)
+                    filepath = args.get("filepath")
+                    document_type = args.get("document_type")
+
+                    if self.agent_client:
+                        try:
+                            if os.path.exists(filepath):
+                                filename = os.path.basename(filepath)
+                                mime_type, _ = mimetypes.guess_type(filepath)
+                                if not mime_type:
+                                    mime_type = "application/octet-stream"
+
+                                with open(filepath, "rb") as f:
+                                    files = {"file": (filename, f, mime_type)}
+                                    data = {}
+                                    if document_type:
+                                        data["document_type"] = document_type
+
+                                    res = await self.agent_client.post("/api/extract", files=files, data=data)
+
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to extract document, status code {res.status_code}", "response": res.text})
+                            else:
+                                tool_content = json.dumps({"error": f"File not found: {filepath}"})
                         except Exception as e:
                             tool_content = json.dumps({"error": str(e)})
                     else:

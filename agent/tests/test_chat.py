@@ -1,6 +1,7 @@
 import unittest
 import json
-from unittest.mock import AsyncMock, MagicMock
+import os
+from unittest.mock import AsyncMock, MagicMock, patch
 from src.chat import ChatSession, run_chat_loop
 
 class TestChatSession(unittest.IsolatedAsyncioTestCase):
@@ -674,8 +675,6 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
 
     async def test_process_user_input_export_chat_history_success(self):
         import tempfile
-        import os
-        import json
 
         mock_client = AsyncMock()
         mock_response = MagicMock()
@@ -1221,7 +1220,6 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
                 await session._call_llm([{"role": "user", "content": "hi"}])
 
     async def test_process_user_input_multi_turn_tool_calling(self):
-        import json
         mock_client = AsyncMock()
 
         # Turn 1: user asks a question, LLM responds with tool call 1 (translate)
@@ -1316,7 +1314,6 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(session.messages[3]["role"], "tool")
 
         result_json = session.messages[3]["content"]
-        import json
         result = json.loads(result_json)
 
         self.assertFalse(result["valid"])
@@ -1355,7 +1352,6 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "Validation complete")
 
         result_json = session.messages[3]["content"]
-        import json
         result = json.loads(result_json)
 
         self.assertFalse(result["valid"])
@@ -1394,7 +1390,6 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "Validation complete")
 
         result_json = session.messages[3]["content"]
-        import json
         result = json.loads(result_json)
 
         self.assertTrue(result["valid"])
@@ -2019,7 +2014,6 @@ class TestChatLoop(unittest.IsolatedAsyncioTestCase):
 class TestChatSessionPersistence(unittest.TestCase):
     def test_save_and_load_state(self):
         import tempfile
-        import os
 
         # Initialize and modify state
 
@@ -3622,3 +3616,52 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "Created item.")
         mock_agent_client.post.assert_called_with("/api/resource/items", json={"name": "New Item"})
         self.assertIn('{"id": "r2", "name": "New Item"}', session.messages[3]["content"])
+
+    async def test_extract_document(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"status": "success", "extracted_data": {"first_name": "John"}}
+        )
+
+        session = ChatSession("System Prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_extract_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "extract_document"
+        mock_tool_call.function.arguments = json.dumps({"filepath": "dummy.pdf", "document_type": "id_card"})
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_2 = MagicMock()
+        mock_msg_2.role = "assistant"
+        mock_msg_2.content = "Extracted data: John"
+        mock_msg_2.tool_calls = None
+        mock_msg_2.type = None
+
+        mock_client.chat.completions.create.side_effect = [
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_2)])
+        ]
+
+        with patch('os.path.exists', return_value=True), \
+             patch('builtins.open', unittest.mock.mock_open(read_data=b"dummy content")), \
+             patch('mimetypes.guess_type', return_value=('application/pdf', None)):
+
+            response = await session.process_user_input("Extract dummy.pdf")
+
+        self.assertEqual(response, "Extracted data: John")
+        mock_agent_client.post.assert_called_once()
+
+        args, kwargs = mock_agent_client.post.call_args
+        self.assertEqual(args[0], "/api/extract")
+        self.assertIn("files", kwargs)
+        self.assertIn("file", kwargs["files"])
+        self.assertEqual(kwargs["files"]["file"][0], "dummy.pdf")
+        self.assertEqual(kwargs["files"]["file"][2], "application/pdf")
+        self.assertEqual(kwargs["data"], {"document_type": "id_card"})

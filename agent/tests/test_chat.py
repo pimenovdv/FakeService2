@@ -168,6 +168,16 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
 
     async def test_translate_text(self):
         mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+
+        mock_agent_response = MagicMock()
+        mock_agent_response.status_code = 200
+        mock_agent_response.json.return_value = {
+            "translated_text": "[ES] Hello",
+            "source_language": "en",
+            "target_language": "es"
+        }
+        mock_agent_client.post.return_value = mock_agent_response
 
         mock_tool_call = MagicMock()
         mock_tool_call.id = "call_translate_123"
@@ -190,7 +200,7 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
 
         mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
 
-        session = ChatSession("System Prompt", client=mock_client)
+        session = ChatSession("System Prompt", client=mock_client, agent_client=mock_agent_client)
 
         response = await session.process_user_input("Translate 'Hello' to Spanish.")
 
@@ -201,10 +211,16 @@ class TestChatSession(unittest.IsolatedAsyncioTestCase):
         tool_msg = next((m for m in session.messages if m.get("role") == "tool" and m.get("tool_call_id") == "call_translate_123"), None)
         self.assertIsNotNone(tool_msg)
         tool_content = json.loads(tool_msg["content"])
-        self.assertEqual(tool_content["text"], "Hello")
-        self.assertEqual(tool_content["source_language"], "en")
-        self.assertEqual(tool_content["target_language"], "es")
-        self.assertIn("translated_text", tool_content)
+
+        # Verify backend call
+        mock_agent_client.post.assert_called_once_with(
+            "/api/translate",
+            json={"text": "Hello", "target_language": "es", "source_language": "en"}
+        )
+
+        self.assertEqual(tool_content.get("translated_text"), "[ES] Hello")
+        self.assertEqual(tool_content.get("source_language"), "en")
+        self.assertEqual(tool_content.get("target_language"), "es")
 
     async def test_calculate_distance(self):
         mock_client = AsyncMock()

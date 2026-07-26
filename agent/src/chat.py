@@ -1626,15 +1626,32 @@ class ChatSession:
                     source_language = args.get("source_language", "")
                     target_language = args.get("target_language", "")
 
-                    # Mock translation logic
-                    mock_translation = f"Translated '{text}' from {source_language} to {target_language} (mocked)"
+                    if self.agent_client:
+                        try:
+                            payload = {
+                                "text": text,
+                                "target_language": target_language
+                            }
+                            if source_language:
+                                payload["source_language"] = source_language
 
-                    tool_content = json.dumps({
-                        "text": text,
-                        "source_language": source_language,
-                        "target_language": target_language,
-                        "translated_text": mock_translation
-                    })
+                            res = await self.agent_client.post("/api/translate", json=payload)
+
+                            if res.status_code == 200:
+                                tool_content = json.dumps(res.json())
+                            else:
+                                tool_content = json.dumps({"error": f"Backend returned status code {res.status_code}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        # Fallback mock logic if no agent_client
+                        mock_translation = f"Translated '{text}' from {source_language} to {target_language} (mocked)"
+                        tool_content = json.dumps({
+                            "text": text,
+                            "source_language": source_language,
+                            "target_language": target_language,
+                            "translated_text": mock_translation
+                        })
 
                     self.messages.append({
                         "role": "tool",

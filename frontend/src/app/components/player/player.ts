@@ -8,6 +8,8 @@ import { StateService } from '../../services/state';
 import { LogicService } from '../../services/logic';
 import { DraftService } from '../../services/draft';
 import { Subscription } from 'rxjs';
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-player',
@@ -142,8 +144,58 @@ export class Player implements OnInit, OnDestroy {
     };
   }
 
+  async exportPdf() {
+    this.loading = true;
+    this.cdr.detectChanges();
+    try {
+      const element = document.querySelector('.screen-layout') as HTMLElement;
+      if (!element) {
+        throw new Error('Screen layout element not found');
+      }
+
+      // Hide action buttons during PDF generation
+      const buttonsContainer = element.querySelector('.flex.justify-end.gap-2.mt-4') as HTMLElement;
+      if (buttonsContainer) {
+        buttonsContainer.style.display = 'none';
+      }
+
+      const canvas = await html2canvas(element, { scale: 2 });
+
+      if (buttonsContainer) {
+        buttonsContainer.style.display = ''; // Restore buttons
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 0.95);
+      const pdf = new jsPDF({
+        orientation: 'p',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+      const screen = this.stateService.getScreen();
+      const filename = screen ? `screen_${screen.id}.pdf` : 'screen_export.pdf';
+      pdf.save(filename);
+    } catch (err: any) {
+      this.error = 'Failed to export PDF: ' + err.message;
+      console.error('PDF Export error:', err);
+    } finally {
+      this.loading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   onButtonClick(btn: ButtonDef) {
     if (btn.confirmMessage && !window.confirm(btn.confirmMessage)) {
+      return;
+    }
+
+    if (btn.action === 'export_pdf') {
+      this.exportPdf();
       return;
     }
 

@@ -46,7 +46,7 @@ export interface ComponentDef {
 export interface ButtonDef {
   id: string;
   label: string;
-  action: 'next_step' | 'cancel' | 'submit';
+  action: 'next_step' | 'cancel' | 'submit' | 'export_pdf';
   color?: 'primary' | 'secondary' | 'warn';
   confirmMessage?: string;
 }

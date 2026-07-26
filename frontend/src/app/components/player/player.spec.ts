@@ -9,6 +9,31 @@ import { BehaviorSubject, Subject, of } from 'rxjs';
 import { Screen, ComponentDef, ButtonDef } from '../../models/screen.model';
 import { vi, expect, describe, it, beforeEach } from 'vitest';
 
+// Mock html2canvas and jsPDF before tests
+vi.mock('html2canvas', () => {
+  return {
+    default: vi.fn().mockResolvedValue({
+      toDataURL: vi.fn().mockReturnValue('data:image/jpeg;base64,mock'),
+      height: 100,
+      width: 100
+    })
+  };
+});
+
+vi.mock('jspdf', () => {
+  return {
+    jsPDF: vi.fn().mockImplementation(() => ({
+      internal: {
+        pageSize: {
+          getWidth: vi.fn().mockReturnValue(210)
+        }
+      },
+      addImage: vi.fn(),
+      save: vi.fn()
+    }))
+  };
+});
+
 describe('Player', () => {
   let component: Player;
   let fixture: ComponentFixture<Player>;
@@ -294,6 +319,12 @@ describe('Player', () => {
 
       expect(component.validationError).toBe('Please correct the errors before proceeding. Passwords do not match');
       expect(mockApiService.nextStep).not.toHaveBeenCalled();
+    });
+
+    it('should call exportPdf if action is export_pdf', () => {
+      const exportPdfSpy = vi.spyOn(component, 'exportPdf').mockImplementation(() => Promise.resolve());
+      component.onButtonClick({ id: 'btn', label: 'Export', action: 'export_pdf' } as any);
+      expect(exportPdfSpy).toHaveBeenCalled();
     });
   });
 

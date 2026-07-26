@@ -39,6 +39,7 @@ describe('Player', () => {
   let fixture: ComponentFixture<Player>;
   let mockApiService: any;
   let mockStateService: any;
+  let mockSpeechRecognition: any;
   let mockLogicService: any;
   let mockDraftService: any;
   let mockActivatedRoute: any;
@@ -89,6 +90,12 @@ describe('Player', () => {
       paramMap: of({ get: () => 'test-service' }),
       snapshot: { queryParamMap: { get: vi.fn() } }
     };
+
+    mockSpeechRecognition = function(this: any) {
+      this.start = vi.fn();
+      this.stop = vi.fn();
+    };
+    (window as any).SpeechRecognition = mockSpeechRecognition;
 
     await TestBed.configureTestingModule({
       imports: [Player],
@@ -347,5 +354,58 @@ describe('Player', () => {
   it('should return empty object from getThemeStyles when theme is not provided', () => {
     const styles = component.getThemeStyles();
     expect(styles).toEqual({});
+  });
+
+  describe('Voice Navigation', () => {
+    it('should initialize SpeechRecognition if toggleVoiceNav is called and not active', () => {
+      const spy = vi.spyOn(window as any, 'SpeechRecognition');
+      component.isVoiceNavActive = false;
+      component.toggleVoiceNav();
+      expect(spy).toHaveBeenCalled();
+      expect(component['recognition']).toBeTruthy();
+      expect(component['recognition'].start).toHaveBeenCalled();
+    });
+
+    it('should stop SpeechRecognition if toggleVoiceNav is called and active', () => {
+      component.isVoiceNavActive = true;
+      component['recognition'] = new mockSpeechRecognition();
+      const stopSpy = vi.spyOn(component['recognition'], 'stop');
+      component.toggleVoiceNav();
+      expect(stopSpy).toHaveBeenCalled();
+      expect(component.isVoiceNavActive).toBe(false);
+      expect(component['recognition']).toBeNull();
+    });
+
+    it('should handle voice command to trigger button click', () => {
+      const btnNext: ButtonDef = { id: 'next', label: 'Next Step', action: 'next_step' };
+      const btnCancel: ButtonDef = { id: 'cancel', label: 'Cancel', action: 'cancel' };
+
+      mockStateService.getScreen.mockReturnValue({
+        id: 'test-screen',
+        buttons: [btnNext, btnCancel]
+      } as Screen);
+
+      const clickSpy = vi.spyOn(component, 'onButtonClick').mockImplementation(() => {});
+
+      component['handleVoiceCommand']('go to the next step');
+
+      expect(clickSpy).toHaveBeenCalledWith(btnNext);
+      expect(clickSpy).not.toHaveBeenCalledWith(btnCancel);
+    });
+
+    it('should handle voice command and not trigger if no match found', () => {
+      const btnNext: ButtonDef = { id: 'next', label: 'Next Step', action: 'next_step' };
+
+      mockStateService.getScreen.mockReturnValue({
+        id: 'test-screen',
+        buttons: [btnNext]
+      } as Screen);
+
+      const clickSpy = vi.spyOn(component, 'onButtonClick').mockImplementation(() => {});
+
+      component['handleVoiceCommand']('submit now');
+
+      expect(clickSpy).not.toHaveBeenCalled();
+    });
   });
 });

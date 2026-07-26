@@ -3451,3 +3451,158 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(response, "Product deleted.")
         mock_agent_client.delete.assert_called_with("/api/products/p1")
         self.assertIn('{"detail": "Product deleted successfully"}', session.messages[3]["content"])
+    async def test_manage_background_tasks_start(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=202,
+            json=lambda: {"task_id": "t1", "status": "pending"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_bg_start"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_background_tasks"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "start"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Task started."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Start task")
+        self.assertEqual(response, "Task started.")
+        mock_agent_client.post.assert_called_with("/api/tasks")
+        self.assertIn('{"task_id": "t1", "status": "pending"}', session.messages[3]["content"])
+
+    async def test_manage_background_tasks_get_status(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"task_id": "t1", "status": "completed"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_bg_get"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_background_tasks"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "get_status",
+            "task_id": "t1"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Task completed."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Get task t1")
+        self.assertEqual(response, "Task completed.")
+        mock_agent_client.get.assert_called_with("/api/tasks/t1")
+        self.assertIn('{"task_id": "t1", "status": "completed"}', session.messages[3]["content"])
+
+    async def test_manage_crud_resources_list(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: [{"id": "r1", "name": "Resource 1"}]
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_crud_list"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_crud_resources"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "list",
+            "resource_name": "items"
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Listed items."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("List items")
+        self.assertEqual(response, "Listed items.")
+        mock_agent_client.get.assert_called_with("/api/resource/items")
+        self.assertIn('[{"id": "r1", "name": "Resource 1"}]', session.messages[3]["content"])
+
+    async def test_manage_crud_resources_create(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=201,
+            json=lambda: {"id": "r2", "name": "New Item"}
+        )
+
+        session = ChatSession(system_prompt="Test prompt", client=mock_client, agent_client=mock_agent_client)
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_crud_create"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_crud_resources"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "create",
+            "resource_name": "items",
+            "item_data": {"name": "New Item"}
+        })
+
+        mock_msg_1 = MagicMock()
+        mock_msg_1.role = "assistant"
+        mock_msg_1.content = None
+        mock_msg_1.tool_calls = [mock_tool_call]
+
+        mock_msg_final = MagicMock()
+        mock_msg_final.role = "assistant"
+        mock_msg_final.content = "Created item."
+        mock_msg_final.tool_calls = None
+
+        mock_client.chat.completions.create = AsyncMock(side_effect=[
+            MagicMock(choices=[MagicMock(message=mock_msg_1)]),
+            MagicMock(choices=[MagicMock(message=mock_msg_final)])
+        ])
+
+        response = await session.process_user_input("Create item")
+        self.assertEqual(response, "Created item.")
+        mock_agent_client.post.assert_called_with("/api/resource/items", json={"name": "New Item"})
+        self.assertIn('{"id": "r2", "name": "New Item"}', session.messages[3]["content"])

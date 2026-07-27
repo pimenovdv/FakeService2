@@ -40,6 +40,13 @@ export abstract class BaseControl implements OnInit, OnDestroy {
     return this.errors.length === 0;
   }
 
+  get hasRequiredRule(): boolean {
+    if (this.def && this.def.validations) {
+      return this.def.validations.some(r => r.type === 'required');
+    }
+    return false;
+  }
+
   get maxLengthRule(): number | null {
     if (this.def && this.def.validations) {
       const rule = this.def.validations.find(r => r.type === 'maxLength');

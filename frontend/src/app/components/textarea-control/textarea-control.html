@@ -8,6 +8,10 @@
       [placeholder]="def.placeholder || ''"
       [disabled]="def.disabled || false"
       [appAutofocus]="def.autofocus"
+      [attr.aria-label]="def.label"
+      [attr.aria-required]="hasRequiredRule"
+      [attr.aria-invalid]="!isValid && touched"
+      [attr.aria-describedby]="def.id + '-error'"
       (blur)="touched = true; validate()"
       class="w-full"
     ></textarea>
@@ -26,7 +30,7 @@
     </div>
   </div>
   <div class="flex justify-between items-start mt-1">
-    <div class="error-messages flex-1">
+    <div [id]="def.id + '-error'" class="error-messages flex-1">
       <ng-container *ngIf="touched && !isValid">
         <div *ngFor="let error of errors" class="error-text">
           {{ error }}

@@ -40,6 +40,14 @@ describe('BaseControl', () => {
     expect(component.isValid).toBe(true);
   });
 
+  it('should correctly identify if required rule is present', () => {
+    expect(component.hasRequiredRule).toBe(false);
+    component.def = { id: 'test', type: 'text', label: 'Test', validations: [{ type: 'required' }] } as any;
+    expect(component.hasRequiredRule).toBe(true);
+    component.def = { id: 'test2', type: 'text', label: 'Test 2', validations: [{ type: 'min', value: 5 }] } as any;
+    expect(component.hasRequiredRule).toBe(false);
+  });
+
   it('should emit value change and trigger validation', () => {
     const valueChangeSpy = vi.spyOn(component.valueChange, 'emit');
     const validateSpy = vi.spyOn(component, 'validate');

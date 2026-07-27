@@ -3665,3 +3665,85 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(kwargs["files"]["file"][0], "dummy.pdf")
         self.assertEqual(kwargs["files"]["file"][2], "application/pdf")
         self.assertEqual(kwargs["data"], {"document_type": "id_card"})
+
+    async def test_manage_cart(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"id": "cart_item_1", "product_id": "prod_1", "quantity": 2}
+        )
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_cart_1"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_cart"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "add_item",
+            "product_id": "prod_1",
+            "quantity": 2
+        })
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Item added to cart."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        result = await session.process_user_input("Add 2 of prod_1 to my cart.")
+
+        self.assertEqual(result, "Item added to cart.")
+        mock_agent_client.post.assert_called_once_with("/api/cart/items", json={"product_id": "prod_1", "quantity": 2})
+
+    async def test_manage_reviews(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {"id": "review_1", "product_id": "prod_1", "user_id": "user_1", "rating": 5, "comment": "Great!"}
+        )
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_review_1"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "manage_reviews"
+        mock_tool_call.function.arguments = json.dumps({
+            "action": "add",
+            "product_id": "prod_1",
+            "user_id": "user_1",
+            "rating": 5,
+            "comment": "Great!"
+        })
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Review added."
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        result = await session.process_user_input("Add a 5-star review for prod_1.")
+
+        self.assertEqual(result, "Review added.")
+        mock_agent_client.post.assert_called_once_with("/api/reviews/prod_1", json={"user_id": "user_1", "rating": 5, "comment": "Great!"})

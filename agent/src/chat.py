@@ -30,6 +30,83 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_cart",
+                    "description": "Manage the mock shopping cart. Action can be 'get' (retrieve cart), 'add_item' (requires product_id and quantity; optional name, price), 'remove_item' (requires item_id), or 'clear' (clear the entire cart).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "add_item", "remove_item", "clear"],
+                                "description": "The action to perform."
+                            },
+                            "item_id": {
+                                "type": "string",
+                                "description": "The ID of the item to remove (required for 'remove_item')."
+                            },
+                            "product_id": {
+                                "type": "string",
+                                "description": "The ID of the product to add (required for 'add_item')."
+                            },
+                            "quantity": {
+                                "type": "integer",
+                                "description": "The quantity of the product to add (required for 'add_item')."
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Optional name of the product."
+                            },
+                            "price": {
+                                "type": "number",
+                                "description": "Optional price of the product."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "manage_reviews",
+                    "description": "Manage mock product reviews. Action can be 'get' (requires product_id), 'add' (requires product_id, user_id, rating), or 'delete' (requires review_id).",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["get", "add", "delete"],
+                                "description": "The action to perform."
+                            },
+                            "product_id": {
+                                "type": "string",
+                                "description": "The ID of the product (required for 'get' and 'add')."
+                            },
+                            "review_id": {
+                                "type": "string",
+                                "description": "The ID of the review (required for 'delete')."
+                            },
+                            "user_id": {
+                                "type": "string",
+                                "description": "The ID of the user writing the review (required for 'add')."
+                            },
+                            "rating": {
+                                "type": "integer",
+                                "description": "The rating from 1 to 5 (required for 'add')."
+                            },
+                            "comment": {
+                                "type": "string",
+                                "description": "An optional comment for the review."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+
+            {
+                "type": "function",
+                "function": {
                     "name": "extract_document",
                     "description": "Upload a local file (e.g. ID card or invoice) for document extraction.",
                     "parameters": {
@@ -2583,6 +2660,117 @@ class ChatSession:
                         "tool_call_id": tool_call.id,
                         "content": tool_content
                     })
+                elif tool_call.function.name == "manage_cart":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                res = await self.agent_client.get("/api/cart")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to get cart, status code {res.status_code}"})
+                            elif action == "add_item":
+                                product_id = args.get("product_id")
+                                quantity = args.get("quantity")
+                                if product_id and quantity:
+                                    payload = {"product_id": product_id, "quantity": quantity}
+                                    if "name" in args:
+                                        payload["name"] = args["name"]
+                                    if "price" in args:
+                                        payload["price"] = args["price"]
+                                    res = await self.agent_client.post("/api/cart/items", json=payload)
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to add item to cart, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "product_id and quantity are required for add_item action"})
+                            elif action == "remove_item":
+                                item_id = args.get("item_id")
+                                if item_id:
+                                    res = await self.agent_client.delete(f"/api/cart/items/{item_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to remove item from cart, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "item_id is required for remove_item action"})
+                            elif action == "clear":
+                                res = await self.agent_client.delete("/api/cart")
+                                if res.status_code == 200:
+                                    tool_content = json.dumps(res.json())
+                                else:
+                                    tool_content = json.dumps({"error": f"Failed to clear cart, status code {res.status_code}"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_reviews":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+
+                    if self.agent_client:
+                        try:
+                            if action == "get":
+                                product_id = args.get("product_id")
+                                if product_id:
+                                    res = await self.agent_client.get(f"/api/reviews/{product_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to get reviews, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "product_id is required for get action"})
+                            elif action == "add":
+                                product_id = args.get("product_id")
+                                user_id = args.get("user_id")
+                                rating = args.get("rating")
+                                if product_id and user_id and rating:
+                                    payload = {"user_id": user_id, "rating": rating}
+                                    if "comment" in args:
+                                        payload["comment"] = args["comment"]
+                                    res = await self.agent_client.post(f"/api/reviews/{product_id}", json=payload)
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to add review, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "product_id, user_id, and rating are required for add action"})
+                            elif action == "delete":
+                                review_id = args.get("review_id")
+                                if review_id:
+                                    res = await self.agent_client.delete(f"/api/reviews/{review_id}")
+                                    if res.status_code == 200:
+                                        tool_content = json.dumps(res.json())
+                                    else:
+                                        tool_content = json.dumps({"error": f"Failed to delete review, status code {res.status_code}"})
+                                else:
+                                    tool_content = json.dumps({"error": "review_id is required for delete action"})
+                            else:
+                                tool_content = json.dumps({"error": f"Invalid action: {action}"})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
+
 
                 elif tool_call.function.name == "extract_document":
                     args = json.loads(tool_call.function.arguments)

@@ -33,6 +33,7 @@
   <app-data-table-control *ngSwitchCase="'data_table'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-data-table-control>
   <app-signature-pad-control *ngSwitchCase="'signature_pad'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-signature-pad-control>
   <app-barcode-scanner-control *ngSwitchCase="'barcode'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-barcode-scanner-control>
+  <app-image-control *ngSwitchCase="'image'" [def]="componentDef" [value]="value" (valueChange)="onValueChange($event)" (isValidChange)="onValidChange($event)"></app-image-control>
 
   <fieldset *ngSwitchCase="'group'" class="border border-gray-300 p-4 rounded-md mb-4" [id]="componentDef.id">
     <legend *ngIf="componentDef.label" class="text-sm font-semibold text-gray-700 px-2">{{ componentDef.label }}</legend>

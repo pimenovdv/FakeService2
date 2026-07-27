@@ -1,4 +1,4 @@
-export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea' | 'file' | 'number' | 'password' | 'slider' | 'color' | 'time' | 'toggle' | 'rating' | 'stepper' | 'currency' | 'tags' | 'email' | 'phone' | 'url' | 'month' | 'search' | 'week' | 'datetime' | 'multiselect' | 'autocomplete' | 'button_group' | 'captcha' | 'progress' | 'markdown' | 'rich_text' | 'group' | 'data_table' | 'signature_pad' | 'barcode';
+export type ControlType = 'text' | 'combobox' | 'checkbox' | 'radio' | 'datepicker' | 'textarea' | 'file' | 'number' | 'password' | 'slider' | 'color' | 'time' | 'toggle' | 'rating' | 'stepper' | 'currency' | 'tags' | 'email' | 'phone' | 'url' | 'month' | 'search' | 'week' | 'datetime' | 'multiselect' | 'autocomplete' | 'button_group' | 'captcha' | 'progress' | 'markdown' | 'rich_text' | 'group' | 'data_table' | 'signature_pad' | 'barcode' | 'image';
 
 export interface ValidationRule {
   type: 'required' | 'regex' | 'min' | 'max' | 'minLength' | 'maxLength' | 'step';
@@ -42,6 +42,7 @@ export interface ComponentDef {
   enableDictation?: boolean;
   dependsOn?: string[]; // IDs of components this depends on
   components?: ComponentDef[]; // For grouped components
+  altText?: string; // For images
 }
 
 export interface ButtonDef {

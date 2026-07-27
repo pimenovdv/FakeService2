@@ -37,6 +37,7 @@
   <app-divider-control *ngSwitchCase="'divider'" [def]="componentDef"></app-divider-control>
   <app-iframe-control *ngSwitchCase="'iframe'" [def]="componentDef" [value]="value"></app-iframe-control>
   <app-video-control *ngSwitchCase="'video'" [def]="componentDef" [value]="value"></app-video-control>
+  <app-audio-control *ngSwitchCase="'audio'" [def]="componentDef" [value]="value"></app-audio-control>
 
   <fieldset *ngSwitchCase="'group'" class="border border-gray-300 p-4 rounded-md mb-4" [id]="componentDef.id">
     <legend *ngIf="componentDef.label" class="text-sm font-semibold text-gray-700 px-2">{{ componentDef.label }}</legend>

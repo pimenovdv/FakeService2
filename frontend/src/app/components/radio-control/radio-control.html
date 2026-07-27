@@ -9,11 +9,14 @@
              [(ngModel)]="value"
              (ngModelChange)="onValueChange($event)"
              (blur)="touched = true; validate(); isValidChange.emit(isValid)"
-             [attr.disabled]="def.disabled ? true : null">
+             [attr.disabled]="def.disabled ? true : null"
+             [attr.aria-required]="hasRequiredRule"
+             [attr.aria-invalid]="!isValid && touched"
+             [attr.aria-describedby]="def.id + '-error'">
       <label [for]="def.id + '-' + i">{{ option.label !== undefined ? option.label : option }}</label>
     </div>
   </div>
-  <div class="error-message" *ngIf="(!isValid && touched)">
+  <div [id]="def.id + '-error'" class="error-message" *ngIf="(!isValid && touched)">
     {{ errors[0] }}
   </div>
 </div>

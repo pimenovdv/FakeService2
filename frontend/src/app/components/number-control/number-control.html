@@ -8,9 +8,13 @@
     [placeholder]="def.placeholder || ''"
     [disabled]="def.disabled === true"
     [appAutofocus]="def.autofocus"
+    [attr.aria-label]="def.label"
+    [attr.aria-required]="hasRequiredRule"
+    [attr.aria-invalid]="!isValid && touched"
+    [attr.aria-describedby]="def.id + '-error'"
     (blur)="touched = true; validate()"
   />
-  <div *ngIf="touched && !isValid" class="error-messages">
+  <div [id]="def.id + '-error'" *ngIf="touched && !isValid" class="error-messages">
     <div *ngFor="let error of errors" class="error-text">
       {{ error }}
     </div>

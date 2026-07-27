@@ -918,6 +918,69 @@ class ChatSession:
                     }
                 }
             },
+
+            {
+                "type": "function",
+                "function": {
+                    "name": "get_dynamic_data",
+                    "description": "Fetch dynamic data from the /api/data endpoint.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "data_source": {
+                                "type": "string",
+                                "description": "The data source name to fetch."
+                            },
+                            "page": {
+                                "type": "integer",
+                                "description": "Pagination page number."
+                            },
+                            "limit": {
+                                "type": "integer",
+                                "description": "Pagination limit."
+                            },
+                            "search": {
+                                "type": "string",
+                                "description": "Search query string."
+                            },
+                            "sort_by": {
+                                "type": "string",
+                                "description": "Field to sort by."
+                            },
+                            "sort_order": {
+                                "type": "string",
+                                "description": "Sort order, either 'asc' or 'desc'."
+                            },
+                            "filter_field": {
+                                "type": "string",
+                                "description": "Field to filter by."
+                            },
+                            "filter_value": {
+                                "type": "string",
+                                "description": "Value to filter by."
+                            }
+                        },
+                        "required": ["data_source"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "execute_graphql_query",
+                    "description": "Execute a GraphQL query against the backend /graphql endpoint.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": "The GraphQL query string."
+                            }
+                        },
+                        "required": ["query"]
+                    }
+                }
+            },
             {
                 "type": "function",
                 "function": {
@@ -1518,6 +1581,55 @@ class ChatSession:
                     self.user_preferences.update(preferences)
 
                     tool_content = json.dumps({"status": "success", "user_preferences": self.user_preferences})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "get_dynamic_data":
+                    args = json.loads(tool_call.function.arguments)
+                    data_source = args.get("data_source")
+                    params = {k: v for k, v in args.items() if k != "data_source"}
+
+                    if self.agent_client:
+                        try:
+                            response = await self.agent_client.get(f"/api/data/{data_source}", params=params)
+                            if response.status_code == 200:
+                                data = response.json()
+                                tool_content = json.dumps(data)
+                            else:
+                                tool_content = f"Error: {response.status_code} - {response.text}"
+                        except Exception as e:
+                            tool_content = f"Exception: {str(e)}"
+                    else:
+                        tool_content = "agent_client not initialized"
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "execute_graphql_query":
+                    args = json.loads(tool_call.function.arguments)
+                    query = args.get("query")
+
+                    if self.agent_client:
+                        try:
+                            response = await self.agent_client.post("/graphql", json={"query": query})
+                            if response.status_code == 200:
+                                data = response.json()
+                                tool_content = json.dumps(data)
+                            else:
+                                tool_content = f"Error: {response.status_code} - {response.text}"
+                        except Exception as e:
+                            tool_content = f"Exception: {str(e)}"
+                    else:
+                        tool_content = "agent_client not initialized"
 
                     self.messages.append({
                         "role": "tool",

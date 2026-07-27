@@ -1,3 +1,4 @@
+import pytest
 import unittest
 import json
 import os
@@ -3747,3 +3748,97 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result, "Review added.")
         mock_agent_client.post.assert_called_once_with("/api/reviews/prod_1", json={"user_id": "user_1", "rating": 5, "comment": "Great!"})
+
+
+
+
+
+    async def test_get_dynamic_data(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: [{"id": 1, "name": "Test User"}]
+        )
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_123"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "get_dynamic_data"
+        mock_tool_call.function.arguments = json.dumps({
+            "data_source": "users",
+            "page": 2,
+            "limit": 10
+        })
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.choices[0].message.model_dump.return_value = {"role": "assistant", "tool_calls": [{"id": "call_123", "function": {"name": "get_dynamic_data", "arguments": mock_tool_call.function.arguments}}]}
+        mock_response_1.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Data fetched"
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.model_dump.return_value = {"role": "assistant", "content": "Data fetched"}
+        mock_response_2.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        result = await session.process_user_input("Get users page 2")
+
+        self.assertEqual(result, "Data fetched")
+        mock_agent_client.get.assert_called_once_with("/api/data/users", params={"page": 2, "limit": 10})
+
+    async def test_execute_graphql_query(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.post.return_value = MagicMock(
+            status_code=200,
+            json=lambda: {
+                "data": {
+                    "user": {
+                        "id": 1,
+                        "name": "John Doe",
+                        "email": "john@example.com"
+                    }
+                }
+            }
+        )
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_124"
+        mock_tool_call.type = "function"
+        mock_tool_call.function.name = "execute_graphql_query"
+        mock_tool_call.function.arguments = json.dumps({
+            "query": "{ user(id: 1) { id name email } }"
+        })
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.choices[0].message.model_dump.return_value = {"role": "assistant", "tool_calls": [{"id": "call_124", "function": {"name": "execute_graphql_query", "arguments": mock_tool_call.function.arguments}}]}
+        mock_response_1.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "GraphQL query executed"
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.model_dump.return_value = {"role": "assistant", "content": "GraphQL query executed"}
+        mock_response_2.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        result = await session.process_user_input("Get user 1 via graphql")
+
+        self.assertEqual(result, "GraphQL query executed")
+        mock_agent_client.post.assert_called_once_with("/graphql", json={"query": "{ user(id: 1) { id name email } }"})

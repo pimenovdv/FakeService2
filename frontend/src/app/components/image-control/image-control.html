@@ -1,0 +1,22 @@
+<div class="mb-4">
+  <label *ngIf="def.label" [for]="def.id" class="block text-sm font-medium text-gray-700 mb-1">
+    {{ def.label }}
+    <span *ngIf="hasRequiredRule" class="text-red-500">*</span>
+  </label>
+  <div class="image-container flex justify-center">
+    <img
+      *ngIf="value"
+      [src]="value"
+      [alt]="def.altText || def.label || 'Image'"
+      class="max-w-full h-auto rounded-md shadow-sm"
+      [id]="def.id"
+      [attr.aria-label]="def.altText || def.label"
+    >
+    <div *ngIf="!value" class="text-gray-400 italic text-sm p-4 border border-dashed border-gray-300 rounded-md">
+      No image available
+    </div>
+  </div>
+  <div [id]="def.id + '-error'" class="text-red-500 text-xs mt-1 min-h-[1rem]">
+    <span *ngIf="touched && !isValid">{{ errors[0] }}</span>
+  </div>
+</div>

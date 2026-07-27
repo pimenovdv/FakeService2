@@ -3922,3 +3922,52 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result, "Streamed events")
         mock_agent_client.get.assert_called_once_with("/api/stream")
+
+    async def test_process_user_input_connect_websocket(self):
+        mock_client = AsyncMock()
+        mock_agent_client = AsyncMock()
+        mock_agent_client.client.base_url = "http://localhost:4200"
+        mock_agent_client.client.headers = {"Authorization": "Bearer token"}
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_connect_websocket"
+        mock_tool_call.function.name = "connect_websocket"
+        mock_tool_call.function.arguments = json.dumps({"path": "/api/ws/notifications", "message": "ping", "wait_for_messages": 1})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.choices[0].message.model_dump.return_value = {"role": "assistant", "tool_calls": [{"id": "call_connect_websocket", "function": {"name": "connect_websocket", "arguments": mock_tool_call.function.arguments}}]}
+        mock_response_1.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Connected and received messages"
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.model_dump.return_value = {"role": "assistant", "content": "Connected and received messages"}
+        mock_response_2.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        mock_websocket = AsyncMock()
+        mock_websocket.recv.return_value = "pong"
+
+        # Setup context manager for connect
+        mock_connect_context = AsyncMock()
+        mock_connect_context.__aenter__.return_value = mock_websocket
+
+        mock_websockets = MagicMock()
+        mock_websockets.connect.return_value = mock_connect_context
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+
+        with patch.dict('sys.modules', {'websockets': mock_websockets}):
+            result = await session.process_user_input("Connect websocket")
+
+        self.assertEqual(result, "Connected and received messages")
+        mock_websockets.connect.assert_called_once_with("ws://localhost:4200/api/ws/notifications", additional_headers={"Authorization": "Bearer token"})
+        mock_websocket.send.assert_called_once_with("ping")
+        mock_websocket.recv.assert_called_once()

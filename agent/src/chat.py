@@ -30,6 +30,44 @@ class ChatSession:
             {
                 "type": "function",
                 "function": {
+                    "name": "manage_auth",
+                    "description": "Manage authentication processes.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "description": "The action to perform: 'login', 'authorize', 'token', 'me', 'admin-data'",
+                                "enum": ["login", "authorize", "token", "me", "admin-data"]
+                            },
+                            "payload": {
+                                "type": "object",
+                                "description": "The request payload."
+                            },
+                            "token": {
+                                "type": "string",
+                                "description": "Optional token for endpoints that require it (e.g. 'me', 'admin-data')."
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "stream_events",
+                    "description": "Stream server-side events from the backend API.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {},
+                        "required": []
+                    }
+                }
+            },
+            {
+                "type": "function",
+                "function": {
                     "name": "manage_cart",
                     "description": "Manage the mock shopping cart. Action can be 'get' (retrieve cart), 'add_item' (requires product_id and quantity; optional name, price), 'remove_item' (requires item_id), or 'clear' (clear the entire cart).",
                     "parameters": {
@@ -1600,6 +1638,76 @@ class ChatSession:
                             if response.status_code == 200:
                                 data = response.json()
                                 tool_content = json.dumps(data)
+                            else:
+                                tool_content = f"Error: {response.status_code} - {response.text}"
+                        except Exception as e:
+                            tool_content = f"Exception: {str(e)}"
+                    else:
+                        tool_content = "agent_client not initialized"
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "manage_auth":
+                    args = json.loads(tool_call.function.arguments)
+                    action = args.get("action")
+                    payload = args.get("payload", {})
+                    token = args.get("token")
+
+                    if self.agent_client:
+                        try:
+                            headers = {}
+                            if token:
+                                headers["Authorization"] = f"Bearer {token}"
+
+                            if action == "login":
+                                response = await self.agent_client.post("/api/auth/login", json=payload)
+                            elif action == "authorize":
+                                response = await self.agent_client.get("/api/auth/authorize", params=payload)
+                            elif action == "token":
+                                response = await self.agent_client.post("/api/auth/token", data=payload)
+                            elif action == "me":
+                                response = await self.agent_client.get("/api/auth/me", headers=headers)
+                            elif action == "admin-data":
+                                response = await self.agent_client.get("/api/auth/admin-data", headers=headers)
+                            else:
+                                response = None
+                                tool_content = f"Unknown action: {action}"
+
+                            if response:
+                                if response.status_code in [200, 201]:
+                                    try:
+                                        data = response.json()
+                                        tool_content = json.dumps(data)
+                                    except:
+                                        tool_content = "Success but response could not be parsed as JSON"
+                                elif response.status_code in [307, 302]:
+                                    tool_content = f"Redirected to: {response.headers.get('location')}"
+                                else:
+                                    tool_content = f"Error: {response.status_code} - {response.text}"
+                        except Exception as e:
+                            tool_content = f"Exception: {str(e)}"
+                    else:
+                        tool_content = "agent_client not initialized"
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "name": tool_call.function.name,
+                        "content": tool_content
+                    })
+
+                elif tool_call.function.name == "stream_events":
+                    if self.agent_client:
+                        try:
+                            response = await self.agent_client.get("/api/stream")
+                            if response.status_code == 200:
+                                # For mock purposes, collect all SSE data
+                                tool_content = response.text
                             else:
                                 tool_content = f"Error: {response.status_code} - {response.text}"
                         except Exception as e:

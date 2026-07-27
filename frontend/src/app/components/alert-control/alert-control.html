@@ -1,0 +1,16 @@
+<div [id]="def.id" [ngClass]="{'hidden': def.hidden}" class="mb-4">
+  <div [class]="getAlertClasses()" role="alert">
+    <div class="flex items-start">
+      <div class="flex-shrink-0 font-bold text-lg mr-3 mt-[-2px]">
+        {{ getAlertIcon() }}
+      </div>
+      <div>
+        <h3 *ngIf="def.label" class="text-sm font-medium mb-1">{{ def.label }}</h3>
+        <div *ngIf="value" class="text-sm">
+           <span *ngIf="!safeHtml" class="plain-text">{{ value }}</span>
+           <span *ngIf="safeHtml" class="html-text" [innerHTML]="safeHtml"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

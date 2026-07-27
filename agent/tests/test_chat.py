@@ -3842,3 +3842,83 @@ class TestChatSessionComments(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(result, "GraphQL query executed")
         mock_agent_client.post.assert_called_once_with("/graphql", json={"query": "{ user(id: 1) { id name email } }"})
+
+    async def test_process_user_input_manage_auth_login(self):
+        mock_client = AsyncMock()
+        mock_client.chat = MagicMock()
+        mock_client.chat.completions = AsyncMock()
+
+        mock_agent_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"access_token": "mock_token", "token_type": "bearer"}
+        mock_agent_client.post.return_value = mock_response
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_auth_login"
+        mock_tool_call.function.name = "manage_auth"
+        mock_tool_call.function.arguments = json.dumps({"action": "login", "payload": {"username": "user", "password": "password"}})
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.choices[0].message.model_dump.return_value = {"role": "assistant", "tool_calls": [{"id": "call_auth_login", "function": {"name": "manage_auth", "arguments": mock_tool_call.function.arguments}}]}
+        mock_response_1.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Logged in successfully"
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.model_dump.return_value = {"role": "assistant", "content": "Logged in successfully"}
+        mock_response_2.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        result = await session.process_user_input("Login user")
+
+        self.assertEqual(result, "Logged in successfully")
+        mock_agent_client.post.assert_called_once_with("/api/auth/login", json={"username": "user", "password": "password"})
+
+    async def test_process_user_input_stream_events(self):
+        mock_client = AsyncMock()
+        mock_client.chat = MagicMock()
+        mock_client.chat.completions = AsyncMock()
+
+        mock_agent_client = AsyncMock()
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = "data: {\"message\": \"Connected\"}\n\n"
+        mock_agent_client.get.return_value = mock_response
+
+        mock_tool_call = MagicMock()
+        mock_tool_call.id = "call_stream_events"
+        mock_tool_call.function.name = "stream_events"
+        mock_tool_call.function.arguments = "{}"
+
+        mock_response_1 = MagicMock()
+        mock_response_1.choices = [MagicMock()]
+        mock_response_1.choices[0].message.content = None
+        mock_response_1.choices[0].message.tool_calls = [mock_tool_call]
+        mock_response_1.choices[0].message.role = "assistant"
+        mock_response_1.choices[0].message.model_dump.return_value = {"role": "assistant", "tool_calls": [{"id": "call_stream_events", "function": {"name": "stream_events", "arguments": mock_tool_call.function.arguments}}]}
+        mock_response_1.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_response_2 = MagicMock()
+        mock_response_2.choices = [MagicMock()]
+        mock_response_2.choices[0].message.content = "Streamed events"
+        mock_response_2.choices[0].message.tool_calls = None
+        mock_response_2.choices[0].message.role = "assistant"
+        mock_response_2.choices[0].message.model_dump.return_value = {"role": "assistant", "content": "Streamed events"}
+        mock_response_2.usage = MagicMock(total_tokens=10, prompt_tokens=5, completion_tokens=5)
+
+        mock_client.chat.completions.create.side_effect = [mock_response_1, mock_response_2]
+
+        session = ChatSession(system_prompt="Test", client=mock_client, agent_client=mock_agent_client)
+        result = await session.process_user_input("Stream events")
+
+        self.assertEqual(result, "Streamed events")
+        mock_agent_client.get.assert_called_once_with("/api/stream")

@@ -5,7 +5,8 @@ This document outlines the step-by-step development process for the Python agent
 **Note: The use of browser automation libraries (like Playwright, Selenium, Puppeteer) is strictly forbidden.** The agent must operate via standard HTTP clients interacting with an Angular SSR backend.
 
 ## Completed Phases
-- **Phases 1-61:** Core functionality including agent loop, SSR parsing, tools, state management, JS execution, mock implementations for endpoints (auth, analytics, webhooks, cache, settings, profile, feature flags, notifications, comments, audit logs, file uploads, weather, subscriptions, events, payments, support tickets, user tasks, devices, emails, orders, invoices, products, background tasks, generic CRUD resources), system search via `/api/search`, `translate_text` refactoring, and `extract_document` tool for local file uploads to `/api/extract`, `manage_cart` and `manage_reviews` tools.
+- **Phases 1-62:** Core functionality (agent loop, SSR parsing, JS eval, state management, basic API integrations).
 
 ## Planned Features
-- [x] **Phase 62:** Add `get_dynamic_data` tool (to interact with `/api/data/{data_source}`) and `execute_graphql_query` tool (to interact with `/graphql`).
+- [x] **Phase 63:** Implement `manage_auth` tool to interact with backend authentication endpoints (`login`, `me`, `token`, `authorize`, `admin-data`).
+- [x] **Phase 64:** Implement `stream_events` tool to interact with `/api/stream` endpoint, reading SSE streams.

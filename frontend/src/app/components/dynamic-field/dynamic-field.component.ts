@@ -38,12 +38,15 @@ import { RichTextControl } from '../rich-text-control/rich-text-control';
 import { SignaturePadControlComponent } from '../signature-pad-control/signature-pad-control';
 import { BarcodeScannerControlComponent } from '../barcode-scanner-control/barcode-scanner-control';
 import { ImageControlComponent } from '../image-control/image-control';
+import { DividerControlComponent } from '../divider-control/divider-control';
+import { IframeControlComponent } from '../iframe-control/iframe-control';
+import { VideoControlComponent } from '../video-control/video-control';
 import { StateService } from '../../services/state';
 
 @Component({
   selector: 'app-dynamic-field',
   standalone: true,
-  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent, CaptchaControlComponent, ProgressControlComponent, MarkdownControlComponent, DataTableControlComponent, RichTextControl, SignaturePadControlComponent, BarcodeScannerControlComponent, ImageControlComponent],
+  imports: [CommonModule, TextInputComponent, ComboboxControlComponent, CheckboxControlComponent, RadioControlComponent, DatepickerControlComponent, TextareaControlComponent, FileControlComponent, NumberControlComponent, PasswordControlComponent, SliderControlComponent, ColorControlComponent, TimeControlComponent, ToggleControlComponent, RatingControlComponent, StepperControlComponent, CurrencyControlComponent, TagsControlComponent, EmailControlComponent, PhoneControlComponent, UrlControlComponent, MonthControlComponent, SearchControlComponent, WeekControlComponent, DatetimeControlComponent, MultiselectControlComponent, AutocompleteControlComponent, ButtonGroupControlComponent, CaptchaControlComponent, ProgressControlComponent, MarkdownControlComponent, DataTableControlComponent, RichTextControl, SignaturePadControlComponent, BarcodeScannerControlComponent, ImageControlComponent, DividerControlComponent, IframeControlComponent, VideoControlComponent],
   templateUrl: './dynamic-field.component.html',
   animations: [
     trigger('fadeSlideInOut', [

@@ -7,7 +7,17 @@ This document outlines the step-by-step development process for the FastAPI-base
 
 ## New Features
 
-## Phase 50: Mock Shipping API
+## Phase 50: Mock Reviews API
+- [x] **Mock Reviews API**
+  - **Goal:** Mock endpoints for managing product reviews.
+  - **Details:** Add endpoints to get reviews for a product (`GET /api/reviews/{product_id}`), add a review (`POST /api/reviews/{product_id}`), and delete a review (`DELETE /api/reviews/{review_id}`).
+
+## Phase 51: Mock Favorites API
+- [ ] **Mock Favorites API**
+  - **Goal:** Mock endpoints for managing user favorites/wishlist.
+  - **Details:** Add endpoints to get favorites (`GET /api/favorites`), add to favorites (`POST /api/favorites/{product_id}`), and remove from favorites (`DELETE /api/favorites/{product_id}`).
+
+## Phase 52: Mock Shipping API
 - [x] **Mock Shipping API**
   - **Goal:** Mock endpoints for calculating shipping rates and tracking shipments.
   - **Details:** Add endpoints to calculate shipping (`POST /api/shipping/calculate`) and track shipping (`GET /api/shipping/track/{tracking_number}`).

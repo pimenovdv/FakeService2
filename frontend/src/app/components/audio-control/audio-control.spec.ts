@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { AudioControlComponent } from './audio-control';
 import { ComponentDef } from '../../models/screen.model';

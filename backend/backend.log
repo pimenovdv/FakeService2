@@ -1,8 +1,22 @@
-INFO:     Started server process [280177]
+Using CPython 3.12.13 interpreter at: /home/jules/.pyenv/versions/3.12.13/bin/python3
+Creating virtual environment at: .venv
+Downloading pygments (1.2MiB)
+Downloading pydantic-core (2.0MiB)
+ Downloaded pydantic-core
+ Downloaded pygments
+Installed 30 packages in 25ms
+INFO:     Started server process [18741]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:40078 - "POST /api/screens/start HTTP/1.1" 200 OK
-INFO:     127.0.0.1:41086 - "POST /api/screens/start HTTP/1.1" 200 OK
-FO:     Application shutdown complete.
-INFO:     Finished server process [259881]
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:36794 - "POST /api/screens/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36808 - "GET /api/data/countries HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36820 - "POST /api/screens/next_step HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52144 - "POST /api/screens/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52154 - "GET /api/data/countries HTTP/1.1" 200 OK
+INFO:     127.0.0.1:52158 - "POST /api/screens/next_step HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36066 - "POST /api/screens/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:36078 - "GET /api/data/countries HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59064 - "POST /api/screens/start HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59070 - "GET /api/data/countries HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59084 - "POST /api/screens/next_step HTTP/1.1" 200 OK

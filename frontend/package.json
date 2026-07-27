@@ -40,6 +40,7 @@
     "@angular/cli": "^21.2.19",
     "@angular/compiler-cli": "^21.2.0",
     "@playwright/test": "^1.61.1",
+    "@types/dom-speech-recognition": "^0.0.12",
     "@types/dompurify": "^3.0.5",
     "@types/marked": "^5.0.2",
     "@vitest/browser-playwright": "^4.1.10",

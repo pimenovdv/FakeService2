@@ -1,16 +1,12 @@
-
-> angular-app@0.0.0 start
-> ng serve
-
 ❯ Building...
 ✔ Building...
 Initial chunk files | Names         |  Raw size
-main.js             | main          | 387.53 kB |
-styles.css          | styles        |  25.84 kB |
+main.js             | main          | 530.39 kB |
+styles.css          | styles        |  60.98 kB |
 
-                    | Initial total | 413.37 kB
+                    | Initial total | 591.38 kB
 
-Application bundle generation complete. [6.418 seconds] - 2026-07-21T16:18:32.429Z
+Application bundle generation complete. [9.563 seconds] - 2026-07-27T16:33:18.575Z
 
 [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
 
@@ -101,6 +97,13 @@ Application bundle generation complete. [6.418 seconds] - 2026-07-21T16:18:32.42
     src/app/components/button-group-control/button-group-control.component.ts:9:15:
 [37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: DynamicFieldComponent is not used within the template of DataTableControlComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/data-table-control/data-table-control.component.ts:11:56:
+[37m      11 │ ...mmonModule, FormsModule, forwardRef(() => [32mDynamicFieldComponent[37m)],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
 
 
 Watch mode enabled. Watching for file changes...
@@ -108,10 +111,13 @@ NOTE: Raw file sizes do not reflect development server per-request transformatio
   ➜  Local:   http://localhost:4200/
 ❯ Changes detected. Rebuilding...
 ✔ Changes detected. Rebuilding...
-Initial chunk files | Names |  Raw size
-main.js             | main  | 387.61 kB |
+Initial chunk files | Names         |  Raw size
+main.js             | main          | 530.39 kB |
+styles.css          | styles        |  60.98 kB |
 
-Application bundle generation complete. [2.833 seconds] - 2026-07-21T16:43:52.984Z
+                    | Initial total | 591.38 kB
+
+Application bundle generation complete. [4.593 seconds] - 2026-07-27T16:39:36.528Z
 
 [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
 
@@ -202,15 +208,127 @@ Application bundle generation complete. [2.833 seconds] - 2026-07-21T16:43:52.98
     src/app/components/button-group-control/button-group-control.component.ts:9:15:
 [37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: DynamicFieldComponent is not used within the template of DataTableControlComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/data-table-control/data-table-control.component.ts:11:56:
+[37m      11 │ ...mmonModule, FormsModule, forwardRef(() => [32mDynamicFieldComponent[37m)],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Initial chunk files | Names |  Raw size
+main.js             | main  | 530.39 kB |
+
+Application bundle generation complete. [1.504 seconds] - 2026-07-27T16:39:54.321Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:1:52:
+[37m      1 │ <div class="control-container" [class.hidden]="def?.[32mhidden[37m === true">
+        ╵                                                     [32m~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:2:21:
+[37m      2 │   <label *ngIf="def?.[32mlabel[37m" class="control-label">
+        ╵                      [32m~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:3:12:
+[37m      3 │     {{ def?.[32mlabel[37m }}
+        ╵             [32m~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:7:65:
+[37m      7 │ ...v class="button-group" role="group" [attr.aria-label]="def?.[32mlabel[37m">
+        ╵                                                                [32m~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:8:30:
+[37m      8 │     <ng-container *ngIf="def?.[32moptions[37m">
+        ╵                               [32m~~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:10:35:
+[37m      10 │         *ngFor="let option of def?.[32moptions[37m"
+         ╵                                    [32m~~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:14:25:
+[37m      14 │         [disabled]="def?.[32mdisabled[37m === true"
+         ╵                          [32m~~~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: DynamicFieldComponent is not used within the template of DataTableControlComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/data-table-control/data-table-control.component.ts:11:56:
+[37m      11 │ ...mmonModule, FormsModule, forwardRef(() => [32mDynamicFieldComponent[37m)],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
 
 
 Page reload sent to client(s).
 ❯ Changes detected. Rebuilding...
 ✔ Changes detected. Rebuilding...
 Initial chunk files | Names |  Raw size
-main.js             | main  | 389.00 kB |
+main.js             | main  | 536.12 kB |
 
-Application bundle generation complete. [0.525 seconds] - 2026-07-21T16:44:19.127Z
+Application bundle generation complete. [1.265 seconds] - 2026-07-27T16:40:13.889Z
 
 [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
 
@@ -301,18 +419,29 @@ Application bundle generation complete. [0.525 seconds] - 2026-07-21T16:44:19.12
     src/app/components/button-group-control/button-group-control.component.ts:9:15:
 [37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: DynamicFieldComponent is not used within the template of DataTableControlComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/data-table-control/data-table-control.component.ts:11:56:
+[37m      11 │ ...mmonModule, FormsModule, forwardRef(() => [32mDynamicFieldComponent[37m)],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: VideoControlComponent is not used within the template of DynamicFieldComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/dynamic-field/dynamic-field.component.ts:49:942:
+[37m      49 │ ...rControlComponent, IframeControlComponent, [32mVideoControlComponent[37m],
+         ╵                                               [32m~~~~~~~~~~~~~~~~~~~~~[0m
 
 
 Page reload sent to client(s).
 ❯ Changes detected. Rebuilding...
 ✔ Changes detected. Rebuilding...
-Initial chunk files | Names         |  Raw size
-main.js             | main          | 389.00 kB |
-styles.css          | styles        |  25.84 kB |
+Initial chunk files | Names |  Raw size
+main.js             | main  | 536.72 kB |
 
-                    | Initial total | 414.84 kB
-
-Application bundle generation complete. [0.059 seconds] - 2026-07-21T16:45:11.618Z
+Application bundle generation complete. [1.267 seconds] - 2026-07-27T16:40:31.863Z
 
 [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
 
@@ -403,17 +532,163 @@ Application bundle generation complete. [0.059 seconds] - 2026-07-21T16:45:11.61
     src/app/components/button-group-control/button-group-control.component.ts:9:15:
 [37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: DynamicFieldComponent is not used within the template of DataTableControlComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/data-table-control/data-table-control.component.ts:11:56:
+[37m      11 │ ...mmonModule, FormsModule, forwardRef(() => [32mDynamicFieldComponent[37m)],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+Component update sent to client(s).
+❯ Changes detected. Rebuilding...
+✔ Changes detected. Rebuilding...
+Application bundle generation failed. [0.610 seconds] - 2026-07-27T16:48:55.725Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:1:52:
+[37m      1 │ <div class="control-container" [class.hidden]="def?.[32mhidden[37m === true">
+        ╵                                                     [32m~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:2:21:
+[37m      2 │   <label *ngIf="def?.[32mlabel[37m" class="control-label">
+        ╵                      [32m~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:3:12:
+[37m      3 │     {{ def?.[32mlabel[37m }}
+        ╵             [32m~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:7:65:
+[37m      7 │ ...v class="button-group" role="group" [attr.aria-label]="def?.[32mlabel[37m">
+        ╵                                                                [32m~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:8:30:
+[37m      8 │     <ng-container *ngIf="def?.[32moptions[37m">
+        ╵                               [32m~~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:10:35:
+[37m      10 │         *ngFor="let option of def?.[32moptions[37m"
+         ╵                                    [32m~~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/button-group-control/button-group-control.component.html:14:25:
+[37m      14 │         [disabled]="def?.[32mdisabled[37m === true"
+         ╵                          [32m~~~~~~~~[0m
+
+  Warning occurs in the template of component ButtonGroupControlComponent.
+
+    src/app/components/button-group-control/button-group-control.component.ts:9:15:
+[37m      9 │   templateUrl: [32m'./button-group-control.component.html'[37m,
+        ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: DynamicFieldComponent is not used within the template of DataTableControlComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/data-table-control/data-table-control.component.ts:11:56:
+[37m      11 │ ...mmonModule, FormsModule, forwardRef(() => [32mDynamicFieldComponent[37m)],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG2012: Component imports must be standalone components, directives, pipes, or must be NgModules.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/dynamic-field/dynamic-field.component.ts:49:918:
+[37m      49 │ ...derControlComponent, [32mIframeControlComponent[37m, VideoControlCompon...
+         ╵                         [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG2012: Component imports must be standalone components, directives, pipes, or must be NgModules.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/dynamic-field/dynamic-field.component.ts:49:942:
+[37m      49 │ ...rControlComponent, IframeControlComponent, [32mVideoControlComponent[37m],
+         ╵                                               [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS1206: Decorators are not valid here.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/iframe-control/iframe-control.ts:6:0:
+[37m      6 │ [32m@[37mComponent({
+        ╵ [32m^[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG2007: Class is using Angular features but is not decorated. Please add an explicit Angular decorator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/iframe-control/iframe-control.ts:14:13:
+[37m      14 │ export class [32mIframeControlComponent[37m implements OnInit, OnChanges {
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mTS1206: Decorators are not valid here.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/video-control/video-control.ts:6:0:
+[37m      6 │ [32m@[37mComponent({
+        ╵ [32m^[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG2007: Class is using Angular features but is not decorated. Please add an explicit Angular decorator.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/video-control/video-control.ts:14:13:
+[37m      14 │ export class [32mVideoControlComponent[37m implements OnInit, OnChanges {
+         ╵              [32m~~~~~~~~~~~~~~~~~~~~~[0m
 
 
 ❯ Changes detected. Rebuilding...
 ✔ Changes detected. Rebuilding...
-Initial chunk files | Names         |  Raw size
-main.js             | main          | 389.00 kB |
-styles.css          | styles        |  25.84 kB |
-
-                    | Initial total | 414.84 kB
-
-Application bundle generation complete. [0.045 seconds] - 2026-07-21T16:45:41.283Z
+Application bundle generation failed. [0.587 seconds] - 2026-07-27T16:49:15.057Z
 
 [33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8107: NG8107: The left side of this optional chain operation does not include 'null' or 'undefined' in its type, therefore the '?.' operator can be replaced with the '.' operator. Find more at https://v21.angular.dev/extended-diagnostics/NG8107[0m [1m[35m[plugin angular-compiler][0m
 
@@ -506,3 +781,22 @@ Application bundle generation complete. [0.045 seconds] - 2026-07-21T16:45:41.28
         ╵                [32m~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~[0m
 
 
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mNG8113: DynamicFieldComponent is not used within the template of DataTableControlComponent[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/data-table-control/data-table-control.component.ts:11:56:
+[37m      11 │ ...mmonModule, FormsModule, forwardRef(() => [32mDynamicFieldComponent[37m)],
+         ╵                                              [32m~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG2012: Component imports must be standalone components, directives, pipes, or must be NgModules.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/dynamic-field/dynamic-field.component.ts:49:918:
+[37m      49 │ ...derControlComponent, [32mIframeControlComponent[37m, VideoControlCompon...
+         ╵                         [32m~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31m✘ [41;31m[[41;97mERROR[41;31m][0m [1mNG2012: Component imports must be standalone components, directives, pipes, or must be NgModules.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/components/dynamic-field/dynamic-field.component.ts:49:942:
+[37m      49 │ ...rControlComponent, IframeControlComponent, [32mVideoControlComponent[37m],
+         ╵                                               [32m~~~~~~~~~~~~~~~~~~~~~[0m

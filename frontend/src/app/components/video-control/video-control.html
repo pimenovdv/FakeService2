@@ -1,0 +1,18 @@
+<div class="video-control" [id]="def.id" [ngClass]="{'hidden': def.hidden}">
+  <label *ngIf="def.label" class="block text-sm font-medium text-gray-700 mb-1">
+    {{ def.label }}
+  </label>
+  <video
+    *ngIf="safeUrl"
+    [src]="safeUrl"
+    [title]="def.altText || def.label"
+    class="w-full rounded-md shadow-sm"
+    controls
+    [autoplay]="def.autofocus"
+  >
+    Your browser does not support the video tag.
+  </video>
+  <div *ngIf="!safeUrl" class="text-gray-500 italic text-sm">
+    No video source provided.
+  </div>
+</div>

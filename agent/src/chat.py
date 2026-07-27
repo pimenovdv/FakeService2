@@ -1239,6 +1239,31 @@ class ChatSession:
                         "required": ["summary"]
                     }
                 }
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "connect_websocket",
+                    "description": "Connect to a websocket endpoint.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "description": "The path to the websocket endpoint (e.g. /api/ws/notifications)."
+                            },
+                            "message": {
+                                "type": "string",
+                                "description": "An optional message to send."
+                            },
+                            "wait_for_messages": {
+                                "type": "integer",
+                                "description": "Number of messages to wait for and return."
+                            }
+                        },
+                        "required": ["path"]
+                    }
+                }
             }
         ]
         self.form_submitted = False
@@ -3119,9 +3144,50 @@ class ChatSession:
                         "content": tool_content
                     })
 
+                elif tool_call.function.name == "connect_websocket":
+                    args = json.loads(tool_call.function.arguments)
+                    path = args.get("path")
+                    message = args.get("message")
+                    wait_for_messages = args.get("wait_for_messages", 0)
 
+                    if self.agent_client:
+                        try:
+                            import websockets
+                            base_url = str(self.agent_client.client.base_url)
+                            if base_url.startswith("http://"):
+                                ws_url = base_url.replace("http://", "ws://", 1) + path
+                            elif base_url.startswith("https://"):
+                                ws_url = base_url.replace("https://", "wss://", 1) + path
+                            else:
+                                ws_url = "ws://localhost:4200" + path
 
+                            headers = {}
+                            if hasattr(self.agent_client, 'client') and hasattr(self.agent_client.client, 'headers'):
+                                headers = dict(self.agent_client.client.headers)
 
+                            messages_received = []
+                            async with websockets.connect(ws_url, additional_headers=headers) as websocket:
+                                if message:
+                                    await websocket.send(message)
+
+                                for _ in range(wait_for_messages):
+                                    try:
+                                        msg = await asyncio.wait_for(websocket.recv(), timeout=5.0)
+                                        messages_received.append(msg)
+                                    except asyncio.TimeoutError:
+                                        break
+
+                            tool_content = json.dumps({"status": "success", "messages": messages_received})
+                        except Exception as e:
+                            tool_content = json.dumps({"error": str(e)})
+                    else:
+                        tool_content = json.dumps({"error": "No agent client configured."})
+
+                    self.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_content
+                    })
 
         return "I'm sorry, but I was unable to complete the request within the allowed number of steps."
 

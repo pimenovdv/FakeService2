@@ -1,0 +1,18 @@
+<div class="audio-control" [id]="def.id" [ngClass]="{'hidden': def.hidden}">
+  <label *ngIf="def.label" class="block text-sm font-medium text-gray-700 mb-1">
+    {{ def.label }}
+  </label>
+  <audio
+    *ngIf="safeUrl"
+    [src]="safeUrl"
+    [title]="def.altText || def.label"
+    class="w-full"
+    controls
+    [autoplay]="def.autofocus"
+  >
+    Your browser does not support the audio tag.
+  </audio>
+  <div *ngIf="!safeUrl" class="text-gray-500 italic text-sm">
+    No audio source provided.
+  </div>
+</div>

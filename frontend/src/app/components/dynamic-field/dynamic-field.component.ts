@@ -68,6 +68,7 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
   isHidden = false;
   isDisabled = false;
   value: any;
+  isAccordionExpanded = false;
 
   private stateService = inject(StateService);
   private subscription = new Subscription();
@@ -98,6 +99,10 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
 
   onValidChange(valid: boolean) {
     this.stateService.setValidation(this.componentDef.id, valid);
+  }
+
+  toggleAccordion() {
+    this.isAccordionExpanded = !this.isAccordionExpanded;
   }
 
   private evaluateConditions() {

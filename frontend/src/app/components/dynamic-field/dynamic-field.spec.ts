@@ -119,4 +119,35 @@ describe('DynamicFieldComponent', () => {
     expect(helpTextDiv).toBeTruthy();
     expect(helpTextDiv?.textContent).toContain('This is helpful text');
   });
+
+  it('should render accordion and toggle its state', () => {
+    component.componentDef = {
+      id: 'accordion1',
+      type: 'accordion',
+      label: 'My Accordion',
+      components: [
+        { id: 'child1', type: 'text', label: 'Child Text' } as ComponentDef
+      ]
+    } as ComponentDef;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    // Accordion should be rendered
+    const accordionDiv = compiled.querySelector('.accordion');
+    expect(accordionDiv).toBeTruthy();
+
+    // Default state: collapsed, so child component shouldn't be rendered yet
+    expect(component.isAccordionExpanded).toBe(false);
+    expect(compiled.querySelector('app-text-input')).toBeFalsy();
+
+    // Click header to toggle
+    const headerButton = compiled.querySelector('.accordion-header') as HTMLButtonElement;
+    headerButton.click();
+    fixture.detectChanges();
+
+    // After toggle: expanded, child component should be rendered
+    expect(component.isAccordionExpanded).toBe(true);
+    expect(compiled.querySelector('app-dynamic-field')).toBeTruthy();
+  });
 });

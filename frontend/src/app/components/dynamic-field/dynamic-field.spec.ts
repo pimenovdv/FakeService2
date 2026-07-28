@@ -150,4 +150,43 @@ describe('DynamicFieldComponent', () => {
     expect(component.isAccordionExpanded).toBe(true);
     expect(compiled.querySelector('app-dynamic-field')).toBeTruthy();
   });
+
+  it('should render tabs and switch content', () => {
+    component.componentDef = {
+      id: 'tabs1',
+      type: 'tabs',
+      label: 'My Tabs',
+      components: [
+        { id: 'tab1', type: 'text', label: 'Tab 1' } as ComponentDef,
+        { id: 'tab2', type: 'radio', label: 'Tab 2' } as ComponentDef
+      ]
+    } as ComponentDef;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    // Tabs container should be rendered
+    const tabsContainer = compiled.querySelector('.tabs-container');
+    expect(tabsContainer).toBeTruthy();
+
+    // Tab buttons should be rendered
+    const tabButtons = compiled.querySelectorAll('.tabs-header button');
+    expect(tabButtons.length).toBe(2);
+    expect(tabButtons[0].textContent?.trim()).toBe('Tab 1');
+    expect(tabButtons[1].textContent?.trim()).toBe('Tab 2');
+
+    // Default state: first tab active, rendering app-text-input
+    expect(component.activeTabIndex).toBe(0);
+    expect(compiled.querySelector('app-text-input')).toBeTruthy();
+    expect(compiled.querySelector('app-radio-control')).toBeFalsy();
+
+    // Click second tab to switch
+    (tabButtons[1] as HTMLButtonElement).click();
+    fixture.detectChanges();
+
+    // After switch: second tab active, rendering app-radio-control
+    expect(component.activeTabIndex).toBe(1);
+    expect(compiled.querySelector('app-text-input')).toBeFalsy();
+    expect(compiled.querySelector('app-radio-control')).toBeTruthy();
+  });
 });

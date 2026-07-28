@@ -59,6 +59,22 @@
     </div>
   </div>
 
+  <div *ngSwitchCase="'tabs'" class="tabs-container border border-gray-300 rounded-md mb-4" [id]="componentDef.id">
+    <div class="tabs-header flex border-b border-gray-300 bg-gray-50 overflow-x-auto">
+      <button type="button" *ngFor="let child of componentDef.components; let i = index"
+              class="px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-nowrap"
+              [ngClass]="{'border-b-2 border-blue-600 text-blue-600 bg-white': activeTabIndex === i, 'text-gray-600 hover:text-gray-800 hover:bg-gray-100': activeTabIndex !== i}"
+              (click)="selectTab(i)"
+              [attr.aria-selected]="activeTabIndex === i"
+              role="tab">
+        {{ child.label || 'Tab ' + (i + 1) }}
+      </button>
+    </div>
+    <div class="tabs-content p-4" [@fadeSlideInOut]>
+      <app-dynamic-field *ngIf="componentDef.components && componentDef.components[activeTabIndex]" [componentDef]="componentDef.components[activeTabIndex]"></app-dynamic-field>
+    </div>
+  </div>
+
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})
   </div>

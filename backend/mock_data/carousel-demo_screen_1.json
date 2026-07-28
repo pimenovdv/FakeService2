@@ -1,0 +1,21 @@
+{
+  "id": "1",
+  "header": "Carousel Demo",
+  "content": "Look at the beautiful carousel",
+  "components": [
+    {
+      "id": "carousel1",
+      "type": "carousel",
+      "label": "My Carousel",
+      "options": [
+        { "value": "https://picsum.photos/400/300?random=1", "label": "Image 1" },
+        { "value": "https://picsum.photos/400/300?random=2", "label": "Image 2" },
+        { "value": "https://picsum.photos/400/300?random=3", "label": "Image 3" },
+        { "value": "https://picsum.photos/400/300?random=4", "label": "Image 4" }
+      ]
+    }
+  ],
+  "buttons": [
+    { "id": "btn_next", "label": "Next", "action": "next_step" }
+  ]
+}

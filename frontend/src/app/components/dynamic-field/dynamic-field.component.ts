@@ -110,6 +110,24 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
     this.activeTabIndex = index;
   }
 
+  scrollCarousel(direction: number, container: HTMLElement) {
+    if (!container) return;
+
+    // Find the width of a single item to scroll by that amount
+    const item = container.querySelector('.carousel-item') as HTMLElement;
+    const scrollAmount = item ? item.offsetWidth + 16 : container.offsetWidth; // 16px is the gap
+
+    if (typeof container.scrollBy === 'function') {
+      container.scrollBy({
+        left: direction * scrollAmount,
+        behavior: 'smooth'
+      });
+    } else {
+      // Fallback for environment like jsdom where scrollBy might not be available
+      container.scrollLeft += direction * scrollAmount;
+    }
+  }
+
   private evaluateConditions() {
     let changed = false;
     if (this.componentDef.showIf) {

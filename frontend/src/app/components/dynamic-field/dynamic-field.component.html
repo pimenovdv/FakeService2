@@ -75,6 +75,39 @@
     </div>
   </div>
 
+  <div *ngSwitchCase="'carousel'" class="carousel-container relative border border-gray-300 rounded-md mb-4 group" [id]="componentDef.id">
+    <div class="carousel-header p-4 border-b border-gray-300 bg-gray-50" *ngIf="componentDef.label">
+      <h3 class="text-lg font-semibold text-gray-700">{{ componentDef.label }}</h3>
+    </div>
+
+    <div class="carousel-content relative overflow-hidden">
+      <div #carouselScroll class="carousel-scroll flex overflow-x-auto snap-x snap-mandatory hide-scrollbar p-4 gap-4" style="scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none;">
+
+        <ng-container *ngIf="componentDef.components && componentDef.components.length > 0; else imageCarousel">
+          <div *ngFor="let child of componentDef.components" class="carousel-item snap-center shrink-0 w-full md:w-3/4 lg:w-2/3">
+             <app-dynamic-field [componentDef]="child"></app-dynamic-field>
+          </div>
+        </ng-container>
+
+        <ng-template #imageCarousel>
+          <div *ngFor="let option of componentDef.options" class="carousel-item snap-center shrink-0 w-full md:w-3/4 lg:w-2/3 flex flex-col items-center justify-center">
+            <img [src]="option.value" [alt]="option.label || 'Carousel Image'" class="max-w-full h-auto rounded shadow-md" style="max-height: 400px; object-fit: contain;">
+            <p *ngIf="option.label" class="mt-2 text-sm text-gray-600 text-center">{{ option.label }}</p>
+          </div>
+        </ng-template>
+
+      </div>
+
+      <button type="button" class="carousel-prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-500 z-10" (click)="scrollCarousel(-1, carouselScroll)" aria-label="Previous slide">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      </button>
+
+      <button type="button" class="carousel-next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-2 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity focus:outline-none focus:ring-2 focus:ring-blue-500 z-10" (click)="scrollCarousel(1, carouselScroll)" aria-label="Next slide">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      </button>
+    </div>
+  </div>
+
   <div *ngSwitchDefault class="fallback-field">
     Unsupported component type: {{ componentDef.type }} (ID: {{ componentDef.id }})
   </div>

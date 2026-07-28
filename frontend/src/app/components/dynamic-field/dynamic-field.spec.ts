@@ -189,4 +189,67 @@ describe('DynamicFieldComponent', () => {
     expect(compiled.querySelector('app-text-input')).toBeFalsy();
     expect(compiled.querySelector('app-radio-control')).toBeTruthy();
   });
+
+  it('should render carousel with image options', () => {
+    component.componentDef = {
+      id: 'carousel1',
+      type: 'carousel',
+      label: 'My Carousel',
+      options: [
+        { value: 'img1.png', label: 'Image 1' },
+        { value: 'img2.png', label: 'Image 2' }
+      ]
+    } as ComponentDef;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const carouselContainer = compiled.querySelector('.carousel-container');
+    expect(carouselContainer).toBeTruthy();
+
+    const images = compiled.querySelectorAll('img');
+    expect(images.length).toBe(2);
+    expect(images[0].getAttribute('src')).toBe('img1.png');
+    expect(images[0].getAttribute('alt')).toBe('Image 1');
+  });
+
+  it('should render carousel with nested dynamic-field components', () => {
+    component.componentDef = {
+      id: 'carousel2',
+      type: 'carousel',
+      label: 'Components Carousel',
+      components: [
+        { id: 'childText', type: 'text', label: 'Text Field' } as ComponentDef,
+        { id: 'childRadio', type: 'radio', label: 'Radio Field' } as ComponentDef
+      ]
+    } as ComponentDef;
+    fixture.detectChanges();
+
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dynamicFields = compiled.querySelectorAll('app-dynamic-field');
+
+    // There are 2 nested dynamic-fields rendered inside the carousel
+    expect(dynamicFields.length).toBe(2);
+  });
+
+  it('should call scrollCarousel when next/prev buttons are clicked', () => {
+    component.componentDef = {
+      id: 'carousel3',
+      type: 'carousel',
+      label: 'Scrollable Carousel',
+      options: [{ value: 'img1.png' }, { value: 'img2.png' }]
+    } as ComponentDef;
+    fixture.detectChanges();
+
+    const scrollSpy = vi.spyOn(component, 'scrollCarousel');
+    const compiled = fixture.nativeElement as HTMLElement;
+
+    const prevButton = compiled.querySelector('.carousel-prev') as HTMLButtonElement;
+    const nextButton = compiled.querySelector('.carousel-next') as HTMLButtonElement;
+
+    prevButton.click();
+    expect(scrollSpy).toHaveBeenCalledWith(-1, expect.any(HTMLElement));
+
+    nextButton.click();
+    expect(scrollSpy).toHaveBeenCalledWith(1, expect.any(HTMLElement));
+  });
 });

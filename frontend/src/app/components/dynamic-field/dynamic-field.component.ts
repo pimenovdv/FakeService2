@@ -69,6 +69,7 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
   isDisabled = false;
   value: any;
   isAccordionExpanded = false;
+  activeTabIndex = 0;
 
   private stateService = inject(StateService);
   private subscription = new Subscription();
@@ -103,6 +104,10 @@ export class DynamicFieldComponent implements OnInit, OnDestroy {
 
   toggleAccordion() {
     this.isAccordionExpanded = !this.isAccordionExpanded;
+  }
+
+  selectTab(index: number) {
+    this.activeTabIndex = index;
   }
 
   private evaluateConditions() {

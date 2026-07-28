@@ -3,11 +3,21 @@
 This document outlines the step-by-step development process for the FastAPI-based mock backend.
 
 ## Completed Phases
-- **Core to Phase 52:** Implemented core features, dynamic endpoints, file uploads/downloads, background tasks, authentication, WebSocket/SSE, RBAC, GraphQL, advanced cross-field validation, rate limiting, health monitoring, webhooks, key-value cache, mock email outbox, mock feature flags, dynamic JSON logic injection, document extraction, analytics, mock audit logs endpoints, mock notifications endpoint, mock comments API, mock user profile API, mock settings API, mock search API, mock translation API, mock weather API, mock calendar events API, mock payment processing API, mock subscriptions API, mock support tickets API, mock user tasks API, mock devices API, mock orders API, mock invoices API, mock products API, mock shopping cart API, mock reviews API, mock favorites API, and mock messages API.
+- **Phase 1-52:** Completed core routers and features including messages, auth, and other endpoints.
 
 ## New Features
 
-## Phase 52: Mock Messages API
-- [x] **Mock Messages API**
-  - **Goal:** Mock endpoints for managing user messages.
-  - **Details:** Add endpoints to get messages (`GET /api/messages`), send a message (`POST /api/messages`), and delete a message (`DELETE /api/messages/{message_id}`).
+## Phase 53: Mock Address Book API
+- [x] **Mock Address Book API**
+  - **Goal:** Mock endpoints for managing user addresses.
+  - **Details:** Add endpoints to list addresses (`GET /api/addresses`), create an address (`POST /api/addresses`), update an address (`PUT /api/addresses/{address_id}`), and delete an address (`DELETE /api/addresses/{address_id}`).
+
+## Phase 54: Mock Documents API
+- [ ] **Mock Documents API**
+  - **Goal:** Mock endpoints for managing user documents.
+  - **Details:** Add endpoints to list documents (`GET /api/documents`), upload a document (`POST /api/documents`), retrieve a document (`GET /api/documents/{document_id}`), and delete a document (`DELETE /api/documents/{document_id}`).
+
+## Phase 55: Mock Activity Log API
+- [ ] **Mock Activity Log API**
+  - **Goal:** Mock endpoints for tracking user activities.
+  - **Details:** Add endpoint to list recent activities (`GET /api/activities`).
